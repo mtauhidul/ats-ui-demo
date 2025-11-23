@@ -16,7 +16,7 @@ interface ConfirmationDialogProps {
   description: string;
   confirmText?: string;
   cancelText?: string;
-  onConfirm: () => void | Promise<void>;
+  onConfirm?: () => void | Promise<void>;
   variant?: "default" | "destructive";
   isLoading?: boolean;
 }
@@ -33,7 +33,9 @@ export function ConfirmationDialog({
   isLoading = false,
 }: ConfirmationDialogProps) {
   const handleConfirm = async () => {
-    await onConfirm();
+    if (onConfirm) {
+      await onConfirm();
+    }
     // Don't close here - let the parent component handle closing
   };
 
@@ -46,17 +48,19 @@ export function ConfirmationDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className={
-              variant === "destructive"
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : ""
-            }
-          >
-            {isLoading ? "Deleting..." : confirmText}
-          </AlertDialogAction>
+          {confirmText && onConfirm && (
+            <AlertDialogAction
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className={
+                variant === "destructive"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              }
+            >
+              {isLoading ? "Deleting..." : confirmText}
+            </AlertDialogAction>
+          )}
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
