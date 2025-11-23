@@ -162,16 +162,23 @@ export function JobDetails({
   const handleDeleteJob = async () => {
     if (!job.id) return;
     
+    // Check if there are any candidates assigned to this job
+    if (candidates && candidates.length > 0) {
+      return; // Don't proceed with deletion
+    }
+    
     setIsDeleting(true);
     try {
       await deleteJob(job.id);
       setIsDeleteDialogOpen(false);
       // Navigate back after successful deletion
       onBack();
-    } catch (error) {
+    } catch {
       setIsDeleting(false);
     }
   };
+  
+  const hasCandidates = candidates && candidates.length > 0;
 
   // Categories are now loaded from Firestore in realtime via useCategories hook
   // Filter for active categories only
@@ -352,6 +359,8 @@ export function JobDetails({
                 variant="destructive"
                 size="sm"
                 onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={hasCandidates}
+                title={hasCandidates ? "Cannot delete job with candidates" : "Delete job"}
               >
                 <Trash2 className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Delete</span>
@@ -910,11 +919,15 @@ export function JobDetails({
       <ConfirmationDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title="Delete Closed Job"
-        description={`Are you sure you want to delete "${job.title}"? This action cannot be undone. All associated data including candidates and applications will remain, but they will no longer be linked to this job.`}
-        confirmText="Delete Job"
-        cancelText="Cancel"
-        onConfirm={handleDeleteJob}
+        title={hasCandidates ? "Cannot Delete Job" : "Delete Closed Job"}
+        description={
+          hasCandidates 
+            ? `Cannot delete "${job.title}" because it has ${candidates.length} candidate(s) assigned. Please remove all candidates from this job before deleting it.`
+            : `Are you sure you want to delete "${job.title}"? This action cannot be undone.`
+        }
+        confirmText={hasCandidates ? undefined : "Delete Job"}
+        cancelText={hasCandidates ? "Close" : "Cancel"}
+        onConfirm={hasCandidates ? undefined : handleDeleteJob}
         variant="destructive"
         isLoading={isDeleting}
       />

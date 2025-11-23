@@ -293,35 +293,17 @@ export default function JobPipelinePage() {
       return;
     }
 
-    // Find the new stage details for optimistic update
-    const newStage = currentPipeline?.stages.find((s) => s.id === newStageId);
-
-    // Optimistic update - update UI immediately
-    if (newStage) {
-      updateCandidateStageOptimistic({
-        candidateId,
-        newStageId,
-        newStageData: {
-          id: newStage.id,
-          name: newStage.name,
-          color: newStage.color,
-          order: newStage.order,
-        },
-      });
-    }
-
     try {
       // CRITICAL: Pass jobId so backend knows which job's stage to update
       await updateCandidate(candidateId, {
         currentPipelineStageId: newStageId,
-      });
+        jobId: jobId, // Pass jobId to update job-specific stage in jobApplications
+      } as any);
 
       // Firestore will automatically update candidates in realtime
       toast.success("Candidate moved to new stage!");
     } catch {
       toast.error("Failed to move candidate");
-
-      // Firestore will automatically sync the correct state
     }
   };
 

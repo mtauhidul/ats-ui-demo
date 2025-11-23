@@ -166,13 +166,10 @@ export function JobKanbanBoard({
   const handleColumnsChange = async (
     newColumns: Record<string, Candidate[]>
   ) => {
-    // Get the actual current state (not optimistic)
-    const currentColumns = optimisticColumns || columnData;
+    // Get the actual current state
+    const currentColumns = columnData;
 
-    // 1. IMMEDIATELY update UI (optimistic update)
-    setOptimisticColumns(newColumns);
-
-    // 2. Find which candidate moved and to which stage
+    // 1. Find which candidate moved and to which stage
     let movedCandidateId: string | null = null;
     let targetStageId: string | null = null;
 
@@ -191,19 +188,22 @@ export function JobKanbanBoard({
       });
     });
 
-    // 3. Call API in background
+    // 2. Call API and let Firestore real-time updates handle UI refresh
     if (movedCandidateId && targetStageId) {
+      // Show optimistic UI update
+      setOptimisticColumns(newColumns);
+      
       try {
         await onStatusChange(movedCandidateId, targetStageId);
-
-        // 4. API succeeded - wait briefly for Firestore to sync, then clear optimistic state
+        
+        // Clear optimistic state after a short delay to let Firestore sync
         setTimeout(() => {
           setOptimisticColumns(null);
-        }, 500); // Give Firestore realtime listener time to update
+        }, 800);
       } catch {
-        // 5. API failed - revert to original state immediately
+        // Revert optimistic update on error
         setOptimisticColumns(null);
-
+        
         // Show error toast
         const toast = (await import("sonner")).toast;
         toast.error("Failed to move candidate. Please try again.");
