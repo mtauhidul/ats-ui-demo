@@ -37,6 +37,7 @@ interface JobSelectionModalProps {
   jobs: Job[];
   currentJobId?: string;
   applicationName?: string;
+  isDirectApplication?: boolean; // Whether this is a direct application with pre-selected job
 }
 
 export function JobSelectionModal({
@@ -46,18 +47,24 @@ export function JobSelectionModal({
   jobs,
   currentJobId,
   applicationName = "this application",
+  isDirectApplication = false,
 }: JobSelectionModalProps) {
   const [selectedJobId, setSelectedJobId] = useState<string>("");
 
   // Helper function to get job ID (handles both _id and id)
   const getJobId = (job: Job) => job._id || job.id || "";
 
-  // Reset selection when modal opens
+  // Reset selection when modal opens, auto-select for direct applications
   useEffect(() => {
     if (open) {
       setSelectedJobId(currentJobId || "");
-      }
+    }
   }, [open, currentJobId, jobs]);
+
+  // Filter jobs based on whether it's a direct application
+  const availableJobs = isDirectApplication && currentJobId
+    ? jobs.filter((job) => getJobId(job) === currentJobId)
+    : jobs;
 
   const selectedJob = jobs.find((job) => getJobId(job) === selectedJobId);
 
@@ -86,8 +93,15 @@ export function JobSelectionModal({
         <DialogHeader>
           <DialogTitle>Select Job for Application</DialogTitle>
           <DialogDescription>
-            Choose which job {applicationName} is applying for. The client will
-            be automatically assigned based on the job selection.
+            {isDirectApplication ? (
+              <>
+                <strong>{applicationName}</strong> applied directly for this job. The job is pre-selected and the client will be automatically assigned.
+              </>
+            ) : (
+              <>
+                Choose which job {applicationName} is applying for. The client will be automatically assigned based on the job selection.
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -99,6 +113,7 @@ export function JobSelectionModal({
               onValueChange={(value) => {
                 setSelectedJobId(value);
               }}
+              disabled={isDirectApplication}
             >
               <SelectTrigger id="job-select" className="w-full">
                 {selectedJobId && selectedJob ? (
@@ -119,12 +134,12 @@ export function JobSelectionModal({
                 )}
               </SelectTrigger>
               <SelectContent position="popper" className="max-h-[300px]">
-                {jobs.length === 0 ? (
+                {availableJobs.length === 0 ? (
                   <div className="py-6 text-center text-sm text-muted-foreground">
                     No jobs available
                   </div>
                 ) : (
-                  jobs.map((job) => {
+                  availableJobs.map((job) => {
                     const jobId = getJobId(job);
                     const clientName =
                       typeof job.clientId === "object"

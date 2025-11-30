@@ -418,6 +418,7 @@ export function DataTable({
   const [currentApprovingName, setCurrentApprovingName] =
     React.useState<string>("");
   const [currentJobId, setCurrentJobId] = React.useState<string | undefined>(undefined);
+  const [isDirectApplication, setIsDirectApplication] = React.useState<boolean>(false);
   const sortableId = React.useId();
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
@@ -566,10 +567,22 @@ export function DataTable({
     const targetJobId = (application as any).targetJobId || (application as any).jobId;
     setCurrentJobId(targetJobId);
 
+    // Check if this is a direct application
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const source = (application as any).source || '';
+    const isDirect = source === 'direct_apply' && !!targetJobId;
+    setIsDirectApplication(isDirect);
+
     // Show immediate feedback to user
-    toast.info("Please select a job to approve this candidate", {
-      description: "Choose the position this candidate will be assigned to",
-    });
+    if (isDirect) {
+      toast.info("Review job assignment for direct application", {
+        description: "The job is pre-selected based on where they applied",
+      });
+    } else {
+      toast.info("Please select a job to approve this candidate", {
+        description: "Choose the position this candidate will be assigned to",
+      });
+    }
 
     setShowJobSelectionModal(true);
   };
@@ -1319,11 +1332,13 @@ export function DataTable({
           setCurrentApprovingId(null);
           setCurrentApprovingName("");
           setCurrentJobId(undefined);
+          setIsDirectApplication(false);
         }}
         onConfirm={handleJobConfirmation}
         jobs={jobs}
         currentJobId={currentJobId}
         applicationName={currentApprovingName}
+        isDirectApplication={isDirectApplication}
       />
     </>
   );
@@ -1337,6 +1352,7 @@ function JobSelectionWrapper({
   jobs,
   currentJobId,
   applicationName,
+  isDirectApplication,
 }: {
   open: boolean;
   onClose: () => void;
@@ -1349,6 +1365,7 @@ function JobSelectionWrapper({
   }>;
   currentJobId?: string;
   applicationName: string;
+  isDirectApplication?: boolean;
 }) {
   // Jobs are already in the correct format, no transformation needed
   return (
@@ -1359,6 +1376,7 @@ function JobSelectionWrapper({
       jobs={jobs}
       currentJobId={currentJobId}
       applicationName={applicationName}
+      isDirectApplication={isDirectApplication}
     />
   );
 }
