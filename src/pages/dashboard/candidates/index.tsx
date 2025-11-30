@@ -66,12 +66,6 @@ export default function CandidatesPage() {
     } catch (error) {}
   };
 
-  // Debug: Check first few candidates and jobs
-  if (candidates.length > 0 && jobs.length > 0) {
-    console.log('First candidate jobIds:', candidates[0]?.jobIds);
-    console.log('Available jobs (first 3):', jobs.slice(0, 3).map(j => ({ id: j.id, title: j.title })));
-  }
-
   // Transform candidates into rows - one row per job application
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformedData = candidates.flatMap((candidate: any, index) => {
@@ -238,9 +232,14 @@ export default function CandidatesPage() {
       }
     }
 
+    // Create unique row ID by combining candidate ID and job ID (or use candidate ID alone if no job)
+    const jobIdStr = job?.id || 'no-job';
+    const uniqueRowId = `${candidateId}-${jobIdStr}`;
+    
     return {
-      id: candidateId, // Use the normalized candidate ID (string)
+      id: uniqueRowId, // Unique row ID for React keys
       candidateId: candidateId, // Actual candidate ID for API calls
+      jobIdForRow: jobIdStr, // Job ID for this specific row
       header: `${candidate.firstName} ${candidate.lastName}`, // Candidate name
       type: job?.title || "General Applicant", // Job title they applied for
       status: getDisplayStatus(candidate.status || "active"),
@@ -318,14 +317,6 @@ export default function CandidatesPage() {
       videoIntroDuration: index === 0 ? "2:30" : undefined,
     };
   }
-
-  // Debug: Check transformed data
-  console.log('Transformed candidates (first 3):', transformedData.slice(0, 3).map(d => ({
-    name: d.header,
-    email: d.email,
-    jobTitle: d.jobTitle,
-    clientName: d.clientName
-  })));
 
   // Sort by application date (newest first) so latest applications appear on top
   const sortedData = transformedData.sort((a, b) => b.target - a.target);
