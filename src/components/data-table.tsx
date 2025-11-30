@@ -1682,14 +1682,31 @@ function TableCellViewer({
                   </div>
                 </div>
               )}
-              {/* Job Title for direct applications */}
+              {/* Job Title and Client for direct applications */}
               {item.jobTitle && item.jobTitle !== "No Job Specified" && (
-                <div className="mt-2 inline-block">
+                <div className="mt-2">
                   <div className="text-[10px] text-muted-foreground mb-0.5">
                     APPLIED FOR
                   </div>
-                  <div className="text-sm font-medium bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded border border-blue-200 dark:border-blue-800">
-                    {item.jobTitle}
+                  <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 px-2 py-1.5 rounded border border-blue-200 dark:border-blue-800">
+                    {item.clientLogo && (
+                      <Avatar className="h-6 w-6 rounded">
+                        <AvatarImage src={item.clientLogo} alt={item.clientName} />
+                        <AvatarFallback className="text-[10px]">
+                          {item.clientName?.charAt(0) || "C"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="flex flex-col min-w-0">
+                      <div className="text-sm font-medium text-blue-700 dark:text-blue-400 truncate">
+                        {item.jobTitle}
+                      </div>
+                      {item.clientName && item.clientName !== "Unknown Client" && (
+                        <div className="text-xs text-blue-600/70 dark:text-blue-400/70 truncate">
+                          {item.clientName}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
