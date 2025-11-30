@@ -382,20 +382,9 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     maxSize: 200,
   },
   {
-    accessorKey: "target",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:bg-transparent p-0"
-      >
-        Stage
-        {column.getIsSorted() === "asc" ? (
-          <IconChevronDown className="ml-1 h-3 w-3 rotate-180" />
-        ) : column.getIsSorted() === "desc" ? (
-          <IconChevronDown className="ml-1 h-3 w-3" />
-        ) : null}
-      </Button>
+    accessorKey: "currentStage",
+    header: () => (
+      <div className="text-left">Stage</div>
     ),
     cell: ({ row }) => {
       const isRejected = row.original.status?.toLowerCase() === "rejected";

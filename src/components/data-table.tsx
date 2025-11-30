@@ -42,6 +42,8 @@ import {
   IconUserX,
   IconWorld,
   IconX,
+  IconClick,
+  IconInbox,
 } from "@tabler/icons-react";
 import {
   flexRender,
@@ -167,11 +169,35 @@ const createColumns = (
     header: () => <div className="w-full text-left">Application ID</div>,
     cell: ({ row }) => {
       const appId = row.original.jobIdDisplay || "-";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const source = (row.original as any).source || "";
 
       const handleCopyId = () => {
         navigator.clipboard.writeText(appId);
         toast.success("Application ID copied to clipboard!");
       };
+
+      // Determine icon and tooltip based on source
+      const getSourceIcon = () => {
+        if (source === "direct_apply") {
+          return {
+            icon: <IconClick className="h-3.5 w-3.5 shrink-0" />,
+            tooltip: "Direct Application",
+          };
+        } else if (source === "email" || source === "email_import" || source === "email_automation") {
+          return {
+            icon: <IconMail className="h-3.5 w-3.5 shrink-0" />,
+            tooltip: "Email Imported Application",
+          };
+        } else {
+          return {
+            icon: <IconUpload className="h-3.5 w-3.5 shrink-0" />,
+            tooltip: "Manual Import",
+          };
+        }
+      };
+
+      const sourceInfo = getSourceIcon();
 
       return (
         <TooltipProvider>
@@ -179,9 +205,23 @@ const createColumns = (
             <TooltipTrigger asChild>
               <button
                 onClick={handleCopyId}
-                className="text-left text-xs font-mono min-w-[200px] max-w-[200px] bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 px-2 py-1 rounded hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors cursor-pointer border border-green-200 dark:border-green-800 truncate"
+                className="text-left text-xs font-mono min-w-[200px] max-w-[200px] bg-green-50 dark:bg-green-950/30 px-2 py-1 rounded hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors cursor-pointer border border-green-200 dark:border-green-800 flex items-center gap-1.5"
               >
-                {appId}
+                <TooltipProvider>
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                      <span className="shrink-0 text-green-700 dark:text-green-400">{sourceInfo.icon}</span>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-slate-900! text-white! border-slate-700! px-3 py-2 font-medium text-xs"
+                      sideOffset={5}
+                    >
+                      {sourceInfo.tooltip}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <span className="truncate text-green-700 dark:text-green-400">{appId}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent
@@ -572,6 +612,15 @@ export function DataTable({
     const source = (application as any).source || '';
     const isDirect = source === 'direct_apply' && !!targetJobId;
     setIsDirectApplication(isDirect);
+
+    // Debug logging
+    console.log('Application approval debug:', {
+      applicationId: id,
+      source,
+      targetJobId,
+      isDirect,
+      application
+    });
 
     // Show immediate feedback to user
     if (isDirect) {

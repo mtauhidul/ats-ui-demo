@@ -237,6 +237,7 @@ export default function ApplicationsPage() {
       return app.reviewedByName || "Unknown";
     })(),
     source: app.source || "direct_application", // Application source (manual/email/direct apply)
+    jobId: app.jobId || undefined, // Job ID for direct applications
     // Add original data for display
     dateApplied: formatDate(applicationDate),
     jobIdDisplay: app.id, // Show application ID instead of job ID
