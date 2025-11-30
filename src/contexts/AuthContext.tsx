@@ -150,28 +150,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
   }, []);
 
-  // Set up automatic token refresh check every 5 minutes
-  useEffect(() => {
-    if (!user || !accessToken) return;
-
-    const checkAndRefreshToken = async () => {
-      const token = authUtils.getAccessToken();
-      
-      // Check if token is expired or will expire soon
-      if (authUtils.isTokenExpired(token)) {
-        await handleTokenRefresh();
-      }
-    };
-
-    // Check immediately
-    checkAndRefreshToken();
-
-    // Set up interval to check every 5 minutes (300000ms)
-    const intervalId = setInterval(checkAndRefreshToken, 5 * 60 * 1000);
-
-    return () => clearInterval(intervalId);
-  }, [user, accessToken, handleTokenRefresh]);
-
   // Login
   const handleLogin = async (credentials: LoginCredentials) => {
     try {

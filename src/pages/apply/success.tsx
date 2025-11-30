@@ -74,12 +74,6 @@ export default function ApplySuccessPage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg" variant="outline">
-                <Link to="/jobs">
-                  <Briefcase className="h-4 w-4 mr-2" />
-                  Browse More Jobs
-                </Link>
-              </Button>
               <Button asChild size="lg">
                 <Link to="/">
                   <Home className="h-4 w-4 mr-2" />
