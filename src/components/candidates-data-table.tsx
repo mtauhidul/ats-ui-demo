@@ -324,6 +324,13 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     maxSize: 180,
   },
   {
+    accessorKey: "target",
+    header: () => null,
+    cell: () => null,
+    enableHiding: true,
+    enableSorting: true,
+  },
+  {
     accessorKey: "jobIdDisplay",
     header: ({ column }) => {
       return (
