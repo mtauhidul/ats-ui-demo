@@ -1610,10 +1610,10 @@ export default function CandidateDetailsPage() {
                           {showVideoPreview && (
                             <div className="border-t">
                               {/* Check if it's an external video link (Loom, YouTube, Vimeo, etc.) */}
-                              {(candidate.videoIntroUrl.includes('loom.com') ||
-                                candidate.videoIntroUrl.includes('youtube.com') ||
-                                candidate.videoIntroUrl.includes('youtu.be') ||
-                                candidate.videoIntroUrl.includes('vimeo.com')) ? (
+                              {(candidate.videoIntroUrl?.includes('loom.com') ||
+                                candidate.videoIntroUrl?.includes('youtube.com') ||
+                                candidate.videoIntroUrl?.includes('youtu.be') ||
+                                candidate.videoIntroUrl?.includes('vimeo.com')) ? (
                                 <div className="bg-muted/30 p-6 text-center space-y-3">
                                   <div className="flex justify-center">
                                     <div className="rounded-full bg-blue-500/10 p-3">
