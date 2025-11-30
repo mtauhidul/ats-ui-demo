@@ -1292,23 +1292,10 @@ export function CandidatesDataTable({
       if (!searchValue) return true;
 
       const searchFields = [
-        row.original.header, // Candidate name
-        row.original.email,
-        row.original.phone,
-        row.original.status,
-        row.original.reviewer,
-        row.original.jobIdDisplay, // Job ID
-        row.original.jobTitle, // Job title
-        row.original.clientName, // Client name
-        row.original.currentTitle,
-        row.original.currentCompany,
-        row.original.currentStage, // Pipeline stage
-        row.original.dateApplied,
-        row.original.location,
-        row.original.educationLevel,
-        ...(row.original.skills || []),
-        ...(row.original.teamMembers || []),
-        ...(row.original.languages || []),
+        row.original.header,      // Candidate name
+        row.original.email,       // Email
+        row.original.jobTitle,    // Job title
+        row.original.clientName,  // Client name
       ];
 
       return searchFields.some((field) => {
@@ -1420,7 +1407,7 @@ export function CandidatesDataTable({
                 <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search by name, email, job, company..."
+                  placeholder="Search by name, email, job, or client..."
                   value={globalFilter ?? ""}
                   onChange={(e) => setGlobalFilter(e.target.value)}
                   className="w-full h-9 pl-9 pr-4 text-sm rounded-md border bg-background shadow-xs focus:outline-none focus:ring-2 focus:ring-ring/50"
