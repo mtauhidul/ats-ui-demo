@@ -679,10 +679,10 @@ export default function CandidateDetailsPage() {
     totalEmails:
       (candidateData.totalEmailsSent || 0) +
       (candidateData.totalEmailsReceived || 0),
-    videoIntroUrl: undefined,
-    videoIntroFilename: undefined,
-    videoIntroFileSize: undefined,
-    videoIntroDuration: undefined,
+    videoIntroUrl: (candidateData as any).videoIntroUrl as string | undefined,
+    videoIntroFilename: (candidateData as any).videoIntroFilename as string | undefined,
+    videoIntroFileSize: (candidateData as any).videoIntroFileSize as string | undefined,
+    videoIntroDuration: (candidateData as any).videoIntroDuration as string | undefined,
     // Additional fields from backend - use 'experience' field from backend
     experience:
       (
