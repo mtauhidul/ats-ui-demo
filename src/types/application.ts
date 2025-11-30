@@ -85,6 +85,9 @@ export interface Application extends BaseEntity {
   portfolioUrl?: string;
   githubUrl?: string;
   
+  // Job information
+  jobId?: string; // Direct job ID (used for direct applications)
+  
   // Target job information (OPTIONAL - can be captured from email subject line or application form)
   // If null, this is a general application without specific job target
   // This helps when routing/approving applications but is not mandatory
