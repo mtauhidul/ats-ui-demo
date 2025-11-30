@@ -91,9 +91,14 @@ import type { schema } from "./data-table-schema.tsx";
 
 // Table cell viewer component for candidate name - decorated like applications table
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
+  // Build URL with both candidateId and jobId for specific candidacy view
+  const url = item.jobIdForRow && item.jobIdForRow !== 'no-job'
+    ? `/dashboard/candidates/${item.candidateId}?jobId=${item.jobIdForRow}`
+    : `/dashboard/candidates/${item.candidateId}`;
+  
   return (
     <Link
-      to={`/dashboard/candidates/${item.candidateId}`}
+      to={url}
       className="group flex flex-col transition-all duration-200 cursor-pointer relative py-1 px-2 -mx-2 rounded-md hover:bg-primary/5 min-w-0"
     >
       <span className="font-medium text-foreground group-hover:text-primary transition-all duration-200 flex items-center gap-1.5 min-w-0 max-w-full">

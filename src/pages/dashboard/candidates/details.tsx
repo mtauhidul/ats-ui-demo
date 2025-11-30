@@ -57,11 +57,13 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import * as React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function CandidateDetailsPage() {
   const { candidateId } = useParams<{ candidateId: string }>();
+  const [searchParams] = useSearchParams();
+  const jobIdFromUrl = searchParams.get('jobId');
   const navigate = useNavigate();
   const [showResumePreview, setShowResumePreview] = React.useState(false);
   const [showVideoPreview, setShowVideoPreview] = React.useState(false);
@@ -422,7 +424,9 @@ export default function CandidateDetailsPage() {
   }
 
   // Get job and client details
-  const firstJobId = candidateData.jobIds?.[0];
+  // Use jobId from URL if provided, otherwise fall back to first job
+  const targetJobId = jobIdFromUrl || candidateData.jobIds?.[0];
+  const firstJobId = targetJobId;
   let job: (typeof jobs)[0] | null = null;
   let client: (typeof clients)[0] | null = null;
 
