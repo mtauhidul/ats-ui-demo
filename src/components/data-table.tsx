@@ -65,7 +65,7 @@ import { useNavigate } from "react-router-dom";
 
 import { z } from "zod";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -1684,26 +1684,26 @@ function TableCellViewer({
               )}
               {/* Job Title and Client for direct applications */}
               {item.jobTitle && item.jobTitle !== "No Job Specified" && (
-                <div className="mt-2">
+                <div className="mt-2 w-full">
                   <div className="text-[10px] text-muted-foreground mb-0.5">
                     APPLIED FOR
                   </div>
-                  <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 px-2 py-1.5 rounded border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 px-2 py-1.5 rounded border border-blue-200 dark:border-blue-800 w-full">
                     {item.clientLogo && (
-                      <Avatar className="h-6 w-6 rounded">
+                      <Avatar className="h-6 w-6 rounded shrink-0">
                         <AvatarImage src={item.clientLogo} alt={item.clientName} />
                         <AvatarFallback className="text-[10px]">
                           {item.clientName?.charAt(0) || "C"}
                         </AvatarFallback>
                       </Avatar>
                     )}
-                    <div className="flex flex-col min-w-0">
-                      <div className="text-sm font-medium text-blue-700 dark:text-blue-400 truncate">
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="text-sm font-medium text-blue-700 dark:text-blue-400">
                         {item.jobTitle}
                       </div>
                       {item.clientName && item.clientName !== "Unknown Client" && (
-                        <div className="text-xs text-blue-600/70 dark:text-blue-400/70 truncate">
-                          {item.clientName}
+                        <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                          at {item.clientName}
                         </div>
                       )}
                     </div>
