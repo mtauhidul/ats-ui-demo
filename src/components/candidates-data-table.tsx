@@ -93,7 +93,7 @@ import type { schema } from "./data-table-schema.tsx";
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   return (
     <Link
-      to={`/dashboard/candidates/${item.id}`}
+      to={`/dashboard/candidates/${item.candidateId}`}
       className="group flex flex-col transition-all duration-200 cursor-pointer relative py-1 px-2 -mx-2 rounded-md hover:bg-primary/5 min-w-0"
     >
       <span className="font-medium text-foreground group-hover:text-primary transition-all duration-200 flex items-center gap-1.5 min-w-0 max-w-full">
@@ -540,7 +540,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       return (
         <div className="min-w-40 max-w-40 overflow-hidden">
           <AssignedSelector
-            candidateId={row.original.id}
+            candidateId={row.original.candidateId}
             initialAssignee={assignedName}
             disabled={isRejected || isHired}
             candidateStatus={row.original.status}
@@ -597,7 +597,7 @@ const createActionsColumn = (handlers: {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem
-              onClick={() => handlers.onHire(row.original.id)}
+              onClick={() => handlers.onHire(row.original.candidateId)}
               disabled={isHired}
               className={
                 isRejected
@@ -619,7 +619,7 @@ const createActionsColumn = (handlers: {
                 : "Mark as Hired"}
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => handlers.onReject(row.original.id)}
+              onClick={() => handlers.onReject(row.original.candidateId)}
               disabled={isRejected || isHired}
               className={isHired ? "opacity-50 cursor-not-allowed" : ""}
             >
@@ -628,14 +628,14 @@ const createActionsColumn = (handlers: {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => handlers.onDownloadResume(row.original.id)}
+              onClick={() => handlers.onDownloadResume(row.original.candidateId)}
             >
               <IconDownload className="h-3 w-3 mr-2" />
               Download Resume
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => handlers.onReassignJob(row.original.id)}
+              onClick={() => handlers.onReassignJob(row.original.candidateId)}
             >
               <IconBriefcase className="h-3 w-3 mr-2" />
               Reassign to another Job
@@ -643,7 +643,7 @@ const createActionsColumn = (handlers: {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => handlers.onDelete(row.original.id)}
+              onClick={() => handlers.onDelete(row.original.candidateId)}
             >
               Delete Candidate
             </DropdownMenuItem>
@@ -1241,7 +1241,7 @@ export function CandidatesDataTable({
             return (
               <div className="min-w-40 max-w-40 overflow-hidden">
                 <AssignedSelector
-                  candidateId={row.original.id}
+                  candidateId={row.original.candidateId}
                   initialAssignee={assignedName}
                   onUpdate={() => {
                     window.dispatchEvent(new CustomEvent("refetchCandidates"));
