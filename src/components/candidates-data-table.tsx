@@ -93,8 +93,8 @@ import type { schema } from "./data-table-schema.tsx";
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   // Build URL with both candidateId and jobId for specific candidacy view
   const url = item.jobIdForRow && item.jobIdForRow !== 'no-job'
-    ? `/dashboard/candidates/${item.candidateId}?jobId=${item.jobIdForRow}`
-    : `/dashboard/candidates/${item.candidateId}`;
+    ? `/dashboard/candidates/${item.candidateId!}?jobId=${item.jobIdForRow}`
+    : `/dashboard/candidates/${item.candidateId!}`;
   
   return (
     <Link
@@ -545,7 +545,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       return (
         <div className="min-w-40 max-w-40 overflow-hidden">
           <AssignedSelector
-            candidateId={row.original.candidateId}
+            candidateId={row.original.candidateId!}
             initialAssignee={assignedName}
             disabled={isRejected || isHired}
             candidateStatus={row.original.status}
@@ -602,7 +602,7 @@ const createActionsColumn = (handlers: {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem
-              onClick={() => handlers.onHire(row.original.candidateId)}
+              onClick={() => handlers.onHire(row.original.candidateId!)}
               disabled={isHired}
               className={
                 isRejected
@@ -624,7 +624,7 @@ const createActionsColumn = (handlers: {
                 : "Mark as Hired"}
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => handlers.onReject(row.original.candidateId)}
+              onClick={() => handlers.onReject(row.original.candidateId!)}
               disabled={isRejected || isHired}
               className={isHired ? "opacity-50 cursor-not-allowed" : ""}
             >
@@ -633,14 +633,14 @@ const createActionsColumn = (handlers: {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => handlers.onDownloadResume(row.original.candidateId)}
+              onClick={() => handlers.onDownloadResume(row.original.candidateId!)}
             >
               <IconDownload className="h-3 w-3 mr-2" />
               Download Resume
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => handlers.onReassignJob(row.original.candidateId)}
+              onClick={() => handlers.onReassignJob(row.original.candidateId!)}
             >
               <IconBriefcase className="h-3 w-3 mr-2" />
               Reassign to another Job
@@ -648,7 +648,7 @@ const createActionsColumn = (handlers: {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => handlers.onDelete(row.original.candidateId)}
+              onClick={() => handlers.onDelete(row.original.candidateId!)}
             >
               Delete Candidate
             </DropdownMenuItem>

@@ -18,6 +18,7 @@ export const schema = z.object({
   clientLogo: z.string().optional(),
   teamMembers: z.array(z.string()).optional(),
   candidateId: z.string().optional(),
+  jobIdForRow: z.string().optional(), // Job ID for this specific row in candidates table
   assignedTo: z.union([
     z.string(),
     z.object({
