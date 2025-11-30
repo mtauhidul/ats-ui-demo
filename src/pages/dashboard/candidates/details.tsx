@@ -1607,94 +1607,98 @@ export default function CandidateDetailsPage() {
                               </Button>
                             </div>
                           </div>
-                          {showVideoPreview && (
-                            <div className="border-t">
-                              {/* Check if it's an external video link (Loom, YouTube, Vimeo, etc.) */}
-                              {(candidate.videoIntroUrl?.includes('loom.com') ||
-                                candidate.videoIntroUrl?.includes('youtube.com') ||
-                                candidate.videoIntroUrl?.includes('youtu.be') ||
-                                candidate.videoIntroUrl?.includes('vimeo.com')) ? (
-                                <div className="bg-muted/30 p-6 text-center space-y-3">
-                                  <div className="flex justify-center">
-                                    <div className="rounded-full bg-blue-500/10 p-3">
-                                      <svg
-                                        className="w-6 h-6 text-blue-600"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
+                          {showVideoPreview && (() => {
+                            const videoUrl = candidate.videoIntroUrl || '';
+                            const isExternalLink = videoUrl.includes('loom.com') ||
+                              videoUrl.includes('youtube.com') ||
+                              videoUrl.includes('youtu.be') ||
+                              videoUrl.includes('vimeo.com');
+                            
+                            return (
+                              <div className="border-t">
+                                {isExternalLink ? (
+                                  <div className="bg-muted/30 p-6 text-center space-y-3">
+                                    <div className="flex justify-center">
+                                      <div className="rounded-full bg-blue-500/10 p-3">
+                                        <svg
+                                          className="w-6 h-6 text-blue-600"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          stroke="currentColor"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                          />
+                                        </svg>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium mb-1">
+                                        External Video Link
+                                      </p>
+                                      <p className="text-xs text-muted-foreground mb-3">
+                                        Click the link below to watch the video introduction.
+                                      </p>
+                                      <a
+                                        href={videoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                                       >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                        />
-                                      </svg>
+                                        <svg
+                                          className="w-4 h-4"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          stroke="currentColor"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                          />
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                          />
+                                        </svg>
+                                        Watch Video
+                                      </a>
                                     </div>
                                   </div>
-                                  <div>
-                                    <p className="text-sm font-medium mb-1">
-                                      External Video Link
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mb-3">
-                                      Click the link below to watch the video introduction.
-                                    </p>
-                                    <a
-                                      href={candidate.videoIntroUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                ) : (
+                                  // Regular video player for Cloudinary or other direct video URLs
+                                  <div className="bg-black flex items-center justify-center">
+                                    <video
+                                      controls
+                                      className="w-full h-[600px] object-contain"
+                                      preload="metadata"
+                                      poster={candidate.photo || undefined}
                                     >
-                                      <svg
-                                        className="w-4 h-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                                        />
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                      </svg>
-                                      Watch Video
-                                    </a>
+                                      <source
+                                        src={videoUrl}
+                                        type="video/mp4"
+                                      />
+                                      <source
+                                        src={videoUrl}
+                                        type="video/webm"
+                                      />
+                                      <source
+                                        src={videoUrl}
+                                        type="video/ogg"
+                                      />
+                                      Your browser does not support the video tag.
+                                    </video>
                                   </div>
-                                </div>
-                              ) : (
-                                // Regular video player for Cloudinary or other direct video URLs
-                                <div className="bg-black flex items-center justify-center">
-                                  <video
-                                    controls
-                                    className="w-full h-[600px] object-contain"
-                                    preload="metadata"
-                                    poster={candidate.photo || undefined}
-                                  >
-                                    <source
-                                      src={candidate.videoIntroUrl}
-                                      type="video/mp4"
-                                    />
-                                    <source
-                                      src={candidate.videoIntroUrl}
-                                      type="video/webm"
-                                    />
-                                    <source
-                                      src={candidate.videoIntroUrl}
-                                      type="video/ogg"
-                                    />
-                                    Your browser does not support the video tag.
-                                  </video>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </CardContent>
