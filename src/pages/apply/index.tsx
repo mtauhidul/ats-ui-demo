@@ -69,6 +69,8 @@ export default function PublicApplyPage() {
   const [isParsing, setIsParsing] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string>("");
+  const [videoLink, setVideoLink] = useState<string>("");
+  const [videoInputMethod, setVideoInputMethod] = useState<"upload" | "link">("upload");
   const [parsedData, setParsedData] = useState<ParsedCandidate | null>(null);
   const [formData, setFormData] = useState<ParsedCandidate>({
     firstName: "",
@@ -365,9 +367,9 @@ export default function PublicApplyPage() {
       const uploadResult = await uploadResponse.json();
       const resumeUrl = uploadResult.data.url;
 
-      // Step 2: Upload video if provided (optional)
-      let finalVideoUrl = videoUrl;
-      if (selectedVideo && !videoUrl) {
+      // Step 2: Upload video if provided (optional) or use video link
+      let finalVideoUrl = videoUrl || videoLink;
+      if (selectedVideo && !videoUrl && !videoLink) {
         toast.loading("Uploading video introduction...", { id: loadingToast });
 
         const videoFormData = new FormData();
@@ -650,48 +652,109 @@ export default function PublicApplyPage() {
                     </p>
                   </div>
                   <div className="p-6">
-                    {!selectedVideo && !videoUrl ? (
-                      <div className="border-2 border-dashed rounded-xl p-8 transition-all duration-200 border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50">
-                        <div className="text-center">
-                          <Upload className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-60" />
-                          <p className="font-medium text-foreground mb-4">
-                            Upload your video introduction
-                          </p>
-                          <div className="flex justify-center mb-4">
-                            <Label htmlFor="video-upload">
-                              <Button
-                                variant="outline"
-                                size="md"
-                                asChild
-                                className="cursor-pointer"
-                              >
-                                <span>
-                                  <Upload className="h-4 w-4 mr-2" />
-                                  Choose Video
-                                </span>
-                              </Button>
-                            </Label>
-                          </div>
-                          <Input
-                            id="video-upload"
-                            type="file"
-                            accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,video/x-matroska,.mp4,.mov,.avi,.webm,.mkv"
-                            className="hidden"
-                            onChange={handleVideoSelect}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Supported: <strong>MP4, MOV, AVI, WEBM, MKV</strong>{" "}
-                            • Max size: <strong>100MB</strong>
-                          </p>
+                    {!selectedVideo && !videoUrl && !videoLink ? (
+                      <div className="space-y-4">
+                        {/* Toggle between upload and link */}
+                        <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                          <Button
+                            type="button"
+                            variant={videoInputMethod === "upload" ? "secondary" : "ghost"}
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setVideoInputMethod("upload")}
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Video
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={videoInputMethod === "link" ? "secondary" : "ghost"}
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setVideoInputMethod("link")}
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Paste Link
+                          </Button>
                         </div>
+
+                        {videoInputMethod === "upload" ? (
+                          <div className="border-2 border-dashed rounded-xl p-8 transition-all duration-200 border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50">
+                            <div className="text-center">
+                              <Upload className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-60" />
+                              <p className="font-medium text-foreground mb-4">
+                                Upload your video introduction
+                              </p>
+                              <div className="flex justify-center mb-4">
+                                <Label htmlFor="video-upload">
+                                  <Button
+                                    variant="outline"
+                                    size="md"
+                                    asChild
+                                    className="cursor-pointer"
+                                  >
+                                    <span>
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      Choose Video
+                                    </span>
+                                  </Button>
+                                </Label>
+                              </div>
+                              <Input
+                                id="video-upload"
+                                type="file"
+                                accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,video/x-matroska,.mp4,.mov,.avi,.webm,.mkv"
+                                className="hidden"
+                                onChange={handleVideoSelect}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Supported: <strong>MP4, MOV, AVI, WEBM, MKV</strong>{" "}
+                                • Max size: <strong>100MB</strong>
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <Label htmlFor="video-link" className="text-sm font-medium">
+                              Video Link (Loom, YouTube, Vimeo, etc.)
+                            </Label>
+                            <Input
+                              id="video-link"
+                              type="url"
+                              placeholder="https://www.loom.com/share/..."
+                              value={videoLink}
+                              onChange={(e) => setVideoLink(e.target.value)}
+                              className="w-full"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Paste your video link from Loom, YouTube, Vimeo, or any other platform
+                            </p>
+                            {videoLink && (
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  if (videoLink.trim()) {
+                                    setVideoUrl(videoLink.trim());
+                                    toast.success("Video link added successfully!");
+                                  }
+                                }}
+                                className="w-full"
+                                size="lg"
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                Add Video Link
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    ) : videoUrl ? (
+                    ) : videoUrl || videoLink ? (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20">
                           <div className="flex items-center gap-3">
                             <CheckCircle2 className="h-5 w-5 text-primary" />
                             <span className="text-sm font-medium text-foreground">
-                              Video uploaded successfully
+                              {videoLink ? "Video link added successfully" : "Video uploaded successfully"}
                             </span>
                           </div>
                           <Button
@@ -699,20 +762,35 @@ export default function PublicApplyPage() {
                             size="sm"
                             onClick={() => {
                               setVideoUrl("");
+                              setVideoLink("");
                               setSelectedVideo(null);
                             }}
                           >
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
-                        <video
-                          src={videoUrl}
-                          controls
-                          className="w-full rounded-lg border"
-                          style={{ maxHeight: "300px" }}
-                        >
-                          Your browser does not support the video tag.
-                        </video>
+                        {videoLink ? (
+                          <div className="p-4 bg-accent/30 rounded-lg border">
+                            <p className="text-sm font-medium text-foreground mb-2">Video Link:</p>
+                            <a 
+                              href={videoLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary hover:underline break-all"
+                            >
+                              {videoLink}
+                            </a>
+                          </div>
+                        ) : (
+                          <video
+                            src={videoUrl}
+                            controls
+                            className="w-full rounded-lg border"
+                            style={{ maxHeight: "300px" }}
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-3">
