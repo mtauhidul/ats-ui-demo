@@ -361,7 +361,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       };
 
       return (
-        <div className="min-w-[200px] max-w-[200px] overflow-hidden">
+        <div className="min-w-[140px] max-w-[140px] overflow-hidden">
           <div className="group flex items-center">
             <span className="text-xs font-mono font-semibold text-foreground pr-2 py-1 rounded truncate">
               {jobId}
@@ -384,9 +384,9 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       return value.includes(row.getValue(id));
     },
     enableHiding: true,
-    size: 200,
-    minSize: 200,
-    maxSize: 200,
+    size: 140,
+    minSize: 140,
+    maxSize: 140,
   },
   {
     accessorKey: "currentStage",
