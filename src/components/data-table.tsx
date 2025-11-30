@@ -1684,11 +1684,11 @@ function TableCellViewer({
               )}
               {/* Job Title for direct applications */}
               {item.jobTitle && item.jobTitle !== "No Job Specified" && (
-                <div className="mt-2">
+                <div className="mt-2 inline-block">
                   <div className="text-[10px] text-muted-foreground mb-0.5">
                     APPLIED FOR
                   </div>
-                  <div className="text-sm font-medium text-foreground">
+                  <div className="text-sm font-medium bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded border border-blue-200 dark:border-blue-800">
                     {item.jobTitle}
                   </div>
                 </div>
