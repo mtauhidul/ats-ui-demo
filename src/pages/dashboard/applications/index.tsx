@@ -241,6 +241,7 @@ export default function ApplicationsPage() {
     // Add original data for display
     dateApplied: formatDate(applicationDate),
     jobIdDisplay: app.id, // Show application ID instead of job ID
+    jobTitle: job?.title || app.targetJobTitle || "No Job Specified", // Job title for search
     clientName: client?.companyName || "Unknown Client",
     clientLogo: client?.logo || `https://api.dicebear.com/7.x/initials/svg?seed=${client?.companyName || 'C'}`,
     // Use real team member data from backend

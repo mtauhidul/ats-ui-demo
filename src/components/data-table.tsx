@@ -773,6 +773,8 @@ export function DataTable({
         row.original.status,
         row.original.reviewer,
         row.original.jobIdDisplay,
+        row.original.jobTitle,
+        row.original.clientName,
         row.original.currentTitle,
         row.original.currentCompany,
       ];
