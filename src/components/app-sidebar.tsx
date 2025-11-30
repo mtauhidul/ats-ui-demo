@@ -204,7 +204,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <div style={{ width: "24px", height: "24px", flexShrink: 0 }}>
                 <LogoIcon size={24} color="#71abbf" />
               </div>
-              <span className="text-base font-semibold">YTFCS ATS</span>
+              <span className="text-base font-semibold">Arista ATS</span>
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -1,8 +1,8 @@
-# ATS Frontend# React + TypeScript + Vite
+# Arista ATS Frontend# React + TypeScript + Vite
 
 
 
-Modern React + TypeScript frontend for the Applicant Tracking System, built with Vite.This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modern React + TypeScript frontend for Arista ATS (Applicant Tracking System), built with Vite.This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 
 

@@ -91,8 +91,8 @@ export function extractEmailVariables(
     jobTitle: job?.title || "[Job Title]",
     department: job?.department || "[Department]",
     
-    // Company info - ALWAYS use YTFCS (client details are confidential)
-    companyName: "YTFCS",
+    // Company info - ALWAYS use Arista (client details are confidential)
+    companyName: "Arista",
     
     // Default recruiter info (should come from user context in real app)
     recruiterName: "HR Team",

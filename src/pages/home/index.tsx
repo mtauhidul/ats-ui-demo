@@ -62,7 +62,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto text-center space-y-8 mb-20">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/20 border border-accent/30 text-sm text-foreground/80 mb-6">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Modern Applicant Tracking System</span>
+            <span>Arista Applicant Tracking System</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight">

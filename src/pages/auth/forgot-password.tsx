@@ -114,7 +114,7 @@ export default function ForgotPasswordPage() {
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <LogoIcon size={32} color="#71abbf" />
-            <span className="text-xl font-semibold">YTFCS ATS</span>
+            <span className="text-xl font-semibold">Arista ATS</span>
           </Link>
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight">

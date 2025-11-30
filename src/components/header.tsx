@@ -69,7 +69,7 @@ export function Header() {
         <Link to="/" className="flex items-center gap-2 rounded-md p-2">
           <LogoIcon className="h-7 w-7" />
           <span className="text-xl font-bold text-foreground tracking-tight">
-            YTFCS ATS
+            Arista ATS
           </span>
         </Link>
         <div className="hidden items-center gap-2 md:flex">

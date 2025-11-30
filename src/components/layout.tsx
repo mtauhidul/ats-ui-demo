@@ -18,7 +18,7 @@ export default function Layout() {
               <div className="flex items-center gap-2">
                 <LogoIcon size={24} color="#71abbf" />
                 <span className="text-base font-semibold text-foreground">
-                  YTFCS ATS
+                  Arista ATS
                 </span>
               </div>
               <span className="text-xs text-muted-foreground">

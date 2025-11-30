@@ -39,9 +39,9 @@ const faqData: FAQItem[] = [
   {
     id: "faq-001",
     category: "Getting Started",
-    question: "What is this Applicant Tracking System?",
+    question: "What is Arista ATS?",
     answer:
-      "This is a recruitment management system that helps you track job applications, manage candidates, organize jobs, and work with clients. Think of it as your complete hiring assistant that keeps everything organized in one place.",
+      "Arista ATS is a recruitment management system that helps you track job applications, manage candidates, organize jobs, and work with clients. Think of it as your complete hiring assistant that keeps everything organized in one place.",
     tags: ["introduction", "overview", "basics"],
   },
   {

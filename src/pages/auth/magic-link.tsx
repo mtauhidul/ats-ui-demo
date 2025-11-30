@@ -118,7 +118,7 @@ export default function MagicLinkPage() {
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
               <LogoIcon size={28} color="#71abbf" />
-              <span className="text-xl font-semibold">YTFCS ATS</span>
+              <span className="text-xl font-semibold">Arista ATS</span>
             </Link>
           </div>
           <div className="text-center space-y-2">

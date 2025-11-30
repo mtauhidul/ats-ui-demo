@@ -45,7 +45,7 @@ export const WordmarkIcon = (props: React.ComponentProps<"svg">) => (
       />
     </g>
     
-    {/* YTFCS ATS Text - Black */}
+    {/* Arista ATS Text - Black */}
     <text 
       x="38" 
       y="21" 
@@ -57,7 +57,7 @@ export const WordmarkIcon = (props: React.ComponentProps<"svg">) => (
         letterSpacing: '-0.02em'
       }}
     >
-      YTFCS ATS
+      Arista ATS
     </text>
   </svg>
 );
