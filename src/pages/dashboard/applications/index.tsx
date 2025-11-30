@@ -12,14 +12,22 @@ export default function ApplicationsPage() {
   const { clients, isLoading: clientsLoading } = useClients();
   const { teamMembers, isLoading: teamLoading } = useTeam();
 
-  // Log applications data
-  // Debug date values from first application
-  if (applications.length > 0) {
-    const firstApp = applications[0];
-    }
+  // Debug: Check job matching
+  if (applications.length > 0 && jobs.length > 0) {
+    console.log('First 3 applications job IDs:', applications.slice(0, 3).map(app => ({
+      appId: app.id,
+      jobId: app.jobId,
+      assignedJobId: app.assignedJobId,
+      targetJobId: app.targetJobId,
+      targetJobTitle: app.targetJobTitle
+    })));
+    console.log('Available jobs:', jobs.slice(0, 5).map(j => ({ id: j.id, title: j.title })));
+  }
 
   const transformedData = applications.map((app: Application) => {
-    const job = jobs.find((j: Job) => j.id === app.targetJobId);
+    // Look up job using jobId (direct applications), assignedJobId (approved), or targetJobId (general)
+    const jobIdToUse = app.jobId || app.assignedJobId || app.targetJobId;
+    const job = jobs.find((j: Job) => j.id === jobIdToUse);
     const client = clients.find((c: Client) => c.id === job?.clientId);
     
     // Type assertion to access backend-specific fields
@@ -304,6 +312,13 @@ export default function ApplicationsPage() {
     resumeRawText: backendApp.resumeRawText || undefined,
   };
   });
+
+  // Debug: Log first 3 transformed job titles
+  console.log('Transformed job titles:', transformedData.slice(0, 3).map(d => ({
+    name: d.header,
+    jobTitle: d.jobTitle,
+    clientName: d.clientName
+  })));
 
   // Enrich jobs with client information for the modal
   const enrichedJobs = jobs.map((job: Job) => {

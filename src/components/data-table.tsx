@@ -767,16 +767,9 @@ export function DataTable({
     globalFilterFn: (row, _columnId, filterValue) => {
       const searchValue = filterValue.toLowerCase();
       const searchFields = [
-        row.original.header,
-        row.original.email,
-        row.original.phone,
-        row.original.status,
-        row.original.reviewer,
-        row.original.jobIdDisplay,
-        row.original.jobTitle,
-        row.original.clientName,
-        row.original.currentTitle,
-        row.original.currentCompany,
+        row.original.header,        // Name
+        row.original.email,         // Email
+        row.original.jobTitle,      // Applied Job
       ];
 
       return searchFields.some((field) =>
@@ -898,7 +891,7 @@ export function DataTable({
                 <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search by name, email, job, company..."
+                  placeholder="Search by name, email, or job title..."
                   value={globalFilter ?? ""}
                   onChange={(e) => setGlobalFilter(e.target.value)}
                   className="w-full h-9 pl-9 pr-4 text-sm rounded-md border bg-background shadow-xs focus:outline-none focus:ring-2 focus:ring-ring/50"
