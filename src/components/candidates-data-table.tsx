@@ -1149,16 +1149,6 @@ export function CandidatesDataTable({
         );
         const firstStageId = jobPipeline?.stages?.[0]?.id;
 
-        console.log("=== REASSIGN DEBUG ===");
-        console.log("Job ID:", selectedJobForReassign);
-        console.log("Job Title:", job.title);
-        console.log("Pipeline found:", !!jobPipeline);
-        console.log("Pipeline ID:", jobPipeline?.id);
-        console.log("Pipeline stages count:", jobPipeline?.stages?.length);
-        console.log("First stage ID:", firstStageId);
-        console.log("First stage name:", jobPipeline?.stages?.[0]?.name);
-        console.log("====================");
-
         const newJobApplication = {
           jobId: selectedJobForReassign,
           status: "active" as const,

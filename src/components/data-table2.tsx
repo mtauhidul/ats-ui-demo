@@ -103,6 +103,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { analyzeVideoUrl, getVideoSourceName } from "@/lib/videoUtils";
 import type { schema } from "./data-table-schema";
 
 // Create a separate component for the drag handle
@@ -1811,69 +1812,88 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                 )}
 
                 {/* Video Introduction */}
-                {item.videoIntroUrl && (
-                  <div className="rounded-lg border overflow-hidden">
-                    <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
-                      <Label className="text-xs font-medium">
-                        Video Introduction
-                      </Label>
-                      {(item.videoIntroDuration || item.videoIntroFileSize) && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {item.videoIntroDuration && (
-                            <span>{item.videoIntroDuration}</span>
-                          )}
-                          {item.videoIntroFileSize && (
-                            <span>• {item.videoIntroFileSize}</span>
-                          )}
+                {item.videoIntroUrl && (() => {
+                  const videoInfo = analyzeVideoUrl(item.videoIntroUrl);
+                  const sourceName = getVideoSourceName(videoInfo);
+                  
+                  return (
+                    <div className="rounded-lg border overflow-hidden">
+                      <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
+                        <Label className="text-xs font-medium">
+                          {sourceName}
+                        </Label>
+                        {(item.videoIntroDuration || item.videoIntroFileSize) && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {item.videoIntroDuration && (
+                              <span>{item.videoIntroDuration}</span>
+                            )}
+                            {item.videoIntroFileSize && (
+                              <span>• {item.videoIntroFileSize}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {videoInfo.canEmbed ? (
+                        videoInfo.type === 'google-drive' ? (
+                          // Google Drive embedded video
+                          <div className="bg-black aspect-video">
+                            <iframe
+                              src={videoInfo.embedUrl}
+                              className="w-full h-full"
+                              allow="autoplay; fullscreen"
+                              sandbox="allow-same-origin allow-scripts"
+                              title="Google Drive Video"
+                            />
+                          </div>
+                        ) : (
+                          // Direct video file player
+                          <div className="bg-black">
+                            <video
+                              controls
+                              className="w-full max-h-80"
+                              preload="metadata"
+                              poster={item.photo || undefined}
+                            >
+                              <source src={item.videoIntroUrl} type="video/mp4" />
+                              <source src={item.videoIntroUrl} type="video/webm" />
+                              <source src={item.videoIntroUrl} type="video/ogg" />
+                            </video>
+                          </div>
+                        )
+                      ) : (
+                        // External link (Loom, Dropbox, OneDrive, etc.)
+                        <div className="bg-muted/30 p-6 text-center space-y-3">
+                          <div className="flex justify-center">
+                            <div className="rounded-full bg-blue-500/10 p-3">
+                              <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium mb-1">{sourceName}</p>
+                            <p className="text-xs text-muted-foreground mb-3">
+                              Click the link below to watch the video.
+                            </p>
+                            <a
+                              href={item.videoIntroUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Watch Video
+                            </a>
+                          </div>
                         </div>
                       )}
                     </div>
-                    {item.videoIntroUrl.includes('loom.com') ? (
-                      // Loom videos - show link with message
-                      <div className="bg-muted/30 p-6 text-center space-y-3">
-                        <div className="flex justify-center">
-                          <div className="rounded-full bg-blue-500/10 p-3">
-                            <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium mb-1">Loom Video Attached</p>
-                          <p className="text-xs text-muted-foreground mb-3">
-                            Loom videos cannot be embedded directly. Please click the link below to watch.
-                          </p>
-                          <a
-                            href={item.videoIntroUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Watch on Loom
-                          </a>
-                        </div>
-                      </div>
-                    ) : (
-                      // Regular video player for non-Loom videos
-                      <div className="bg-black">
-                        <video
-                          controls
-                          className="w-full max-h-80"
-                          preload="metadata"
-                          poster={item.photo || undefined}
-                        >
-                          <source src={item.videoIntroUrl} type="video/mp4" />
-                          <source src={item.videoIntroUrl} type="video/webm" />
-                          <source src={item.videoIntroUrl} type="video/ogg" />
-                        </video>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           )}
