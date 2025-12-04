@@ -18,7 +18,6 @@ import zoomLogo from "@/assets/logo/zoom.png";
 import resendLogo from "@/assets/logo/resend.png";
 import herokuLogo from "@/assets/logo/heroku.png";
 import cloudinaryLogo from "@/assets/logo/cloudinary.png";
-import affindaLogo from "@/assets/logo/affinda.png";
 import vercelLogo from "@/assets/logo/vercel.png";
 
 export default function HomePage() {
@@ -27,7 +26,7 @@ export default function HomePage() {
       icon: Brain,
       title: "AI Resume Parser",
       description:
-        "Extract and validate candidate data automatically with OpenAI & Affinda powered intelligent parsing",
+        "Extract and validate candidate data automatically with OpenAI-powered intelligent parsing",
     },
     {
       icon: Mail,
@@ -143,10 +142,6 @@ const logos = [
   {
     src: cloudinaryLogo,
     alt: "Cloudinary",
-  },
-  {
-    src: affindaLogo,
-    alt: "Affinda",
   },
   {
     src: vercelLogo,
