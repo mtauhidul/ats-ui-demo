@@ -1009,10 +1009,17 @@ export function CandidatesDataTable({
   };
 
   const handleDelete = (id: string | number) => {
-    const rowData = data.find((item) => item.id === id);
+    // Try to find by row id first
+    let rowData = data.find((item) => item.id === id);
+    
+    // If not found, the id might be a candidateId directly, try finding by candidateId
+    if (!rowData) {
+      rowData = data.find((item) => item.candidateId === id);
+    }
+    
     setCandidateToDelete({
       id,
-      candidateId: rowData?.candidateId,
+      candidateId: rowData?.candidateId || (typeof id === 'string' ? id : undefined), // Fallback to id if it's the candidateId
       jobId: rowData?.jobIdDisplay, // Store the job ID for this specific application
     });
     setDeleteDialogOpen(true);
@@ -1071,15 +1078,15 @@ export function CandidatesDataTable({
           } else {
             // No specific job, delete entire candidate
             if (onDeleteCandidate) {
-              onDeleteCandidate(candidateToDelete.candidateId);
+              await onDeleteCandidate(candidateToDelete.candidateId);
             }
-            toast.success("Candidate deleted");
           }
 
           setDeleteDialogOpen(false);
           setCandidateToDelete(null);
-        } catch {
-          toast.error("Failed to remove candidate from job");
+        } catch (error) {
+          toast.error("Failed to delete candidate");
+          console.error("Delete error:", error);
         }
       } else {
         // Fallback to local state update if no callback provided

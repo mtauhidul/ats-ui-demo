@@ -63,7 +63,10 @@ export default function CandidatesPage() {
       await deleteCandidate(candidateId);
       // Firestore will automatically update the list after deletion
       invalidateCache();
-    } catch (error) {}
+    } catch (error: any) {
+      // Error toast is already shown by the deleteCandidate action
+      console.error('Failed to delete candidate:', error);
+    }
   };
 
   // Transform candidates into rows - one row per job application

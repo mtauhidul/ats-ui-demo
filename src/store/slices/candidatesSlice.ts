@@ -136,7 +136,11 @@ export const deleteCandidate = createAsyncThunk(
     const response = await authenticatedFetch(`${API_BASE_URL}/candidates/${id}`, {
       method: "DELETE",
     });
-    if (!response.ok) throw new Error("Failed to delete candidate");
+    if (!response.ok) {
+      const error = await response.json();
+      toast.error(error.message || "Failed to delete candidate");
+      throw new Error(error.message || "Failed to delete candidate");
+    }
     toast.success("Candidate deleted successfully");
     return id;
   }
