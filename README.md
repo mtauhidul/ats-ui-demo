@@ -42,4 +42,4 @@ Password: admin1234
 
 **System email for all communications:**
 
-- `demo@notequi.com`
+- `demo@notequik.com`
