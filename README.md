@@ -24,7 +24,7 @@ A modern Applicant Tracking System that helps you manage job postings, track can
 
 ## Live Demo
 
-**Try the system:** [https://ats-ui-demo.vercel.app/]([ats-ui-demo.vercel.app](https://ats-ui-demo.vercel.app)
+**Try the system:** [https://ats-ui-demo.vercel.app/]([ats-ui-demo.vercel.app](https://ats-ui-demo.vercel.app))
 
 ### Test Admin Account
 
