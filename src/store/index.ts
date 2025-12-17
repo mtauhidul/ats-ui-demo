@@ -45,27 +45,34 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Ignore these action types
-        ignoredActions: ["persist/PERSIST"],
+        // Ignore these action types - including RTK Query actions
+        ignoredActions: [
+          "persist/PERSIST",
+          "__rtkq/focused",
+          "__rtkq/unfocused",
+        ],
         // Ignore these field paths in all actions
         ignoredActionPaths: [
           "meta.arg",
+          "meta.baseQueryMeta",
           "payload.timestamp",
           "payload.createdAt",
           "payload.updatedAt",
           "payload.appliedAt",
+          "payload.sentAt",
+          "payload.receivedAt",
           "payload.jobApplications",
         ],
-        // Ignore these paths in the state - Firestore Timestamps
+        // Ignore these paths in the state - Firestore Timestamps and Date objects
         ignoredPaths: [
           "items.dates",
-          "candidates.currentCandidate.jobApplications",
+          "candidates.currentCandidate",
           "candidates.candidates",
-          "jobs.currentJob.createdAt",
-          "jobs.currentJob.updatedAt",
+          "jobs.currentJob",
           "jobs.jobs",
           "applications.applications",
           "emails.emails",
+          "emailTemplates.emailTemplates",
         ],
       },
     })

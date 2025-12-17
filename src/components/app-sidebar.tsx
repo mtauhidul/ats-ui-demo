@@ -8,6 +8,7 @@ import {
   IconDashboard,
   IconFileText,
   IconHelp,
+  IconMail,
   IconSearch,
   IconSettings,
   IconTag,
@@ -66,6 +67,13 @@ const allNavItems = {
       url: "/dashboard/applications",
       icon: IconFileText,
       permission: "canReviewApplications" as const,
+      adminOnly: false,
+    },
+    {
+      title: "Emails",
+      url: "/dashboard/emails",
+      icon: IconMail,
+      permission: "canSendEmails" as const,
       adminOnly: false,
     },
     {

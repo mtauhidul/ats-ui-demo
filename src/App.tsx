@@ -37,6 +37,7 @@ import SettingsPage from "./pages/dashboard/settings";
 import TagsPage from "./pages/dashboard/tags";
 import TeamPage from "./pages/dashboard/team";
 import TeamMemberDetailPage from "./pages/dashboard/team/detail";
+import EmailsPage from "./pages/dashboard/emails";
 import HomePage from "./pages/home";
 import JobsPage from "./pages/jobs";
 import PublicJobDetailPage from "./pages/jobs/detail";
@@ -120,6 +121,7 @@ function App() {
 
           {/* Other Routes */}
           <Route path="applications" element={<PermissionGuard permission="canReviewApplications"><ApplicationsPage /></PermissionGuard>} />
+          <Route path="emails" element={<PermissionGuard permission="canSendEmails"><EmailsPage /></PermissionGuard>} />
           <Route path="team" element={<PermissionGuard permission="canManageTeam"><TeamPage /></PermissionGuard>} />
           <Route path="team/:memberId" element={<PermissionGuard permission="canManageTeam"><TeamMemberDetailPage /></PermissionGuard>} />
           <Route path="tags" element={<PermissionGuard permission="canManageCandidates"><TagsPage /></PermissionGuard>} />

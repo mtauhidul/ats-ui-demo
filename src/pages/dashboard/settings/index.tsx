@@ -1,9 +1,10 @@
 import { EmailMonitoringSettings } from "@/components/settings/email-monitoring-settings";
 import { EmailTemplatesSettings } from "@/components/settings/email-templates-settings";
+import { EmailConfigurationSettings } from "@/components/settings/email-configuration-settings";
 import { BulkImportSettings } from "@/components/settings/bulk-import-settings";
 import { PipelineTemplatesSettings } from "@/components/settings/pipeline-templates-settings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Mail, Download, Settings, Workflow } from "lucide-react";
+import { Activity, Mail, Download, Settings, Workflow, AtSign } from "lucide-react";
 import { useState } from "react";
 
 export default function SettingsPage() {
@@ -35,6 +36,14 @@ export default function SettingsPage() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 mb-4 md:mb-6">
                 <TabsList className="h-9 md:h-11 p-0.5 md:p-1 bg-card border border-border w-full md:w-fit inline-flex">
+                  <TabsTrigger
+                    value="email-configuration"
+                    className="flex-1 md:flex-initial px-3 md:px-6 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white! data-[state=inactive]:text-muted-foreground whitespace-nowrap"
+                  >
+                    <AtSign className="h-3 w-3 md:h-4 md:w-4 mr-1.5 md:mr-2" />
+                    <span className="hidden sm:inline">Email Configuration</span>
+                    <span className="sm:hidden">Config</span>
+                  </TabsTrigger>
                   <TabsTrigger
                     value="email-templates"
                     className="flex-1 md:flex-initial px-3 md:px-6 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white! data-[state=inactive]:text-muted-foreground whitespace-nowrap"
@@ -69,6 +78,10 @@ export default function SettingsPage() {
                   </TabsTrigger>
                 </TabsList>
               </div>
+
+              <TabsContent value="email-configuration" className="mt-0">
+                <EmailConfigurationSettings />
+              </TabsContent>
 
               <TabsContent value="email-templates" className="mt-0">
                 <EmailTemplatesSettings />
