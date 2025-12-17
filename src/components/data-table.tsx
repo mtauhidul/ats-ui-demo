@@ -1436,6 +1436,8 @@ function TableCellViewer({
   const [approvalAction, setApprovalAction] = React.useState<
     "approve" | "reject" | null
   >(null);
+  const [currentJobId, setCurrentJobId] = React.useState<string | undefined>(undefined);
+  const [isDirectApplication, setIsDirectApplication] = React.useState(false);
 
   // Jobs data is now passed as prop, no need to fetch
 
@@ -2120,6 +2122,18 @@ function TableCellViewer({
             <Button
               onClick={async () => {
                 setApprovalAction("approve");
+                
+                // Extract job ID from the application
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const targetJobId = (item as any).jobId;
+                setCurrentJobId(targetJobId);
+
+                // Check if this is a direct application
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const source = (item as any).source || '';
+                const isDirect = source === 'direct_apply' && !!targetJobId;
+                setIsDirectApplication(isDirect);
+                
                 // Jobs are passed as prop, no need to refetch
                 setShowJobSelectionModal(true);
               }}
@@ -2136,6 +2150,18 @@ function TableCellViewer({
               variant="destructive"
               onClick={async () => {
                 setApprovalAction("reject");
+                
+                // Extract job ID from the application
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const targetJobId = (item as any).jobId;
+                setCurrentJobId(targetJobId);
+
+                // Check if this is a direct application
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const source = (item as any).source || '';
+                const isDirect = source === 'direct_apply' && !!targetJobId;
+                setIsDirectApplication(isDirect);
+                
                 // Jobs are passed as prop, no need to refetch
                 setShowJobSelectionModal(true);
               }}
@@ -2158,10 +2184,14 @@ function TableCellViewer({
             onClose={() => {
               setShowJobSelectionModal(false);
               setApprovalAction(null);
+              setCurrentJobId(undefined);
+              setIsDirectApplication(false);
             }}
             onConfirm={handleJobConfirmation}
             jobs={jobs}
+            currentJobId={currentJobId}
             applicationName={item.header}
+            isDirectApplication={isDirectApplication}
           />
         )}
       </DrawerContent>
