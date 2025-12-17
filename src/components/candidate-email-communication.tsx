@@ -29,6 +29,7 @@ import {
   extractEmailVariables,
   replaceTemplateVariables,
 } from "@/lib/email-template-helper";
+import { extractReplyContent, formatQuotedText } from "@/lib/email-parser";
 import { cn } from "@/lib/utils";
 import { useEmailTemplates } from "@/store/hooks/index";
 import type { Candidate } from "@/types/candidate";
@@ -485,7 +486,7 @@ export function CandidateEmailCommunication({
                                     {email.subject || "(No Subject)"}
                                   </p>
                                   <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-2">
-                                    {email.body || ""}
+                                    {extractReplyContent(email.body || "").replyText || email.body || ""}
                                   </p>
                                 </div>
                                 {email.isStarred && (
@@ -833,9 +834,44 @@ export function CandidateEmailCommunication({
                   <Separator />
 
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <p className="whitespace-pre-wrap text-xs md:text-sm leading-relaxed">
-                      {selectedEmail.body || "(No content)"}
-                    </p>
+                    {(() => {
+                      const { replyText, hasQuotedText, quotedText } = extractReplyContent(selectedEmail.body || "");
+                      const [showQuoted, setShowQuoted] = useState(false);
+
+                      return (
+                        <div className="space-y-3">
+                          {/* Main reply content */}
+                          <p className="whitespace-pre-wrap text-xs md:text-sm leading-relaxed">
+                            {replyText || "(No content)"}
+                          </p>
+
+                          {/* Expandable quoted text */}
+                          {hasQuotedText && quotedText && (
+                            <div className="border-l-2 border-muted pl-3 space-y-2">
+                              <button
+                                onClick={() => setShowQuoted(!showQuoted)}
+                                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                {showQuoted ? (
+                                  <ChevronUp className="h-3 w-3" />
+                                ) : (
+                                  <ChevronDown className="h-3 w-3" />
+                                )}
+                                <span>
+                                  {showQuoted ? "Hide" : "Show"} previous messages
+                                </span>
+                              </button>
+
+                              {showQuoted && (
+                                <div className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed opacity-75">
+                                  {formatQuotedText(quotedText)}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {selectedEmail.attachments &&
