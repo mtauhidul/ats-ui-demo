@@ -68,6 +68,7 @@ export default function PublicApplyPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [videoLink, setVideoLink] = useState<string>("");
   const [videoInputMethod, setVideoInputMethod] = useState<"upload" | "link">("upload");
@@ -326,6 +327,11 @@ export default function PublicApplyPage() {
   };
 
   const handleSubmit = async () => {
+    // Prevent duplicate submissions
+    if (isSubmitted || isUploading) {
+      return;
+    }
+
     if (!formData.firstName || !formData.lastName || !formData.email) {
       toast.error(
         "Please fill in all required fields (First Name, Last Name, Email)"
@@ -338,6 +344,7 @@ export default function PublicApplyPage() {
       return;
     }
 
+    setIsSubmitted(true);
     const loadingToast = toast.loading("Submitting your application...");
 
     try {
@@ -443,6 +450,7 @@ export default function PublicApplyPage() {
       }, 1000);
     } catch (error) {
       setIsUploading(false);
+      setIsSubmitted(false); // Reset on error to allow retry
       toast.dismiss(loadingToast);
       const message =
         error instanceof Error ? error.message : "Failed to submit application";
@@ -1115,7 +1123,7 @@ export default function PublicApplyPage() {
               <Button
                 onClick={handleSubmit}
                 size="lg"
-                disabled={isUploading}
+                disabled={isUploading || isSubmitted}
                 className="min-w-[200px]"
               >
                 {isUploading ? (
