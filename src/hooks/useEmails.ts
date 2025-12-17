@@ -17,6 +17,9 @@ export interface Email {
   sentBy?: string;
   sentAt?: Date;
   receivedAt?: Date; // For inbound emails
+  isRead?: boolean; // Whether the email has been read
+  isStarred?: boolean; // Whether the email is starred
+  isArchived?: boolean; // Whether the email is archived
   createdAt: Date;
   updatedAt: Date;
 }
