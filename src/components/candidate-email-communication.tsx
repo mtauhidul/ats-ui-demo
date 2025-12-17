@@ -109,6 +109,7 @@ export function CandidateEmailCommunication({
   const [isInboxOpen, setIsInboxOpen] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState<EmailThread | null>(null);
+  const [showQuotedText, setShowQuotedText] = useState(false);
 
   // 🔥 REALTIME: Get ALL emails for candidate from Firestore (not just for this job)
   // This ensures reply emails are visible even if they're associated with a different job
@@ -836,7 +837,6 @@ export function CandidateEmailCommunication({
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     {(() => {
                       const { replyText, hasQuotedText, quotedText } = extractReplyContent(selectedEmail.body || "");
-                      const [showQuoted, setShowQuoted] = useState(false);
 
                       return (
                         <div className="space-y-3">
@@ -849,20 +849,20 @@ export function CandidateEmailCommunication({
                           {hasQuotedText && quotedText && (
                             <div className="border-l-2 border-muted pl-3 space-y-2">
                               <button
-                                onClick={() => setShowQuoted(!showQuoted)}
+                                onClick={() => setShowQuotedText(!showQuotedText)}
                                 className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                               >
-                                {showQuoted ? (
+                                {showQuotedText ? (
                                   <ChevronUp className="h-3 w-3" />
                                 ) : (
                                   <ChevronDown className="h-3 w-3" />
                                 )}
                                 <span>
-                                  {showQuoted ? "Hide" : "Show"} previous messages
+                                  {showQuotedText ? "Hide" : "Show"} previous messages
                                 </span>
                               </button>
 
-                              {showQuoted && (
+                              {showQuotedText && (
                                 <div className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed opacity-75">
                                   {formatQuotedText(quotedText)}
                                 </div>

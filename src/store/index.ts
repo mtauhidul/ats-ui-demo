@@ -48,9 +48,25 @@ export const store = configureStore({
         // Ignore these action types
         ignoredActions: ["persist/PERSIST"],
         // Ignore these field paths in all actions
-        ignoredActionPaths: ["meta.arg", "payload.timestamp"],
-        // Ignore these paths in the state
-        ignoredPaths: ["items.dates"],
+        ignoredActionPaths: [
+          "meta.arg",
+          "payload.timestamp",
+          "payload.createdAt",
+          "payload.updatedAt",
+          "payload.appliedAt",
+          "payload.jobApplications",
+        ],
+        // Ignore these paths in the state - Firestore Timestamps
+        ignoredPaths: [
+          "items.dates",
+          "candidates.currentCandidate.jobApplications",
+          "candidates.candidates",
+          "jobs.currentJob.createdAt",
+          "jobs.currentJob.updatedAt",
+          "jobs.jobs",
+          "applications.applications",
+          "emails.emails",
+        ],
       },
     })
       .concat(apiSlice.middleware)
