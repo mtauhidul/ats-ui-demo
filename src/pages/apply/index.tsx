@@ -344,6 +344,12 @@ export default function PublicApplyPage() {
       return;
     }
 
+    // Check for video (either uploaded file with URL, or pasted link)
+    if (!videoUrl && !videoLink) {
+      toast.error("Please upload a video introduction or paste a video link");
+      return;
+    }
+
     setIsSubmitted(true);
     const loadingToast = toast.loading("Submitting your application...");
 
@@ -374,7 +380,7 @@ export default function PublicApplyPage() {
       const uploadResult = await uploadResponse.json();
       const resumeUrl = uploadResult.data.url;
 
-      // Step 2: Upload video if provided (optional) or use video link
+      // Step 2: Upload video (required) or use video link
       let finalVideoUrl = videoUrl || videoLink;
       if (selectedVideo && !videoUrl && !videoLink) {
         toast.loading("Uploading video introduction...", { id: loadingToast });
@@ -394,8 +400,9 @@ export default function PublicApplyPage() {
           const videoResult = await videoResponse.json();
           finalVideoUrl = videoResult.data.url;
         } else {
-          // Video upload failed but continue with application (it's optional)
-          }
+          // Video upload failed - throw error since it's required
+          throw new Error("Failed to upload video. Please try again.");
+        }
       }
 
       // Step 3: Create Application using PUBLIC endpoint
@@ -409,7 +416,7 @@ export default function PublicApplyPage() {
         resumeUrl: resumeUrl,
         resumeOriginalName: selectedFile.name,
         resumeRawText: parsedData?.extractedText || "",
-        videoIntroUrl: finalVideoUrl || undefined,
+        videoIntroUrl: finalVideoUrl, // Required field
         source: "direct_apply",
         status: "pending",
         jobId: jobId, // Job ID from URL
@@ -652,11 +659,10 @@ export default function PublicApplyPage() {
                   <div className="bg-linear-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b">
                     <h3 className="font-semibold text-lg flex items-center gap-2">
                       <FileText className="h-5 w-5 text-primary" />
-                      Video Introduction (Optional)
+                      Video Introduction <span className="text-red-500">*</span>
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Some employers prefer a video introduction. Upload a short
-                      video (max 100MB)
+                      Upload a short video introduction or paste a link from Loom, YouTube, etc. (max 100MB)
                     </p>
                   </div>
                   <div className="p-6">
@@ -1123,7 +1129,13 @@ export default function PublicApplyPage() {
               <Button
                 onClick={handleSubmit}
                 size="lg"
-                disabled={isUploading || isSubmitted}
+                disabled={
+                  isUploading || 
+                  isSubmitted || 
+                  !selectedFile || 
+                  !parsedData || 
+                  (!videoUrl && !videoLink)
+                }
                 className="min-w-[200px]"
               >
                 {isUploading ? (
