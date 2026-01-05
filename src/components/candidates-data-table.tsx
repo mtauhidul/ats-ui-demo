@@ -100,6 +100,7 @@ import {
   useTeam,
 } from "@/store/hooks/index";
 import type { schema } from "./data-table-schema.tsx";
+import { CandidateEmailModal } from "./candidate-email-modal";
 
 // Table cell viewer component for candidate name - decorated like applications table
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
@@ -584,6 +585,7 @@ const createActionsColumn = (handlers: {
   onDelete: (id: string | number) => void;
   onApprove: (id: string | number) => void;
   onRejectApplication: (id: string | number) => void;
+  onEmail: (id: string | number) => void;
 }): ColumnDef<z.infer<typeof schema>> => ({
   id: "actions",
   cell: ({ row }) => {
@@ -593,7 +595,28 @@ const createActionsColumn = (handlers: {
     const isPending = row.original.applicationStatus === "pending";
 
     return (
-      <div className="min-w-[60px] max-w-[60px] flex justify-start">
+      <div className="min-w-[60px] max-w-[100px] flex items-center gap-1 justify-start">
+        {/* Quick Email Button - Only show for actual candidates (not applications) */}
+        {!isApplication && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  onClick={() => handlers.onEmail(row.original.candidateId!)}
+                >
+                  <IconMail className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Email Candidate</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -664,6 +687,12 @@ const createActionsColumn = (handlers: {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
+                  onClick={() => handlers.onEmail(row.original.candidateId!)}
+                >
+                  <IconMail className="h-3 w-3 mr-2" />
+                  Email Candidate
+                </DropdownMenuItem>
+                <DropdownMenuItem
                   onClick={() => handlers.onDownloadResume(row.original.candidateId!)}
                 >
                   <IconDownload className="h-3 w-3 mr-2" />
@@ -690,9 +719,9 @@ const createActionsColumn = (handlers: {
       </div>
     );
   },
-  size: 60,
-  minSize: 60,
-  maxSize: 60,
+  size: 100,
+  minSize: 100,
+  maxSize: 100,
 });
 
 export function CandidatesDataTable({
@@ -755,6 +784,13 @@ export function CandidatesDataTable({
   } | null>(null);
   const [selectedJobForReassign, setSelectedJobForReassign] =
     React.useState<string>("");
+
+  // Email modal state
+  const [emailModalOpen, setEmailModalOpen] = React.useState(false);
+  const [selectedCandidateForEmail, setSelectedCandidateForEmail] = React.useState<{
+    candidate: typeof candidates[0] | null;
+    job: typeof jobs[0] | null;
+  } | null>(null);
 
   // Sync local data state with prop changes (important for when candidates are loaded/updated)
   React.useEffect(() => {
@@ -1168,6 +1204,56 @@ export function CandidatesDataTable({
     setReassignJobDialogOpen(true);
   };
 
+  const handleEmail = (id: string | number) => {
+    const rowData = data.find((item) => item.candidateId === id);
+    
+    if (!rowData) {
+      toast.error("Row data not found");
+      return;
+    }
+
+    // Find the actual candidate from candidates store
+    const candidate = candidates.find((c) => c.id === id);
+    
+    if (!candidate) {
+      toast.error("Candidate not found");
+      return;
+    }
+
+    // Get the job - handle both string and object types
+    let job = null;
+    const jobIdToFind = rowData.jobIdForRow || rowData.jobId;
+    
+    if (jobIdToFind) {
+      if (typeof jobIdToFind === "string") {
+        job = jobs.find((j) => j.id === jobIdToFind);
+      } else if (typeof jobIdToFind === "object" && jobIdToFind !== null) {
+        const jobId = (jobIdToFind as { id?: string })?.id;
+        if (jobId) {
+          job = jobs.find((j) => j.id === jobId);
+        }
+      }
+    }
+
+    // If job still not found, try to get from candidate's jobs array
+    if (!job && candidate.jobs && candidate.jobs.length > 0) {
+      const firstJobId = typeof candidate.jobs[0] === "string" 
+        ? candidate.jobs[0] 
+        : (candidate.jobs[0] as { id?: string })?.id;
+      if (firstJobId) {
+        job = jobs.find((j) => j.id === firstJobId);
+      }
+    }
+
+    if (!job) {
+      toast.error("No job associated with this candidate");
+      return;
+    }
+
+    setSelectedCandidateForEmail({ candidate, job });
+    setEmailModalOpen(true);
+  };
+
   const handleReassignJobConfirm = async () => {
     if (!candidateToReassign?.candidateId || !selectedJobForReassign) return;
 
@@ -1428,6 +1514,7 @@ export function CandidatesDataTable({
       onDelete: handleDelete,
       onApprove: handleApprove,
       onRejectApplication: handleRejectApplication,
+      onEmail: handleEmail,
     });
     return [...baseColumns, actionsColumn];
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2239,6 +2326,14 @@ export function CandidatesDataTable({
         cancelText="Cancel"
         onConfirm={handleRejectApplicationConfirm}
         variant="destructive"
+      />
+
+      {/* Email Modal */}
+      <CandidateEmailModal
+        open={emailModalOpen}
+        onOpenChange={setEmailModalOpen}
+        candidate={selectedCandidateForEmail?.candidate || null}
+        job={selectedCandidateForEmail?.job || null}
       />
     </>
   );
