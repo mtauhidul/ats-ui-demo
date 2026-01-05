@@ -141,6 +141,7 @@ export interface Candidate extends BaseEntity {
   referredBy?: string;
   rawEmailBody?: string; // Raw text body of email if applied via email
   rawEmailBodyHtml?: string; // Raw HTML body of email if applied via email
+  emailSubject?: string; // Email subject if applied via email
   
   // Documents
   resume?: Attachment;

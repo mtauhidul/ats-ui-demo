@@ -561,6 +561,7 @@ export default function CandidateDetailsPage() {
     source: (displayData as { source?: string }).source,
     rawEmailBody: (displayData as { rawEmailBody?: string }).rawEmailBody,
     rawEmailBodyHtml: (displayData as { rawEmailBodyHtml?: string }).rawEmailBodyHtml,
+    emailSubject: (displayData as { emailSubject?: string }).emailSubject,
     // Use actual status from backend model
     status: (() => {
       const backendStatus = (
@@ -1746,10 +1747,10 @@ export default function CandidateDetailsPage() {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium truncate">
-                                  Email Application Content
+                                  {candidate.emailSubject || 'Email Application Content'}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                  Original email body received
+                                  {candidate.emailSubject ? 'Original email subject and body' : 'Original email body received'}
                                 </p>
                               </div>
                             </div>
