@@ -1222,7 +1222,7 @@ export function CandidatesDataTable({
 
     // Get the job - handle both string and object types
     let job = null;
-    const jobIdToFind = rowData.jobIdForRow || rowData.jobId;
+    const jobIdToFind = (rowData as any).jobIdForRow || (rowData as any).jobId;
     
     if (jobIdToFind) {
       if (typeof jobIdToFind === "string") {
@@ -1236,10 +1236,11 @@ export function CandidatesDataTable({
     }
 
     // If job still not found, try to get from candidate's jobs array
-    if (!job && candidate.jobs && candidate.jobs.length > 0) {
-      const firstJobId = typeof candidate.jobs[0] === "string" 
-        ? candidate.jobs[0] 
-        : (candidate.jobs[0] as { id?: string })?.id;
+    const candidateJobs = (candidate as any).jobs;
+    if (!job && candidateJobs && Array.isArray(candidateJobs) && candidateJobs.length > 0) {
+      const firstJobId = typeof candidateJobs[0] === "string" 
+        ? candidateJobs[0] 
+        : (candidateJobs[0] as { id?: string })?.id;
       if (firstJobId) {
         job = jobs.find((j) => j.id === firstJobId);
       }
