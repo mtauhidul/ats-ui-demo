@@ -217,19 +217,33 @@ export default function PublicApplyPage() {
     }
 
     setIsUploadingVideo(true);
-    const loadingToast = toast.loading("Uploading video introduction...");
+    
+    // Show file size in the toast
+    const fileSizeMB = (selectedVideo.size / (1024 * 1024)).toFixed(2);
+    const loadingToast = toast.loading(
+      `Uploading video (${fileSizeMB} MB)... This may take a few minutes.`
+    );
 
     try {
       const formData = new FormData();
       formData.append("video", selectedVideo);
+
+      // Create an abort controller for timeout handling
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => {
+        abortController.abort();
+      }, 300000); // 5 minutes timeout
 
       const response = await fetch(
         `${API_BASE_URL}/resumes/public/upload-video`,
         {
           method: "POST",
           body: formData,
+          signal: abortController.signal,
         }
       );
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const error = await response
@@ -243,11 +257,17 @@ export default function PublicApplyPage() {
 
       toast.dismiss(loadingToast);
       toast.success("Video uploaded successfully!");
-    } catch (error) {
+    } catch (error: any) {
       toast.dismiss(loadingToast);
-      const message =
-        error instanceof Error ? error.message : "Failed to upload video";
-      toast.error(message);
+      
+      let message = "Failed to upload video";
+      if (error.name === 'AbortError') {
+        message = "Video upload timed out. Please try with a smaller file or check your internet connection.";
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+      
+      toast.error(message, { duration: 5000 });
     } finally {
       setIsUploadingVideo(false);
     }
@@ -383,25 +403,38 @@ export default function PublicApplyPage() {
       // Step 2: Upload video (required) or use video link
       let finalVideoUrl = videoUrl || videoLink;
       if (selectedVideo && !videoUrl && !videoLink) {
-        toast.loading("Uploading video introduction...", { id: loadingToast });
+        const videoSizeMB = (selectedVideo.size / (1024 * 1024)).toFixed(2);
+        toast.loading(`Uploading video (${videoSizeMB} MB)... Please wait.`, { id: loadingToast });
 
         const videoFormData = new FormData();
         videoFormData.append("video", selectedVideo);
+
+        // Create abort controller for timeout
+        const abortController = new AbortController();
+        const timeoutId = setTimeout(() => {
+          abortController.abort();
+        }, 300000); // 5 minutes timeout
 
         const videoResponse = await fetch(
           `${API_BASE_URL}/resumes/public/upload-video`,
           {
             method: "POST",
             body: videoFormData,
+            signal: abortController.signal,
           }
         );
+
+        clearTimeout(timeoutId);
 
         if (videoResponse.ok) {
           const videoResult = await videoResponse.json();
           finalVideoUrl = videoResult.data.url;
         } else {
+          const error = await videoResponse.json().catch(() => ({ 
+            error: { message: "Failed to upload video" } 
+          }));
           // Video upload failed - throw error since it's required
-          throw new Error("Failed to upload video. Please try again.");
+          throw new Error(error.error?.message || "Failed to upload video. Please try again.");
         }
       }
 

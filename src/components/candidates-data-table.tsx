@@ -700,6 +700,27 @@ const createActionsColumn = (handlers: {
 
     return (
       <div className="min-w-[60px] max-w-[100px] flex items-center gap-1 justify-start">
+        {/* Quick Approve Button - Only for pending applications */}
+        {isApplication && isPending && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
+                  onClick={() => handlers.onApprove(row.original.candidateId!)}
+                >
+                  <IconCircleCheck className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Approve & Email</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        
         {/* Quick Email Button - Only show for actual candidates (not applications) */}
         {!isApplication && (
           <TooltipProvider>
@@ -740,7 +761,10 @@ const createActionsColumn = (handlers: {
                   className="text-green-600 dark:text-green-400"
                 >
                   <IconCircleCheck className="h-3 w-3 mr-2" />
-                  Approve & Create Candidate
+                  <div className="flex flex-col">
+                    <span>Approve & Email Candidate</span>
+                    <span className="text-xs text-muted-foreground font-normal">Review and send welcome email</span>
+                  </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handlers.onRejectApplication(row.original.candidateId!)}
@@ -1443,6 +1467,8 @@ export function CandidatesDataTable({
   const [applicationToApprove, setApplicationToApprove] = React.useState<string | null>(null);
   const [selectedJobForApproval, setSelectedJobForApproval] = React.useState<string>("");
   const [isApproving, setIsApproving] = React.useState(false);
+  const [sendWelcomeEmail, setSendWelcomeEmail] = React.useState(true); // Default to true
+  const [newlyCreatedCandidate, setNewlyCreatedCandidate] = React.useState<{ candidate: any; job: any } | null>(null);
 
   const handleApprove = (id: string | number) => {
     setApplicationToApprove(String(id));
@@ -1475,15 +1501,60 @@ export function CandidatesDataTable({
         throw new Error("Failed to approve application");
       }
 
+      const result = await response.json();
+      const candidateId = result.data?.candidateId || result.data?.id;
+
       toast.success("Application approved and candidate created");
-      setApproveModalOpen(false);
-      setApplicationToApprove(null);
-      setSelectedJobForApproval("");
       
       // Remove from local state
       setData((prevData) =>
         prevData.filter((item) => item.id !== applicationToApprove)
       );
+
+      // If user wants to send welcome email, open email modal with new candidate
+      if (sendWelcomeEmail && candidateId) {
+        // Fetch the newly created candidate
+        try {
+          const candidateResponse = await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
+            headers: {
+              "Authorization": `Bearer ${localStorage.getItem("ats_access_token")}`,
+            },
+          });
+
+          if (candidateResponse.ok) {
+            const candidateData = await candidateResponse.json();
+            const job = jobs.find((j) => j.id === jobId);
+            
+            if (job) {
+              // Close approval modal first
+              setApproveModalOpen(false);
+              setApplicationToApprove(null);
+              setSelectedJobForApproval("");
+              setSendWelcomeEmail(true); // Reset for next time
+              
+              // Store candidate data and open email modal
+              setNewlyCreatedCandidate({ candidate: candidateData.data, job });
+              
+              // Small delay to ensure modal transition is smooth
+              setTimeout(() => {
+                setEmailModalOpen(true);
+                toast.info("Welcome email composer opened");
+              }, 300);
+              
+              return; // Exit early to avoid closing modal twice
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch candidate for email:", error);
+          toast.error("Candidate created but couldn't open email composer");
+        }
+      }
+      
+      // Close modal if not sending email or on error
+      setApproveModalOpen(false);
+      setApplicationToApprove(null);
+      setSelectedJobForApproval("");
+      setSendWelcomeEmail(true); // Reset for next time
     } catch (error) {
       toast.error("Failed to approve application");
       console.error(error);
@@ -2371,6 +2442,26 @@ export function CandidatesDataTable({
                 </SelectContent>
               </Select>
 
+              {/* Welcome Email Checkbox */}
+              <div className="mb-4 p-3 bg-primary/5 dark:bg-primary/10 rounded-md border border-primary/20">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={sendWelcomeEmail}
+                    onChange={(e) => setSendWelcomeEmail(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-foreground mb-1">
+                      Send welcome email after approval
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Email composer will open immediately after creating the candidate, allowing you to send a personalized welcome message.
+                    </div>
+                  </div>
+                </label>
+              </div>
+
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
@@ -2423,9 +2514,15 @@ export function CandidatesDataTable({
       {/* Email Modal */}
       <CandidateEmailModal
         open={emailModalOpen}
-        onOpenChange={setEmailModalOpen}
-        candidate={selectedCandidateForEmail?.candidate || null}
-        job={selectedCandidateForEmail?.job || null}
+        onOpenChange={(open) => {
+          setEmailModalOpen(open);
+          // Clear newly created candidate data when closing modal
+          if (!open && newlyCreatedCandidate) {
+            setNewlyCreatedCandidate(null);
+          }
+        }}
+        candidate={(newlyCreatedCandidate?.candidate || selectedCandidateForEmail?.candidate) || null}
+        job={(newlyCreatedCandidate?.job || selectedCandidateForEmail?.job) || null}
       />
     </>
   );
