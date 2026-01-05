@@ -23,6 +23,7 @@ import {
   IconUserX,
   IconX,
 } from "@tabler/icons-react";
+import { Loader } from "@/components/ui/loader";
 import {
   flexRender,
   getCoreRowModel,

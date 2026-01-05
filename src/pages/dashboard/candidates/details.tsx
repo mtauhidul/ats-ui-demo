@@ -439,7 +439,7 @@ export default function CandidateDetailsPage() {
 
   // Get job and client details
   // Use jobId from URL if provided, otherwise fall back to first job
-  const targetJobId = jobIdFromUrl || (isApplication ? applicationData?.jobId : displayData.jobIds?.[0]);
+  const targetJobId = jobIdFromUrl || (isApplication ? applicationData?.jobId : (displayData as { jobIds?: string[] })?.jobIds?.[0]);
   const firstJobId = targetJobId;
   let job: (typeof jobs)[0] | null = null;
   let client: (typeof clients)[0] | null = null;
@@ -534,13 +534,13 @@ export default function CandidateDetailsPage() {
     fullName: `${displayData?.firstName || "Unknown"} ${displayData?.lastName || "Applicant"}`,
     email: displayData?.email || "No email provided",
     phone: displayData?.phone || "N/A",
-    photo: displayData?.avatar || (displayData as { photo?: string })?.photo,
+    photo: (displayData as { avatar?: string })?.avatar || (displayData as { photo?: string })?.photo,
     currentTitle: displayData?.currentTitle,
     currentCompany: displayData?.currentCompany,
     yearsOfExperience: displayData?.yearsOfExperience || 0,
     skills: displayData?.skills || [],
-    coverLetter: displayData?.coverLetter?.url || displayData?.notes || (displayData as { coverLetter?: string })?.coverLetter,
-    resumeText: displayData?.notes || (displayData as { resumeText?: string })?.resumeText || (displayData as { resumeRawText?: string })?.resumeRawText,
+    coverLetter: (typeof displayData?.coverLetter === 'object' && displayData?.coverLetter !== null ? (displayData.coverLetter as { url?: string }).url : displayData?.coverLetter) || (displayData as { notes?: string })?.notes || (displayData as { coverLetter?: string })?.coverLetter,
+    resumeText: (displayData as { notes?: string })?.notes || (displayData as { resumeText?: string })?.resumeText || (displayData as { resumeRawText?: string })?.resumeRawText,
     resumeFilename:
       (displayData as { resumeOriginalName?: string }).resumeOriginalName ||
       displayData.resume?.name ||
@@ -551,12 +551,16 @@ export default function CandidateDetailsPage() {
     resumeUrl:
       (displayData as { resumeUrl?: string }).resumeUrl ||
       displayData.resume?.url,
-    location: displayData.address
-      ? `${displayData.address.city}, ${displayData.address.country}`
-      : (displayData as { address?: string }).address || undefined,
+    location: displayData?.address && typeof displayData.address === 'object'
+      ? `${(displayData.address as { city?: string }).city || ''}, ${(displayData.address as { country?: string }).country || ''}`
+      : (displayData as { address?: string })?.address || undefined,
     linkedInUrl: displayData.linkedInUrl || (displayData as { linkedInUrl?: string }).linkedInUrl,
     portfolioUrl: displayData.portfolioUrl || (displayData as { portfolioUrl?: string }).portfolioUrl,
     githubUrl: displayData.githubUrl || (displayData as { githubUrl?: string }).githubUrl,
+    // Email automation fields
+    source: (displayData as { source?: string }).source,
+    rawEmailBody: (displayData as { rawEmailBody?: string }).rawEmailBody,
+    rawEmailBodyHtml: (displayData as { rawEmailBodyHtml?: string }).rawEmailBodyHtml,
     // Use actual status from backend model
     status: (() => {
       const backendStatus = (
@@ -652,8 +656,8 @@ export default function CandidateDetailsPage() {
       `https://api.dicebear.com/7.x/initials/svg?seed=${
         client?.companyName || "C"
       }`,
-    appliedDate: toSafeDate(effectiveCandidateData.createdAt),
-    lastStatusChange: toSafeDate(effectiveCandidateData.updatedAt),
+    appliedDate: toSafeDate(effectiveCandidateData?.createdAt),
+    lastStatusChange: toSafeDate(effectiveCandidateData?.updatedAt),
     rating: undefined as number | undefined, // Backend doesn't have rating in Candidate model
     reviewedBy: (() => {
       const assignedTo = (
@@ -695,8 +699,8 @@ export default function CandidateDetailsPage() {
     teamMembers: [] as string[],
     interviewScheduled: undefined as Date | undefined, // Backend doesn't have this in Candidate model
     totalEmails:
-      (effectiveCandidateData.totalEmailsSent || 0) +
-      (effectiveCandidateData.totalEmailsReceived || 0),
+      (effectiveCandidateData?.totalEmailsSent || 0) +
+      (effectiveCandidateData?.totalEmailsReceived || 0),
     videoIntroUrl: (effectiveCandidateData as any)?.videoIntroUrl as string | undefined,
     videoIntroFilename: (effectiveCandidateData as any)?.videoIntroFilename as string | undefined,
     videoIntroFileSize: (effectiveCandidateData as any)?.videoIntroFileSize as string | undefined,
@@ -747,7 +751,7 @@ export default function CandidateDetailsPage() {
     stage: string;
     lastUpdated: string;
     lastUpdatedRaw: Date; // Keep raw date for timeline
-  }> = effectiveCandidateData.jobApplications
+  }> = effectiveCandidateData?.jobApplications
     ? effectiveCandidateData.jobApplications.map((jobApp) => {
         // Find the job details
         const jobAppJobId =
@@ -2164,7 +2168,7 @@ export default function CandidateDetailsPage() {
                             .map((history) => {
                               // Get email data from jobApplications
                               const jobApp =
-                                effectiveCandidateData.jobApplications?.find((app) => {
+                                effectiveCandidateData?.jobApplications?.find((app) => {
                                   const appJobId =
                                     typeof app.jobId === "object" &&
                                     app.jobId !== null
@@ -2308,7 +2312,7 @@ export default function CandidateDetailsPage() {
                           size="sm"
                           onClick={() => {
                             // Get the first job ID from the candidate's job applications
-                            const firstJobId = effectiveCandidateData.jobIds?.[0];
+                            const firstJobId = effectiveCandidateData?.jobIds?.[0];
                             let jobIdStr: string | undefined;
 
                             if (typeof firstJobId === "string") {
@@ -2923,7 +2927,7 @@ export default function CandidateDetailsPage() {
         {reassignJobDialogOpen &&
           candidateData &&
           (() => {
-            const candidate = candidates.find((c) => c.id === effectiveCandidateData.id);
+            const candidate = candidates.find((c) => c.id === effectiveCandidateData?.id);
             const availableJobs = jobs.filter((job) => {
               // Filter logic:
               // - Show if candidate never applied to this job
