@@ -63,13 +63,6 @@ const allNavItems = {
       adminOnly: false,
     },
     {
-      title: "Applications",
-      url: "/dashboard/applications",
-      icon: IconFileText,
-      permission: "canReviewApplications" as const,
-      adminOnly: false,
-    },
-    {
       title: "Emails",
       url: "/dashboard/emails",
       icon: IconMail,

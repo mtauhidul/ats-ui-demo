@@ -25,8 +25,9 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_BASE_URL } from "@/config/api";
-import { useCandidate, useEmailsByCandidate, useTags } from "@/hooks/firestore";
+import { useCandidate, useEmailsByCandidate, useTags, useApplication } from "@/hooks/firestore";
 import { useInterviewsByCandidate } from "@/hooks/useInterviews";
+import { analyzeVideoUrl, getVideoSourceName } from "@/lib/videoUtils";
 import { authenticatedFetch } from "@/lib/authenticated-fetch";
 import {
   useCandidates,
@@ -67,6 +68,7 @@ export default function CandidateDetailsPage() {
   const navigate = useNavigate();
   const [showResumePreview, setShowResumePreview] = React.useState(false);
   const [showVideoPreview, setShowVideoPreview] = React.useState(false);
+  const [showEmailPreview, setShowEmailPreview] = React.useState(false);
   const [openTagPopover, setOpenTagPopover] = React.useState(false);
 
   // 🔥 REALTIME: Get ALL tags from Firestore (including inactive ones for display)
@@ -104,9 +106,20 @@ export default function CandidateDetailsPage() {
     }>;
   }
 
-  // Get realtime data from Firestore
+  // Get realtime data from Firestore - try both candidate and application
   const { candidate: candidateData, loading: candidatesLoading } =
     useCandidate(candidateId);
+  const { application: applicationData, loading: applicationLoading } =
+    useApplication(candidateId);
+    
+  // Determine if viewing an application or candidate
+  const isApplication = !candidateData && applicationData;
+  const displayData = isApplication ? applicationData : candidateData;
+  const isLoading = candidatesLoading || applicationLoading;
+  
+  // Create a compatibility layer - map application data to candidate structure for existing code
+  const effectiveCandidateData = displayData as typeof candidateData;
+  
   const { jobs, isLoading: jobsLoading } = useJobs();
   const { clients, isLoading: clientsLoading } = useClients();
   const { pipelines, isLoading: pipelinesLoading } = usePipelines();
@@ -119,8 +132,9 @@ export default function CandidateDetailsPage() {
     React.useState<string>("");
 
   // 🔥 REALTIME: Get interviews from Firestore for this candidate across all jobs
-  // Use candidateData.id if available, otherwise use candidateId from URL
-  const actualCandidateId = candidateData?.id || candidateId;
+  // Use displayData.id if available, otherwise use candidateId from URL
+  // Note: Applications don't have interviews yet
+  const actualCandidateId = displayData?.id || candidateId;
 
   const {
     data: firestoreInterviews,
@@ -186,11 +200,11 @@ export default function CandidateDetailsPage() {
   };
 
   const handleReassignJobConfirm = async () => {
-    if (!candidateData?.id || !selectedJobForReassign) return;
+    if (!effectiveCandidateData?.id || !selectedJobForReassign) return;
 
     try {
       // Find the full candidate and job
-      const candidate = candidates.find((c) => c.id === candidateData.id);
+      const candidate = candidates.find((c) => c.id === effectiveCandidateData.id);
       const job = jobs.find((j) => j.id === selectedJobForReassign);
 
       if (!candidate || !job) {
@@ -247,7 +261,7 @@ export default function CandidateDetailsPage() {
       }
 
       // Update candidate
-      await updateCandidate(candidateData.id, {
+      await updateCandidate(effectiveCandidateData.id, {
         jobIds: updatedJobIds,
         jobApplications: updatedJobApplications,
         clientIds: [
@@ -307,10 +321,10 @@ export default function CandidateDetailsPage() {
 
   // Log candidate data for debugging
   React.useEffect(() => {
-    if (candidateData) {
+    if (effectiveCandidateData) {
       // Backend uses 'experience' field, frontend type has 'workExperience'
     }
-  }, [candidateData]);
+  }, [effectiveCandidateData]);
 
   // DISABLED: Interviews not yet migrated to Firestore - no API call
   // Interviews will show as empty until data is migrated to Firestore
@@ -337,12 +351,12 @@ export default function CandidateDetailsPage() {
 
   // 🔥 REALTIME: Derive selected tags directly from candidate data (updates automatically with Firestore)
   const selectedTags = React.useMemo(() => {
-    if (!candidateData) {
+    if (!effectiveCandidateData) {
       return [];
     }
 
-    // Access tagIds directly from candidateData
-    const tagIds = candidateData.tagIds;
+    // Access tagIds directly from effectiveCandidateData
+    const tagIds = effectiveCandidateData.tagIds;
 
     if (!tagIds || !Array.isArray(tagIds)) {
       return [];
@@ -356,7 +370,7 @@ export default function CandidateDetailsPage() {
       .filter(Boolean);
 
     return processedTags;
-  }, [candidateData, allTags.length]);
+  }, [effectiveCandidateData, allTags.length]);
 
   // Update candidate tags on the backend
   const updateCandidateTags = React.useCallback(
@@ -395,22 +409,22 @@ export default function CandidateDetailsPage() {
   };
 
   // Loading state
-  const isLoading =
-    candidatesLoading || jobsLoading || clientsLoading || pipelinesLoading;
+  const isLoadingAll =
+    isLoading || jobsLoading || clientsLoading || pipelinesLoading;
 
-  if (isLoading) {
+  if (isLoadingAll) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader size="lg" text="Loading candidate details..." />
+        <Loader size="lg" text={`Loading ${isApplication ? 'application' : 'candidate'} details...`} />
       </div>
     );
   }
 
-  if (!candidateData) {
+  if (!displayData) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="text-lg font-semibold mb-2">Candidate not found</div>
+          <div className="text-lg font-semibold mb-2">{isApplication ? 'Application' : 'Candidate'} not found</div>
           <Button
             onClick={() => navigate("/dashboard/candidates")}
             className="mt-4"
@@ -425,7 +439,7 @@ export default function CandidateDetailsPage() {
 
   // Get job and client details
   // Use jobId from URL if provided, otherwise fall back to first job
-  const targetJobId = jobIdFromUrl || candidateData.jobIds?.[0];
+  const targetJobId = jobIdFromUrl || (isApplication ? applicationData?.jobId : displayData.jobIds?.[0]);
   const firstJobId = targetJobId;
   let job: (typeof jobs)[0] | null = null;
   let client: (typeof clients)[0] | null = null;
@@ -514,39 +528,39 @@ export default function CandidateDetailsPage() {
   };
 
   const candidate = {
-    id: candidateData.id || "",
-    firstName: candidateData.firstName,
-    lastName: candidateData.lastName,
-    fullName: `${candidateData.firstName} ${candidateData.lastName}`,
-    email: candidateData.email,
-    phone: candidateData.phone || "N/A",
-    photo: candidateData.avatar,
-    currentTitle: candidateData.currentTitle,
-    currentCompany: candidateData.currentCompany,
-    yearsOfExperience: candidateData.yearsOfExperience || 0,
-    skills: candidateData.skills || [],
-    coverLetter: candidateData.coverLetter?.url || candidateData.notes,
-    resumeText: candidateData.notes,
+    id: displayData?.id || "",
+    firstName: displayData?.firstName || "Unknown",
+    lastName: displayData?.lastName || "Applicant",
+    fullName: `${displayData?.firstName || "Unknown"} ${displayData?.lastName || "Applicant"}`,
+    email: displayData?.email || "No email provided",
+    phone: displayData?.phone || "N/A",
+    photo: displayData?.avatar || (displayData as { photo?: string })?.photo,
+    currentTitle: displayData?.currentTitle,
+    currentCompany: displayData?.currentCompany,
+    yearsOfExperience: displayData?.yearsOfExperience || 0,
+    skills: displayData?.skills || [],
+    coverLetter: displayData?.coverLetter?.url || displayData?.notes || (displayData as { coverLetter?: string })?.coverLetter,
+    resumeText: displayData?.notes || (displayData as { resumeText?: string })?.resumeText || (displayData as { resumeRawText?: string })?.resumeRawText,
     resumeFilename:
-      (candidateData as { resumeOriginalName?: string }).resumeOriginalName ||
-      candidateData.resume?.name ||
+      (displayData as { resumeOriginalName?: string }).resumeOriginalName ||
+      displayData.resume?.name ||
       "resume.pdf",
-    resumeFileSize: candidateData.resume?.size
-      ? `${Math.round(candidateData.resume.size / 1024)} KB`
+    resumeFileSize: displayData.resume?.size
+      ? `${Math.round(displayData.resume.size / 1024)} KB`
       : "N/A",
     resumeUrl:
-      (candidateData as { resumeUrl?: string }).resumeUrl ||
-      candidateData.resume?.url,
-    location: candidateData.address
-      ? `${candidateData.address.city}, ${candidateData.address.country}`
-      : undefined,
-    linkedInUrl: candidateData.linkedInUrl,
-    portfolioUrl: candidateData.portfolioUrl,
-    githubUrl: candidateData.githubUrl,
+      (displayData as { resumeUrl?: string }).resumeUrl ||
+      displayData.resume?.url,
+    location: displayData.address
+      ? `${displayData.address.city}, ${displayData.address.country}`
+      : (displayData as { address?: string }).address || undefined,
+    linkedInUrl: displayData.linkedInUrl || (displayData as { linkedInUrl?: string }).linkedInUrl,
+    portfolioUrl: displayData.portfolioUrl || (displayData as { portfolioUrl?: string }).portfolioUrl,
+    githubUrl: displayData.githubUrl || (displayData as { githubUrl?: string }).githubUrl,
     // Use actual status from backend model
     status: (() => {
       const backendStatus = (
-        candidateData as {
+        displayData as {
           status?:
             | "active"
             | "interviewing"
@@ -578,11 +592,11 @@ export default function CandidateDetailsPage() {
     jobTitle: job?.title || "N/A",
     currentStage: (() => {
       const stageId =
-        (candidateData as any).currentPipelineStageId ||
-        candidateData.currentStage;
+        (effectiveCandidateData as any)?.currentPipelineStageId ||
+        effectiveCandidateData?.currentStage;
 
       if (!stageId || typeof stageId !== "string" || !job?.pipelineId) {
-        return "Not Assigned";
+        return isApplication ? "Application" : "Not Assigned";
       }
 
       const jobPipeline = pipelines.find((p) => p.id === job.pipelineId);
@@ -638,17 +652,17 @@ export default function CandidateDetailsPage() {
       `https://api.dicebear.com/7.x/initials/svg?seed=${
         client?.companyName || "C"
       }`,
-    appliedDate: toSafeDate(candidateData.createdAt),
-    lastStatusChange: toSafeDate(candidateData.updatedAt),
+    appliedDate: toSafeDate(effectiveCandidateData.createdAt),
+    lastStatusChange: toSafeDate(effectiveCandidateData.updatedAt),
     rating: undefined as number | undefined, // Backend doesn't have rating in Candidate model
     reviewedBy: (() => {
       const assignedTo = (
-        candidateData as {
+        effectiveCandidateData as {
           assignedTo?:
             | string
             | { firstName?: string; lastName?: string; email?: string };
         }
-      ).assignedTo;
+      )?.assignedTo;
 
       if (!assignedTo) {
         return "N/A";
@@ -681,16 +695,16 @@ export default function CandidateDetailsPage() {
     teamMembers: [] as string[],
     interviewScheduled: undefined as Date | undefined, // Backend doesn't have this in Candidate model
     totalEmails:
-      (candidateData.totalEmailsSent || 0) +
-      (candidateData.totalEmailsReceived || 0),
-    videoIntroUrl: (candidateData as any).videoIntroUrl as string | undefined,
-    videoIntroFilename: (candidateData as any).videoIntroFilename as string | undefined,
-    videoIntroFileSize: (candidateData as any).videoIntroFileSize as string | undefined,
-    videoIntroDuration: (candidateData as any).videoIntroDuration as string | undefined,
+      (effectiveCandidateData.totalEmailsSent || 0) +
+      (effectiveCandidateData.totalEmailsReceived || 0),
+    videoIntroUrl: (effectiveCandidateData as any)?.videoIntroUrl as string | undefined,
+    videoIntroFilename: (effectiveCandidateData as any)?.videoIntroFilename as string | undefined,
+    videoIntroFileSize: (effectiveCandidateData as any)?.videoIntroFileSize as string | undefined,
+    videoIntroDuration: (effectiveCandidateData as any)?.videoIntroDuration as string | undefined,
     // Additional fields from backend - use 'experience' field from backend
     experience:
       (
-        candidateData as {
+        effectiveCandidateData as {
           experience?: Array<{
             company: string;
             title: string;
@@ -698,14 +712,14 @@ export default function CandidateDetailsPage() {
             description?: string;
           }>;
         }
-      ).experience ||
-      candidateData.workExperience ||
+      )?.experience ||
+      effectiveCandidateData?.workExperience ||
       [],
-    education: candidateData.education || [],
-    certifications: candidateData.certifications || [],
-    languages: candidateData.languages || [],
+    education: effectiveCandidateData?.education || [],
+    certifications: effectiveCandidateData?.certifications || [],
+    languages: effectiveCandidateData?.languages || [],
     aiScore: (
-      candidateData as {
+      effectiveCandidateData as {
         aiScore?: {
           overallScore: number;
           skillsMatch: number;
@@ -717,7 +731,7 @@ export default function CandidateDetailsPage() {
           recommendation: string;
         };
       }
-    ).aiScore,
+    )?.aiScore,
   };
 
   // Log transformed candidate object
@@ -733,8 +747,8 @@ export default function CandidateDetailsPage() {
     stage: string;
     lastUpdated: string;
     lastUpdatedRaw: Date; // Keep raw date for timeline
-  }> = candidateData.jobApplications
-    ? candidateData.jobApplications.map((jobApp) => {
+  }> = effectiveCandidateData.jobApplications
+    ? effectiveCandidateData.jobApplications.map((jobApp) => {
         // Find the job details
         const jobAppJobId =
           typeof jobApp.jobId === "object" && jobApp.jobId !== null
@@ -1612,15 +1626,50 @@ export default function CandidateDetailsPage() {
                             </div>
                           </div>
                           {showVideoPreview && (() => {
-                            const videoUrl = candidate.videoIntroUrl || '';
-                            const isExternalLink = videoUrl.includes('loom.com') ||
-                              videoUrl.includes('youtube.com') ||
-                              videoUrl.includes('youtu.be') ||
-                              videoUrl.includes('vimeo.com');
+                            const videoInfo = analyzeVideoUrl(candidate.videoIntroUrl || '');
+                            const sourceName = getVideoSourceName(videoInfo);
                             
                             return (
                               <div className="border-t">
-                                {isExternalLink ? (
+                                {videoInfo.canEmbed ? (
+                                  videoInfo.type === 'google-drive' ? (
+                                    // Google Drive embedded video
+                                    <div className="bg-black aspect-video">
+                                      <iframe
+                                        src={videoInfo.embedUrl}
+                                        className="w-full h-full"
+                                        allow="autoplay; fullscreen"
+                                        sandbox="allow-same-origin allow-scripts"
+                                        title="Google Drive Video"
+                                      />
+                                    </div>
+                                  ) : (
+                                    // Direct video file player for Cloudinary or other direct video URLs
+                                    <div className="bg-black flex items-center justify-center">
+                                      <video
+                                        controls
+                                        className="w-full h-[600px] object-contain"
+                                        preload="metadata"
+                                        poster={candidate.photo || undefined}
+                                      >
+                                        <source
+                                          src={candidate.videoIntroUrl}
+                                          type="video/mp4"
+                                        />
+                                        <source
+                                          src={candidate.videoIntroUrl}
+                                          type="video/webm"
+                                        />
+                                        <source
+                                          src={candidate.videoIntroUrl}
+                                          type="video/ogg"
+                                        />
+                                        Your browser does not support the video tag.
+                                      </video>
+                                    </div>
+                                  )
+                                ) : (
+                                  // External link (Loom, Dropbox, OneDrive, YouTube, etc.)
                                   <div className="bg-muted/30 p-6 text-center space-y-3">
                                     <div className="flex justify-center">
                                       <div className="rounded-full bg-blue-500/10 p-3">
@@ -1641,13 +1690,13 @@ export default function CandidateDetailsPage() {
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium mb-1">
-                                        External Video Link
+                                        {sourceName}
                                       </p>
                                       <p className="text-xs text-muted-foreground mb-3">
                                         Click the link below to watch the video introduction.
                                       </p>
                                       <a
-                                        href={videoUrl}
+                                        href={candidate.videoIntroUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -1675,34 +1724,62 @@ export default function CandidateDetailsPage() {
                                       </a>
                                     </div>
                                   </div>
-                                ) : (
-                                  // Regular video player for Cloudinary or other direct video URLs
-                                  <div className="bg-black flex items-center justify-center">
-                                    <video
-                                      controls
-                                      className="w-full h-[600px] object-contain"
-                                      preload="metadata"
-                                      poster={candidate.photo || undefined}
-                                    >
-                                      <source
-                                        src={videoUrl}
-                                        type="video/mp4"
-                                      />
-                                      <source
-                                        src={videoUrl}
-                                        type="video/webm"
-                                      />
-                                      <source
-                                        src={videoUrl}
-                                        type="video/ogg"
-                                      />
-                                      Your browser does not support the video tag.
-                                    </video>
-                                  </div>
                                 )}
                               </div>
                             );
                           })()}
+                        </div>
+                      )}
+
+                      {/* Email Content - Only show if applied via email */}
+                      {(candidate.source === 'email_automation' || candidate.source === 'email') && 
+                       (candidate.rawEmailBody || candidate.rawEmailBodyHtml) && (
+                        <div className="rounded-lg border overflow-hidden">
+                          <div className="flex items-center justify-between gap-3 p-3 bg-muted/50">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="rounded-md bg-background p-2 border">
+                                <IconMail className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium truncate">
+                                  Email Application Content
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  Original email body received
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                setShowEmailPreview(!showEmailPreview)
+                              }
+                              className="h-8 px-3"
+                            >
+                              <span className="text-xs">
+                                {showEmailPreview ? "Hide" : "View"}
+                              </span>
+                            </Button>
+                          </div>
+                          {showEmailPreview && (
+                            <div className="border-t">
+                              <div className="max-h-[600px] overflow-y-auto">
+                                {candidate.rawEmailBodyHtml ? (
+                                  <div 
+                                    className="p-4 prose prose-sm max-w-none"
+                                    dangerouslySetInnerHTML={{ __html: candidate.rawEmailBodyHtml }}
+                                  />
+                                ) : (
+                                  <div className="p-4 bg-muted/30">
+                                    <pre className="text-xs whitespace-pre-wrap leading-relaxed">
+                                      {candidate.rawEmailBody}
+                                    </pre>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </CardContent>
@@ -2087,7 +2164,7 @@ export default function CandidateDetailsPage() {
                             .map((history) => {
                               // Get email data from jobApplications
                               const jobApp =
-                                candidateData.jobApplications?.find((app) => {
+                                effectiveCandidateData.jobApplications?.find((app) => {
                                   const appJobId =
                                     typeof app.jobId === "object" &&
                                     app.jobId !== null
@@ -2231,7 +2308,7 @@ export default function CandidateDetailsPage() {
                           size="sm"
                           onClick={() => {
                             // Get the first job ID from the candidate's job applications
-                            const firstJobId = candidateData.jobIds?.[0];
+                            const firstJobId = effectiveCandidateData.jobIds?.[0];
                             let jobIdStr: string | undefined;
 
                             if (typeof firstJobId === "string") {
@@ -2846,7 +2923,7 @@ export default function CandidateDetailsPage() {
         {reassignJobDialogOpen &&
           candidateData &&
           (() => {
-            const candidate = candidates.find((c) => c.id === candidateData.id);
+            const candidate = candidates.find((c) => c.id === effectiveCandidateData.id);
             const availableJobs = jobs.filter((job) => {
               // Filter logic:
               // - Show if candidate never applied to this job

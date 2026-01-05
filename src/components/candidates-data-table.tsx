@@ -7,13 +7,17 @@ import {
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
+  IconCircleCheck,
+  IconClick,
   IconClockHour4,
   IconCopy,
   IconDotsVertical,
   IconDownload,
   IconFilter,
   IconLayoutColumns,
+  IconMail,
   IconSearch,
+  IconUpload,
   IconUserCheck,
   IconUsers,
   IconUserX,
@@ -78,7 +82,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { API_BASE_URL } from "@/config/api";
 import { useClients } from "@/hooks/firestore";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -336,7 +347,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     enableSorting: true,
   },
   {
-    accessorKey: "jobIdDisplay",
+    accessorKey: "jobAndClient",
     header: ({ column }) => {
       return (
         <Button
@@ -344,7 +355,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="hover:bg-transparent p-0"
         >
-          Job ID
+          Job & Client
           {column.getIsSorted() === "asc" ? (
             <IconChevronDown className="ml-1 h-3 w-3 rotate-180" />
           ) : column.getIsSorted() === "desc" ? (
@@ -354,33 +365,37 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       );
     },
     cell: ({ row }) => {
-      const jobId = row.original.jobIdDisplay || "N/A";
-      const handleCopy = async () => {
-        if (jobId === "N/A") return;
-        try {
-          await navigator.clipboard.writeText(jobId);
-          toast.success("Job ID copied to clipboard!");
-        } catch {
-          toast.error("Failed to copy Job ID");
-        }
-      };
+      const jobTitle = row.original.jobTitle || "N/A";
+      const clientName = row.original.clientName || "N/A";
+      const clientLogo = row.original.clientLogo;
 
       return (
-        <div className="min-w-[140px] max-w-[140px] overflow-hidden">
-          <div className="group flex items-center">
-            <span className="text-xs font-mono font-semibold text-foreground pr-2 py-1 rounded truncate">
-              {jobId}
-            </span>
-            {jobId !== "N/A" && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                onClick={handleCopy}
-              >
-                <IconCopy className="h-3 w-3" />
-              </Button>
+        <div className="min-w-[280px] max-w-[280px] overflow-hidden">
+          <div className="flex items-center gap-3 p-2 rounded-lg border bg-card">
+            {/* Client Logo */}
+            {clientLogo ? (
+              <Avatar className="size-10 rounded shrink-0">
+                <AvatarImage src={clientLogo} alt={clientName} />
+                <AvatarFallback className="text-sm rounded">
+                  {clientName.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className="size-10 rounded bg-muted flex items-center justify-center shrink-0">
+                <span className="text-sm font-semibold text-muted-foreground">
+                  {clientName.substring(0, 2).toUpperCase()}
+                </span>
+              </div>
             )}
+            {/* Job Title and Client Name */}
+            <div className="flex flex-col justify-center overflow-hidden min-w-0">
+              <span className="text-sm font-semibold text-foreground truncate">
+                {jobTitle}
+              </span>
+              <span className="text-xs text-muted-foreground truncate">
+                {clientName}
+              </span>
+            </div>
           </div>
         </div>
       );
@@ -389,9 +404,9 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       return value.includes(row.getValue(id));
     },
     enableHiding: true,
-    size: 140,
-    minSize: 140,
-    maxSize: 140,
+    size: 280,
+    minSize: 280,
+    maxSize: 280,
   },
   {
     accessorKey: "currentStage",
@@ -471,14 +486,14 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     maxSize: 180,
   },
   {
-    accessorKey: "limit",
+    accessorKey: "dateApplied",
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         className="hover:bg-transparent p-0"
       >
-        Client
+        Applied Date
         {column.getIsSorted() === "asc" ? (
           <IconChevronDown className="ml-1 h-3 w-3 rotate-180" />
         ) : column.getIsSorted() === "desc" ? (
@@ -487,81 +502,66 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const clientName = row.original.clientName || "-";
-      const clientLogo = row.original.clientLogo;
+      const dateApplied = row.original.dateApplied;
+      const source = row.original.source;
+      let displayDate = "N/A";
 
-      return (
-        <div className="min-w-[220px] max-w-[220px] flex items-center gap-2 overflow-hidden">
-          {clientLogo && (
-            <Avatar className="size-6 rounded shrink-0">
-              <AvatarImage src={clientLogo} alt={clientName} />
-              <AvatarFallback className="text-xs rounded">
-                {clientName.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          )}
-          <span className="text-xs truncate">{clientName}</span>
-        </div>
-      );
-    },
-    enableHiding: true,
-    size: 220,
-    minSize: 150,
-    maxSize: 150,
-  },
-  {
-    accessorKey: "reviewer",
-    header: "Assigned",
-    cell: ({ row }) => {
-      // Get assignedTo - can be a string (ID) or populated object
-      const assignedTo = row.original.assignedTo as
-        | string
-        | {
-            id?: string;
-            _id?: string;
-            firstName?: string;
-            lastName?: string;
-            email?: string;
-          }
-        | null
-        | undefined;
-      let assignedName: string | null = null;
-
-      if (assignedTo) {
-        if (typeof assignedTo === "object") {
-          // Populated user object
-          assignedName =
-            `${assignedTo.firstName || ""} ${
-              assignedTo.lastName || ""
-            }`.trim() ||
-            assignedTo.email ||
-            null;
+      if (dateApplied) {
+        try {
+          const date = new Date(dateApplied);
+          displayDate = date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          });
+        } catch {
+          displayDate = "Invalid Date";
         }
       }
 
-      const isRejected = row.original.status?.toLowerCase() === "rejected";
-      const isHired = row.original.status?.toLowerCase() === "hired";
+      // Determine icon and tooltip based on source
+      let SourceIcon = IconClick;
+      let tooltipText = "Direct Apply";
+      let iconColor = "text-blue-500";
+
+      if (source === "email_automation" || source === "email") {
+        SourceIcon = IconMail;
+        tooltipText = "Applied via Email";
+        iconColor = "text-green-500";
+      } else if (source === "manual") {
+        SourceIcon = IconUpload;
+        tooltipText = "Manually Uploaded";
+        iconColor = "text-orange-500";
+      } else if (source === "direct_apply" || source === "direct_application") {
+        SourceIcon = IconClick;
+        tooltipText = "Direct Apply";
+        iconColor = "text-blue-500";
+      }
 
       return (
-        <div className="min-w-40 max-w-40 overflow-hidden">
-          <AssignedSelector
-            candidateId={row.original.candidateId!}
-            initialAssignee={assignedName}
-            disabled={isRejected || isHired}
-            candidateStatus={row.original.status}
-            onUpdate={() => {
-              // Trigger a refetch of candidates when assignment changes
-              // This will be handled by the parent component
-              window.dispatchEvent(new CustomEvent("refetchCandidates"));
-            }}
-          />
+        <div className="min-w-[140px] max-w-[140px] overflow-hidden">
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help">
+                    <SourceIcon className={`h-4 w-4 ${iconColor}`} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tooltipText}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <span className="text-xs text-muted-foreground">{displayDate}</span>
+          </div>
         </div>
       );
     },
     enableHiding: true,
-    size: 160,
-    minSize: 160,
-    maxSize: 160,
+    size: 140,
+    minSize: 140,
+    maxSize: 140,
   },
   {
     id: "actions",
@@ -581,11 +581,15 @@ const createActionsColumn = (handlers: {
   onDownloadResume: (id: string | number) => void;
   onReassignJob: (id: string | number) => void;
   onDelete: (id: string | number) => void;
+  onApprove: (id: string | number) => void;
+  onRejectApplication: (id: string | number) => void;
 }): ColumnDef<z.infer<typeof schema>> => ({
   id: "actions",
   cell: ({ row }) => {
     const isRejected = row.original.status?.toLowerCase() === "rejected";
     const isHired = row.original.status?.toLowerCase() === "hired";
+    const isApplication = row.original.isApplication === true;
+    const isPending = row.original.applicationStatus === "pending";
 
     return (
       <div className="min-w-[60px] max-w-[60px] flex justify-start">
@@ -601,57 +605,85 @@ const createActionsColumn = (handlers: {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem
-              onClick={() => handlers.onHire(row.original.candidateId!)}
-              disabled={isHired}
-              className={
-                isRejected
-                  ? "text-amber-600 dark:text-amber-400"
-                  : isHired
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }
-            >
-              <IconCheck
-                className={`h-3 w-3 mr-2 ${
-                  isRejected ? "text-amber-600" : "text-green-600"
-                }`}
-              />
-              {isRejected
-                ? "Hire (Was Rejected)"
-                : isHired
-                ? "Already Hired"
-                : "Mark as Hired"}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => handlers.onReject(row.original.candidateId!)}
-              disabled={isRejected || isHired}
-              className={isHired ? "opacity-50 cursor-not-allowed" : ""}
-            >
-              <IconX className="h-3 w-3 mr-2 text-red-600" />
-              {isHired ? "Cannot Reject (Hired)" : "Reject"}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => handlers.onDownloadResume(row.original.candidateId!)}
-            >
-              <IconDownload className="h-3 w-3 mr-2" />
-              Download Resume
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => handlers.onReassignJob(row.original.candidateId!)}
-            >
-              <IconBriefcase className="h-3 w-3 mr-2" />
-              Reassign to another Job
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => handlers.onDelete(row.original.candidateId!)}
-            >
-              Delete Candidate
-            </DropdownMenuItem>
+            {isApplication && isPending ? (
+              <>
+                <DropdownMenuItem
+                  onClick={() => handlers.onApprove(row.original.candidateId!)}
+                  className="text-green-600 dark:text-green-400"
+                >
+                  <IconCircleCheck className="h-3 w-3 mr-2" />
+                  Approve & Create Candidate
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handlers.onRejectApplication(row.original.candidateId!)}
+                  className="text-red-600 dark:text-red-400"
+                >
+                  <IconX className="h-3 w-3 mr-2" />
+                  Reject Application
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => handlers.onDownloadResume(row.original.candidateId!)}
+                >
+                  <IconDownload className="h-3 w-3 mr-2" />
+                  Download Resume
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem
+                  onClick={() => handlers.onHire(row.original.candidateId!)}
+                  disabled={isHired}
+                  className={
+                    isRejected
+                      ? "text-amber-600 dark:text-amber-400"
+                      : isHired
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }
+                >
+                  <IconCheck
+                    className={`h-3 w-3 mr-2 ${
+                      isRejected ? "text-amber-600" : "text-green-600"
+                    }`}
+                  />
+                  {isRejected
+                    ? "Hire (Was Rejected)"
+                    : isHired
+                    ? "Already Hired"
+                    : "Mark as Hired"}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handlers.onReject(row.original.candidateId!)}
+                  disabled={isRejected || isHired}
+                  className={isHired ? "opacity-50 cursor-not-allowed" : ""}
+                >
+                  <IconX className="h-3 w-3 mr-2 text-red-600" />
+                  {isHired ? "Cannot Reject (Hired)" : "Reject"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => handlers.onDownloadResume(row.original.candidateId!)}
+                >
+                  <IconDownload className="h-3 w-3 mr-2" />
+                  Download Resume
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => handlers.onReassignJob(row.original.candidateId!)}
+                >
+                  <IconBriefcase className="h-3 w-3 mr-2" />
+                  Reassign to another Job
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => handlers.onDelete(row.original.candidateId!)}
+                >
+                  Delete Candidate
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -1027,7 +1059,38 @@ export function CandidatesDataTable({
 
   const confirmDelete = async () => {
     if (candidateToDelete) {
-      if (candidateToDelete.candidateId) {
+      // Check if this is an application
+      const rowData = data.find((item) => item.id === candidateToDelete.id);
+      const isApplication = rowData && "isApplication" in rowData && rowData.isApplication;
+
+      if (isApplication) {
+        // Delete application using API
+        try {
+          const response = await fetch(`${API_BASE_URL}/applications/${candidateToDelete.id}`, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${localStorage.getItem("ats_access_token")}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to delete application");
+          }
+
+          toast.success("Application deleted");
+          setDeleteDialogOpen(false);
+          setCandidateToDelete(null);
+          
+          // Remove from local state
+          setData((prevData) =>
+            prevData.filter((item) => item.id !== candidateToDelete.id)
+          );
+        } catch (error) {
+          toast.error("Failed to delete application");
+          console.error("Delete error:", error);
+        }
+      } else if (candidateToDelete.candidateId) {
         try {
           // Find the full candidate data
           const candidate = candidates.find(
@@ -1196,6 +1259,104 @@ export function CandidatesDataTable({
     }
   };
 
+  // Handle application approval
+  const [approveModalOpen, setApproveModalOpen] = React.useState(false);
+  const [applicationToApprove, setApplicationToApprove] = React.useState<string | null>(null);
+  const [selectedJobForApproval, setSelectedJobForApproval] = React.useState<string>("");
+  const [isApproving, setIsApproving] = React.useState(false);
+
+  const handleApprove = (id: string | number) => {
+    setApplicationToApprove(String(id));
+    setApproveModalOpen(true);
+    
+    // Auto-select job if application has a jobId
+    const application = data.find((item) => item.id === id);
+    if (application?.jobIdDisplay && application.jobIdDisplay !== "N/A") {
+      setSelectedJobForApproval(application.jobIdDisplay);
+    } else {
+      setSelectedJobForApproval("");
+    }
+  };
+
+  const handleApproveConfirm = async (jobId: string) => {
+    if (!applicationToApprove || isApproving) return;
+
+    setIsApproving(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/applications/${applicationToApprove}/approve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("ats_access_token")}`,
+        },
+        body: JSON.stringify({ jobId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to approve application");
+      }
+
+      toast.success("Application approved and candidate created");
+      setApproveModalOpen(false);
+      setApplicationToApprove(null);
+      setSelectedJobForApproval("");
+      
+      // Remove from local state
+      setData((prevData) =>
+        prevData.filter((item) => item.id !== applicationToApprove)
+      );
+    } catch (error) {
+      toast.error("Failed to approve application");
+      console.error(error);
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  // Handle application rejection
+  const [rejectApplicationDialogOpen, setRejectApplicationDialogOpen] = React.useState(false);
+  const [applicationToReject, setApplicationToReject] = React.useState<string | null>(null);
+
+  const handleRejectApplication = (id: string | number) => {
+    setApplicationToReject(String(id));
+    setRejectApplicationDialogOpen(true);
+  };
+
+  const handleRejectApplicationConfirm = async () => {
+    if (!applicationToReject) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/applications/${applicationToReject}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("ats_access_token")}`,
+        },
+        body: JSON.stringify({ status: "rejected" }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to reject application");
+      }
+
+      toast.success("Application rejected");
+      setRejectApplicationDialogOpen(false);
+      setApplicationToReject(null);
+      
+      // Update local state
+      setData((prevData) =>
+        prevData.map((item) =>
+          item.id === applicationToReject
+            ? { ...item, status: "Rejected", applicationStatus: "rejected" }
+            : item
+        )
+      );
+    } catch (error) {
+      toast.error("Failed to reject application");
+      console.error(error);
+    }
+  };
+
   const columnsWithActions = React.useMemo(() => {
     // Clone columns and update the "Assigned" column to use team members for name lookup
     const baseColumns = columns.slice(0, -1).map((col) => {
@@ -1264,6 +1425,8 @@ export function CandidatesDataTable({
       onDownloadResume: handleDownloadResume,
       onReassignJob: handleReassignJob,
       onDelete: handleDelete,
+      onApprove: handleApprove,
+      onRejectApplication: handleRejectApplication,
     });
     return [...baseColumns, actionsColumn];
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1538,10 +1701,10 @@ export function CandidatesDataTable({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
-                      setSorting([{ id: "jobIdDisplay", desc: false }])
+                      setSorting([{ id: "jobAndClient", desc: false }])
                     }
                   >
-                    Job ID (A → Z)
+                    Job & Client (A → Z)
                   </DropdownMenuItem>
                   {sorting.length > 0 && (
                     <>
@@ -1581,36 +1744,28 @@ export function CandidatesDataTable({
                     Name
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuCheckboxItem
-                    checked={table.getColumn("jobIdDisplay")?.getIsVisible()}
+                    checked={table.getColumn("jobAndClient")?.getIsVisible()}
                     onCheckedChange={(value) =>
-                      table.getColumn("jobIdDisplay")?.toggleVisibility(!!value)
+                      table.getColumn("jobAndClient")?.toggleVisibility(!!value)
                     }
                   >
-                    Job ID
+                    Job & Client
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuCheckboxItem
-                    checked={table.getColumn("target")?.getIsVisible()}
+                    checked={table.getColumn("currentStage")?.getIsVisible()}
                     onCheckedChange={(value) =>
-                      table.getColumn("target")?.toggleVisibility(!!value)
+                      table.getColumn("currentStage")?.toggleVisibility(!!value)
                     }
                   >
                     Stage
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuCheckboxItem
-                    checked={table.getColumn("limit")?.getIsVisible()}
+                    checked={table.getColumn("dateApplied")?.getIsVisible()}
                     onCheckedChange={(value) =>
-                      table.getColumn("limit")?.toggleVisibility(!!value)
+                      table.getColumn("dateApplied")?.toggleVisibility(!!value)
                     }
                   >
-                    Client
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={table.getColumn("reviewer")?.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      table.getColumn("reviewer")?.toggleVisibility(!!value)
-                    }
-                  >
-                    Assigned
+                    Applied Date
                   </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -1980,6 +2135,110 @@ export function CandidatesDataTable({
             </div>
           );
         })()}
+
+      {/* Approve Application Dialog */}
+      {approveModalOpen && applicationToApprove && (() => {
+        const application = data.find((item) => item.id === applicationToApprove);
+        const applicableJobs = jobs.filter((job) => job.status === "open");
+        const hasPreselectedJob = selectedJobForApproval && selectedJobForApproval !== "N/A";
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-md w-full p-6">
+              <h2 className="text-lg font-semibold mb-4">
+                Approve Application
+              </h2>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                Convert <strong>{application?.header}</strong>'s application to candidate and assign to a job:
+              </p>
+
+              {hasPreselectedJob && (
+                <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 mb-1">
+                    Applied job auto-selected
+                  </p>
+                </div>
+              )}
+
+              <Select
+                value={selectedJobForApproval}
+                onValueChange={(value) => {
+                  setSelectedJobForApproval(value);
+                }}
+              >
+                <SelectTrigger className="w-full mb-4">
+                  <SelectValue placeholder="Select a job" />
+                </SelectTrigger>
+                <SelectContent>
+                  {applicableJobs.map((job) => {
+                    const clientName =
+                      typeof job.clientId === "object" && job.clientId !== null
+                        ? job.clientId.companyName
+                        : clients.find((client) => client.id === job.clientId)?.companyName || "Unknown Client";
+
+                    return (
+                      <SelectItem key={job.id} value={job.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{job.title}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {clientName}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setApproveModalOpen(false);
+                    setApplicationToApprove(null);
+                    setSelectedJobForApproval("");
+                  }}
+                  disabled={isApproving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (selectedJobForApproval) {
+                      handleApproveConfirm(selectedJobForApproval);
+                    } else {
+                      toast.error("Please select a job");
+                    }
+                  }}
+                  disabled={!selectedJobForApproval || isApproving}
+                >
+                  {isApproving ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Approving...
+                    </>
+                  ) : (
+                    "Approve & Create Candidate"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Reject Application Dialog */}
+      <ConfirmationDialog
+        open={rejectApplicationDialogOpen}
+        onOpenChange={setRejectApplicationDialogOpen}
+        title="Reject Application"
+        description="Are you sure you want to reject this application? This action can be undone later if needed."
+        confirmText="Reject Application"
+        cancelText="Cancel"
+        onConfirm={handleRejectApplicationConfirm}
+        variant="destructive"
+      />
     </>
   );
 }

@@ -139,6 +139,8 @@ export interface Candidate extends BaseEntity {
   // Source and tracking
   source: CandidateSource;
   referredBy?: string;
+  rawEmailBody?: string; // Raw text body of email if applied via email
+  rawEmailBodyHtml?: string; // Raw HTML body of email if applied via email
   
   // Documents
   resume?: Attachment;

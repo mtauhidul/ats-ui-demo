@@ -11,6 +11,9 @@ export const schema = z.object({
   source: z.string().optional(), // Application source (manual/email/direct apply)
   dateApplied: z.string().optional(),
   jobIdDisplay: z.string().optional(),
+  // Application-specific fields
+  isApplication: z.boolean().optional(), // Flag to indicate if this is an application (not yet approved candidate)
+  applicationStatus: z.string().optional(), // Status of application: pending, approved, rejected
   // Candidates-specific fields
   currentStage: z.string().optional(),
   jobTitle: z.string().optional(),
