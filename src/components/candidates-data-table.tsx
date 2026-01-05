@@ -119,7 +119,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
 
         <IconChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transform -translate-x-1 group-hover:translate-x-0 transition-all duration-200 shrink-0" />
       </span>
-      <span className="text-xs text-muted-foreground group-hover:text-primary/70 transition-colors duration-200 truncate max-w-full">
+      <span className="text-xs text-muted-foreground group-hover:text-primary/70 transition-colors duration-200 break-all">
         {item.email}
       </span>
     </Link>
@@ -280,6 +280,111 @@ function AssignedSelector({
   );
 }
 
+// Stage selector component for changing pipeline stages
+function StageSelector({
+  candidateId,
+  jobIdForRow,
+  currentStageId,
+  currentStageName,
+  onUpdate,
+}: {
+  candidateId: string;
+  jobIdForRow: string;
+  currentStageId: string;
+  currentStageName: string;
+  onUpdate?: () => void;
+}) {
+  const [isUpdating, setIsUpdating] = React.useState(false);
+  const { updateCandidate } = useCandidates();
+  const { pipelines } = usePipelines();
+
+  // Get the pipeline for this job
+  const jobPipeline = pipelines.find((p) => p.jobId === jobIdForRow);
+  const stages = jobPipeline?.stages || [];
+
+  // If no pipeline or stages, show read-only badge
+  if (stages.length === 0) {
+    return (
+      <Badge variant="outline" className="text-xs">
+        {currentStageName || "No Pipeline"}
+      </Badge>
+    );
+  }
+
+  const handleStageChange = async (newStageId: string) => {
+    if (newStageId === currentStageId || isUpdating) return;
+
+    setIsUpdating(true);
+    try {
+      await updateCandidate(candidateId, {
+        currentPipelineStageId: newStageId,
+        jobId: jobIdForRow,
+      } as any);
+
+      toast.success("Stage updated successfully");
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      toast.error("Failed to update stage");
+      console.error("Stage update error:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Get color for current stage
+  // The currentStageId might actually be the stage name, so we need to match by both
+  const currentStage = stages.find((s) => s.id === currentStageId || s.name === currentStageId);
+  const stageColor = currentStage?.color || "#6B7280";
+
+  // Convert hex to rgba for background with opacity
+  const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  return (
+    <Select
+      value={currentStageId}
+      onValueChange={handleStageChange}
+      disabled={isUpdating}
+    >
+      <SelectTrigger 
+        className="h-7 text-xs focus:ring-1 focus:ring-offset-0 w-full border-l-4"
+        style={{
+          borderLeftColor: stageColor,
+          backgroundColor: hexToRgba(stageColor, 0.1),
+        }}
+      >
+        <SelectValue>
+          {isUpdating ? (
+            <span className="flex items-center gap-1">
+              <Loader size="sm" />
+              Updating...
+            </span>
+          ) : (
+            <span className="truncate font-medium">{currentStageName}</span>
+          )}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {stages.map((stage) => (
+          <SelectItem key={stage.id} value={stage.id} className="text-xs">
+            <div className="flex items-center gap-2">
+              <div
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: stage.color }}
+              />
+              <span className="truncate">{stage.name}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     id: "select",
@@ -331,15 +436,15 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     accessorFn: (row) => row.header,
     cell: ({ row }) => {
       return (
-        <div className="min-w-[180px] max-w-[180px] overflow-hidden">
+        <div className="min-w-[220px] max-w-[220px] overflow-hidden">
           <TableCellViewer item={row.original} />
         </div>
       );
     },
     enableHiding: false,
-    size: 180,
-    minSize: 180,
-    maxSize: 180,
+    size: 220,
+    minSize: 220,
+    maxSize: 220,
   },
   {
     accessorKey: "target",
@@ -372,28 +477,28 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const clientLogo = row.original.clientLogo;
 
       return (
-        <div className="min-w-[280px] max-w-[280px] overflow-hidden">
-          <div className="flex items-center gap-3 p-2 rounded-lg border bg-card">
-            {/* Client Logo */}
-            {clientLogo ? (
-              <Avatar className="size-10 rounded shrink-0">
-                <AvatarImage src={clientLogo} alt={clientName} />
-                <AvatarFallback className="text-sm rounded">
-                  {clientName.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <div className="size-10 rounded bg-muted flex items-center justify-center shrink-0">
-                <span className="text-sm font-semibold text-muted-foreground">
-                  {clientName.substring(0, 2).toUpperCase()}
-                </span>
-              </div>
-            )}
-            {/* Job Title and Client Name */}
-            <div className="flex flex-col justify-center overflow-hidden min-w-0">
-              <span className="text-sm font-semibold text-foreground truncate">
-                {jobTitle}
-              </span>
+        <div className="min-w-[240px] max-w-[240px] overflow-hidden">
+          <div className="flex flex-col gap-1.5 p-2 rounded-lg border bg-card">
+            {/* Job Title on top */}
+            <div className="text-xs font-semibold text-foreground truncate">
+              {jobTitle}
+            </div>
+            {/* Client info on bottom */}
+            <div className="flex items-center gap-1.5">
+              {clientLogo ? (
+                <Avatar className="size-5 rounded shrink-0">
+                  <AvatarImage src={clientLogo} alt={clientName} />
+                  <AvatarFallback className="text-[10px] rounded">
+                    {clientName.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <div className="size-5 rounded bg-muted flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-semibold text-muted-foreground">
+                    {clientName.substring(0, 2).toUpperCase()}
+                  </span>
+                </div>
+              )}
               <span className="text-xs text-muted-foreground truncate">
                 {clientName}
               </span>
@@ -406,76 +511,75 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       return value.includes(row.getValue(id));
     },
     enableHiding: true,
-    size: 280,
-    minSize: 280,
-    maxSize: 280,
+    size: 240,
+    minSize: 240,
+    maxSize: 240,
   },
   {
     accessorKey: "currentStage",
     header: () => (
       <div className="text-left">Stage</div>
     ),
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const isRejected = row.original.status?.toLowerCase() === "rejected";
       const isHired = row.original.status?.toLowerCase() === "hired";
+      const isApplication = row.original.isApplication === true;
+
+      // Don't show stage selector for pending applications
+      if (isApplication) {
+        return (
+          <div className="min-w-[200px] max-w-[200px]">
+            <Badge 
+              variant="outline" 
+              className="text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+            >
+              Pending Review
+            </Badge>
+          </div>
+        );
+      }
 
       // currentStage can be either a string or an object { id, name, color, order }
       const currentStage = row.original.currentStage as
         | string
-        | { name?: string }
+        | { id?: string; name?: string; color?: string }
         | undefined;
       const stageName =
         typeof currentStage === "string"
           ? currentStage
           : currentStage?.name || "Not Started";
+      const stageId = 
+        typeof currentStage === "string"
+          ? currentStage
+          : currentStage?.id || "";
 
-      // Define stage colors
-      const getStageColor = (stage: string) => {
-        if (isRejected) {
-          return "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400 border-red-200 dark:border-red-800";
-        }
-        if (isHired) {
-          return "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200 dark:border-green-800";
-        }
-
-        switch (stage.toLowerCase()) {
-          case "new applications":
-          case "new application":
-            return "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 border-blue-200 dark:border-blue-800";
-          case "resume screening":
-          case "screening":
-            return "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400 border-purple-200 dark:border-purple-800";
-          case "technical interview":
-          case "behavioral interview":
-          case "interview":
-            return "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 border-amber-200 dark:border-amber-800";
-          case "technical test":
-          case "assessment":
-            return "bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800";
-          case "offer":
-            return "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200 dark:border-green-800";
-          case "hired":
-            return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800";
-          default:
-            return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-700";
-        }
-      };
-
-      const displayText = isRejected
-        ? "Rejected"
-        : isHired
-        ? "Hired"
-        : stageName;
+      // For rejected/hired, show static badge
+      if (isRejected || isHired) {
+        const displayText = isRejected ? "Rejected" : "Hired";
+        const colorClass = isRejected
+          ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400 border-red-200"
+          : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200";
+        
+        return (
+          <div className="min-w-[200px] max-w-[200px]">
+            <Badge className={`text-xs border ${colorClass}`}>
+              {displayText}
+            </Badge>
+          </div>
+        );
+      }
 
       return (
-        <div className="min-w-[180px] max-w-[180px] overflow-hidden">
-          <Badge
-            className={`px-2.5 py-1 text-xs font-medium w-fit truncate max-w-full ${getStageColor(
-              stageName
-            )}`}
-          >
-            {displayText}
-          </Badge>
+        <div className="min-w-[200px] max-w-[200px]">
+          <StageSelector
+            candidateId={row.original.candidateId!}
+            jobIdForRow={(row.original as any).jobIdForRow}
+            currentStageId={stageId}
+            currentStageName={stageName}
+            onUpdate={() => {
+              window.dispatchEvent(new CustomEvent("refetchCandidates"));
+            }}
+          />
         </div>
       );
     },
@@ -483,9 +587,9 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       return value.includes(row.original.dateApplied);
     },
     enableHiding: true,
-    size: 180,
-    minSize: 180,
-    maxSize: 180,
+    size: 200,
+    minSize: 200,
+    maxSize: 200,
   },
   {
     accessorKey: "dateApplied",
@@ -645,13 +749,6 @@ const createActionsColumn = (handlers: {
                   <IconX className="h-3 w-3 mr-2" />
                   Reject Application
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => handlers.onDownloadResume(row.original.candidateId!)}
-                >
-                  <IconDownload className="h-3 w-3 mr-2" />
-                  Download Resume
-                </DropdownMenuItem>
               </>
             ) : (
               <>
@@ -692,12 +789,6 @@ const createActionsColumn = (handlers: {
                   <IconMail className="h-3 w-3 mr-2" />
                   Email Candidate
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handlers.onDownloadResume(row.original.candidateId!)}
-                >
-                  <IconDownload className="h-3 w-3 mr-2" />
-                  Download Resume
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => handlers.onReassignJob(row.original.candidateId!)}
@@ -734,7 +825,7 @@ export function CandidatesDataTable({
   const [data, setData] = React.useState(() => initialData);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>({ target: false });
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
@@ -1587,7 +1678,7 @@ export function CandidatesDataTable({
         defaultValue="outline"
         className="w-full flex-col justify-start gap-6"
       >
-        <div className="flex flex-col gap-4 px-4 lg:px-6">
+        <div className="flex flex-col gap-4">
           {/* Statistics Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="rounded-lg border bg-linear-to-br from-card to-muted/20 p-3 shadow-sm">
@@ -1863,7 +1954,7 @@ export function CandidatesDataTable({
         </div>
 
         <TabsContent value="outline" className="m-0 border-0">
-          <div className="rounded-lg border overflow-x-auto mx-4 lg:mx-6">
+          <div className="rounded-lg border overflow-x-auto">
             <Table>
               <TableHeader className="bg-muted sticky top-0 z-10">
                 {table.getHeaderGroups().map((headerGroup) => (
