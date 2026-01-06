@@ -703,7 +703,7 @@ const createActionsColumn = (handlers: {
         {/* Prominent Approve & Email Button - Only for pending applications */}
         {isApplication && isPending && (
           <Button
-            variant="default"
+            variant="primary"
             size="sm"
             className="h-8 px-3 bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm"
             onClick={() => handlers.onApprove(row.original.candidateId!)}
@@ -716,7 +716,7 @@ const createActionsColumn = (handlers: {
         {/* Prominent Email Button - Only show for actual candidates (not applications) */}
         {!isApplication && (
           <Button
-            variant="default"
+            variant="primary"
             size="sm"
             className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
             onClick={() => handlers.onEmail(row.original.candidateId!)}
