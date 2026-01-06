@@ -65,7 +65,23 @@ export default function CandidateDetailsPage() {
   const { candidateId } = useParams<{ candidateId: string }>();
   const [searchParams] = useSearchParams();
   const jobIdFromUrl = searchParams.get('jobId');
+  const clientIdFromUrl = searchParams.get('clientId');
   const navigate = useNavigate();
+  
+  // Smart back navigation based on context
+  const handleBackNavigation = () => {
+    if (jobIdFromUrl) {
+      // Came from a job context, go back to that job
+      if (clientIdFromUrl) {
+        navigate(`/dashboard/clients/${clientIdFromUrl}/jobs/${jobIdFromUrl}`);
+      } else {
+        navigate(`/dashboard/jobs/${jobIdFromUrl}`);
+      }
+    } else {
+      // No job context, go to candidates list
+      navigate('/dashboard/candidates');
+    }
+  };
   const [showResumePreview, setShowResumePreview] = React.useState(false);
   const [showVideoPreview, setShowVideoPreview] = React.useState(false);
   const [showEmailPreview, setShowEmailPreview] = React.useState(false);
@@ -426,11 +442,11 @@ export default function CandidateDetailsPage() {
         <div className="text-center">
           <div className="text-lg font-semibold mb-2">{isApplication ? 'Application' : 'Candidate'} not found</div>
           <Button
-            onClick={() => navigate("/dashboard/candidates")}
+            onClick={handleBackNavigation}
             className="mt-4"
           >
             <IconArrowLeft className="h-4 w-4 mr-2" />
-            Back to Candidates
+            {jobIdFromUrl ? 'Back to Job' : 'Back to Candidates'}
           </Button>
         </div>
       </div>
@@ -828,11 +844,11 @@ export default function CandidateDetailsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/dashboard/candidates")}
+                onClick={handleBackNavigation}
                 className="gap-2"
               >
                 <IconArrowLeft className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Back to Candidates</span>
+                <span className="hidden md:inline">{jobIdFromUrl ? 'Back to Job' : 'Back to Candidates'}</span>
               </Button>
             </div>
 
@@ -2355,14 +2371,34 @@ export default function CandidateDetailsPage() {
               <TabsContent value="interviews" className="mt-4 md:mt-6">
                 <Card>
                   <CardHeader className="p-3 md:p-4 lg:p-6">
-                    <CardTitle className="text-sm md:text-base flex items-center gap-2">
-                      <IconCalendar className="h-4 w-4 md:h-5 md:w-5 text-primary shrink-0" />
-                      Interview History Across All Jobs
-                    </CardTitle>
-                    <p className="text-xs md:text-sm text-muted-foreground">
-                      Read-only overview of all interviews this candidate has
-                      had
-                    </p>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <CardTitle className="text-sm md:text-base flex items-center gap-2">
+                          <IconCalendar className="h-4 w-4 md:h-5 md:w-5 text-primary shrink-0" />
+                          Interview History Across All Jobs
+                        </CardTitle>
+                        <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                          Read-only overview of all interviews this candidate has
+                          had
+                        </p>
+                      </div>
+                      {jobIdFromUrl && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const params = new URLSearchParams();
+                            params.append('jobId', jobIdFromUrl);
+                            const clientIdParam = searchParams.get('clientId');
+                            if (clientIdParam) params.append('clientId', clientIdParam);
+                            navigate(`/dashboard/candidates/${candidateId}/interviews?${params.toString()}`);
+                          }}
+                          className="shrink-0"
+                        >
+                          <IconCalendar className="h-4 w-4 mr-2" />
+                          Manage Interviews
+                        </Button>
+                      )}
+                    </div>
                     {candidateData?.status?.toLowerCase() === "rejected" && (
                       <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800 rounded-lg">
                         <div className="flex items-start gap-2">

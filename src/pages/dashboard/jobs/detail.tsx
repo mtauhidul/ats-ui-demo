@@ -32,11 +32,14 @@ export default function JobDetailPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const candidateId = (candidate as any)._id || candidate.id;
     
+    // Use standardized route with jobId and clientId as query params
+    const params = new URLSearchParams();
+    params.append('jobId', jobId!);
     if (clientId) {
-      navigate(`/dashboard/clients/${clientId}/jobs/${jobId}/candidates/${candidateId}`);
-    } else {
-      navigate(`/dashboard/jobs/${jobId}/candidates/${candidateId}`);
+      params.append('clientId', clientId);
     }
+    
+    navigate(`/dashboard/candidates/${candidateId}?${params.toString()}`);
   };
 
   const handleEditJob = async (jobIdParam: string, data: UpdateJobRequest) => {

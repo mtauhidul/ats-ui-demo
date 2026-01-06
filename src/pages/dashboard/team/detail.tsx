@@ -656,7 +656,12 @@ export default function TeamMemberDetailPage() {
                         key={candidate.id}
                         className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
                         onClick={() =>
-                          navigate(`/dashboard/candidates/${candidate.id}`)
+                          (() => {
+                            const jobId = (candidate as any).jobId || (candidate as any).jobIds?.[0];
+                            const params = new URLSearchParams();
+                            if (jobId) params.append('jobId', typeof jobId === 'string' ? jobId : jobId?.toString());
+                            navigate(`/dashboard/candidates/${candidate.id}${params.toString() ? `?${params.toString()}` : ''}`);
+                          })()
                         }
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">

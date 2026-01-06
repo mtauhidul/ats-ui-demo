@@ -41,11 +41,12 @@ export default function JobCandidateDetailPage() {
   }, [currentJob, setCurrentJob]);
 
   const handleBack = () => {
-    if (clientId) {
-      navigate(`/dashboard/clients/${clientId}/jobs/${jobId}`);
-    } else {
-      navigate(`/dashboard/jobs/${jobId}`);
-    }
+    // Navigate to standardized candidate route with job context
+    const params = new URLSearchParams();
+    if (jobId) params.append('jobId', jobId);
+    if (clientId) params.append('clientId', clientId);
+    
+    navigate(`/dashboard/candidates/${candidateId}?${params.toString()}`);
   };
 
   const handleInterviewClick = () => {

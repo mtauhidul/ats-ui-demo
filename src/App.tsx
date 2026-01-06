@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import DashboardLayout from "./components/dashboard-layout";
 import Layout from "./components/layout";
+import { CandidateRouteRedirect } from "./components/CandidateRouteRedirect";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PermissionGuard } from "./components/auth/PermissionGuard";
 import { RoleGuard } from "./components/auth/RoleGuard";
@@ -83,7 +84,7 @@ function App() {
           />
           <Route
             path="clients/:clientId/jobs/:jobId/candidates/:candidateId"
-            element={<PermissionGuard permission="canManageCandidates"><JobCandidateDetailPage /></PermissionGuard>}
+            element={<CandidateRouteRedirect />}
           />
           <Route
             path="clients/:clientId/jobs/:jobId/candidates/:candidateId/interviews"
@@ -99,7 +100,7 @@ function App() {
           <Route path="jobs/:jobId" element={<PermissionGuard permission="canManageJobs"><JobDetailPage /></PermissionGuard>} />
           <Route
             path="jobs/:jobId/candidates/:candidateId"
-            element={<PermissionGuard permission="canManageCandidates"><JobCandidateDetailPage /></PermissionGuard>}
+            element={<CandidateRouteRedirect />}
           />
           <Route
             path="jobs/:jobId/candidates/:candidateId/interviews"
@@ -117,6 +118,14 @@ function App() {
           <Route
             path="candidates/:candidateId"
             element={<PermissionGuard permission="canManageCandidates"><CandidateDetailsPage /></PermissionGuard>}
+          />
+          <Route
+            path="candidates/:candidateId/interviews"
+            element={<PermissionGuard permission="canManageCandidates"><InterviewPage /></PermissionGuard>}
+          />
+          <Route
+            path="candidates/:candidateId/communication"
+            element={<PermissionGuard permission="canSendEmails"><JobCandidateCommunicationPage /></PermissionGuard>}
           />
 
           {/* Other Routes */}

@@ -4,14 +4,20 @@ import { useCandidates } from "@/store/hooks/useCandidates";
 import { useJobs } from "@/store/hooks/useJobs";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 export default function JobCandidateCommunicationPage() {
   const navigate = useNavigate();
-  const { jobId, candidateId } = useParams<{
-    jobId: string;
-    candidateId: string;
+  const { jobId: jobIdParam, candidateId, clientId: clientIdParam } = useParams<{
+    jobId?: string;
+    candidateId?: string;
+    clientId?: string;
   }>();
+  const [searchParams] = useSearchParams();
+  
+  // Support both route params (old) and query params (new)
+  const jobId = jobIdParam || searchParams.get('jobId') || undefined;
+  const clientId = clientIdParam || searchParams.get('clientId') || undefined;
   
   // Get data from Firestore realtime subscriptions
   const { candidates, isLoading: candidatesLoading, setCurrentCandidate } = useCandidates();
@@ -77,7 +83,12 @@ export default function JobCandidateCommunicationPage() {
             <CandidateEmailCommunication
               candidate={currentCandidate}
               job={currentJob}
-              onBack={() => navigate(-1)}
+              onBack={() => {
+                const params = new URLSearchParams();
+                if (jobId) params.append('jobId', jobId);
+                if (clientId) params.append('clientId', clientId);
+                navigate(`/dashboard/candidates/${candidateId}${params.toString() ? `?${params.toString()}` : ''}`);
+              }}
             />
           </div>
         </div>
