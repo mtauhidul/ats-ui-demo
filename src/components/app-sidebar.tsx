@@ -49,13 +49,6 @@ const allNavItems = {
       adminOnly: false,
     },
     {
-      title: "Jobs",
-      url: "/dashboard/jobs",
-      icon: IconBriefcase,
-      permission: "canManageJobs" as const,
-      adminOnly: false,
-    },
-    {
       title: "Candidates",
       url: "/dashboard/candidates",
       icon: IconUserCheck,
