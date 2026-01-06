@@ -645,13 +645,13 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       }
 
       return (
-        <div className="min-w-[140px] max-w-[140px] overflow-hidden">
-          <div className="flex items-center gap-2">
+        <div className="min-w-[95px] max-w-[95px] overflow-hidden">
+          <div className="flex items-center gap-1.5">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="cursor-help">
-                    <SourceIcon className={`h-4 w-4 ${iconColor}`} />
+                    <SourceIcon className={`h-3.5 w-3.5 ${iconColor}`} />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -659,23 +659,23 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <span className="text-xs text-muted-foreground">{displayDate}</span>
+            <span className="text-xs text-muted-foreground truncate">{displayDate}</span>
           </div>
         </div>
       );
     },
     enableHiding: true,
-    size: 140,
-    minSize: 140,
-    maxSize: 140,
+    size: 95,
+    minSize: 95,
+    maxSize: 95,
   },
   {
     id: "actions",
     cell: () => null,
     enableHiding: false,
-    size: 60,
-    minSize: 60,
-    maxSize: 60,
+    size: 180,
+    minSize: 180,
+    maxSize: 180,
   },
 ];
 
@@ -699,47 +699,31 @@ const createActionsColumn = (handlers: {
     const isPending = row.original.applicationStatus === "pending";
 
     return (
-      <div className="min-w-[60px] max-w-[100px] flex items-center gap-1 justify-start">
-        {/* Quick Approve Button - Only for pending applications */}
+      <div className="min-w-[180px] flex items-center gap-1.5 justify-start">
+        {/* Prominent Approve & Email Button - Only for pending applications */}
         {isApplication && isPending && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
-                  onClick={() => handlers.onApprove(row.original.candidateId!)}
-                >
-                  <IconCircleCheck className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Approve & Email</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant="default"
+            size="sm"
+            className="h-8 px-3 bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm"
+            onClick={() => handlers.onApprove(row.original.candidateId!)}
+          >
+            <IconCircleCheck className="h-3.5 w-3.5 mr-1.5" />
+            Approve & Email
+          </Button>
         )}
         
-        {/* Quick Email Button - Only show for actual candidates (not applications) */}
+        {/* Prominent Email Button - Only show for actual candidates (not applications) */}
         {!isApplication && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary"
-                  onClick={() => handlers.onEmail(row.original.candidateId!)}
-                >
-                  <IconMail className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Email Candidate</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant="default"
+            size="sm"
+            className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+            onClick={() => handlers.onEmail(row.original.candidateId!)}
+          >
+            <IconMail className="h-3.5 w-3.5 mr-1.5" />
+            Email Candidate
+          </Button>
         )}
         
         <DropdownMenu>
