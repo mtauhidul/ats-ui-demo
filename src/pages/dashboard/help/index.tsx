@@ -49,7 +49,7 @@ const faqData: FAQItem[] = [
     category: "Getting Started",
     question: "What's the difference between Applications and Candidates?",
     answer:
-      "Applications are new resumes that come in - they're like your inbox. When you review an application and click the green checkmark button to Approve it, that person becomes a Candidate in your system. Candidates can be assigned to jobs, moved through interview stages, and tracked over time. Rejected applications don't become candidates.",
+      "Applications are new resumes waiting for your review - think of them as your inbox. When you approve an application by clicking the green 'Approve & Email' button, that person becomes a Candidate. Candidates can be assigned to jobs, moved through interview stages, and tracked throughout your hiring process. Note: Rejected applications do not become candidates and are automatically deleted after 30 days.",
     tags: ["applications", "candidates", "difference", "workflow"],
   },
   {
@@ -57,7 +57,7 @@ const faqData: FAQItem[] = [
     category: "Getting Started",
     question: "How do I navigate around the system?",
     answer:
-      "Use the left sidebar to access different sections: Dashboard (home page with charts), Clients (companies you work with), Jobs (open positions), Candidates (approved people), Applications (new resumes to review), Team (your coworkers), Search (find anything), Settings (system configuration), and Get Help (this page).",
+      "Use the left sidebar to access main sections: Dashboard (home page with overview), Clients (companies you work with - click any client to see their jobs), Candidates (both approved candidates and pending applications), Emails (communication center), Team (manage your coworkers), and Get Help (this page). Each section has its own tools and filters at the top.",
     tags: ["navigation", "sidebar", "menu", "basics"],
   },
 
@@ -67,7 +67,7 @@ const faqData: FAQItem[] = [
     category: "Applications",
     question: "How do I review new applications?",
     answer:
-      "Click 'Applications' in the left sidebar. You'll see a list of all new applications. Click on any row to open a drawer showing the person's resume, skills, and details. Use the green checkmark button to Approve (moves them to Candidates), or the red X button to Reject. You can also assign a reviewer using the dropdown in each row.",
+      "Go to Candidates page and click the 'Applications' tab. You'll see all new applications in a table. Click any row to view the full resume and details. To approve: click the green 'Approve & Email' button (this creates a candidate and opens an email to contact them). To reject: click the red X button. You can assign applications to team members using the dropdown in each row.",
     tags: ["applications", "review", "approve", "reject"],
   },
   {
@@ -75,7 +75,7 @@ const faqData: FAQItem[] = [
     category: "Applications",
     question: "Can I filter applications?",
     answer:
-      "Yes! At the top of the Applications page, you'll see filter buttons for 'All', 'Pending', 'Approved', and 'Rejected'. Click any of these to see only that type. You can also use the search box to find applications by name, email, or job title.",
+      "Yes! In the Candidates page, click the 'Applications' tab. At the top you'll see filter options for 'All', 'Pending', 'Approved', and 'Rejected'. Click any of these to see only that type. You can also use the search box to find applications by name, email, or job title.",
     tags: ["applications", "filter", "search"],
   },
   {
@@ -83,7 +83,7 @@ const faqData: FAQItem[] = [
     category: "Applications",
     question: "What happens when I approve an application?",
     answer:
-      "When you click the green Approve button, the system automatically creates a new candidate record and links them to the job they applied for. They'll appear on the Candidates page and in that job's pipeline, starting at the first stage. This saves you from manually copying information.",
+      "Three things happen automatically: 1) A new candidate profile is created and linked to the job they applied for, 2) An email window opens so you can immediately contact them, 3) They appear in the Candidates tab and in the job's pipeline at the first stage. This ensures you never forget to welcome new candidates.",
     tags: ["applications", "approve", "automation"],
   },
   {
@@ -99,7 +99,7 @@ const faqData: FAQItem[] = [
     category: "Applications",
     question: "How do applications come into the system?",
     answer:
-      "Applications can come in three ways: 1) Direct Apply - people apply through your website or portal, 2) Manual - you or your team manually add someone, 3) Email Automation - resumes sent to your monitoring email are automatically parsed and added. You can see the source in the applications table.",
+      "Applications come in three ways: 1) Direct Apply - candidates apply through your website or application form, 2) Manual Entry - your team manually adds someone's information, 3) Email Automation - resumes emailed to your monitored inbox are automatically extracted and added. The 'Source' column in the Applications table shows how each application arrived.",
     tags: ["applications", "source", "automation", "email"],
   },
   {
@@ -107,8 +107,25 @@ const faqData: FAQItem[] = [
     category: "Applications",
     question: "Can I reassign an application to another team member?",
     answer:
-      "Yes! In the Applications table, find the 'Assigned To' column. Click the dropdown menu in any row and select a team member's name. That person will be notified and can see it's assigned to them.",
+      "Yes! In the Applications table, find the 'Assigned To' column. Click the dropdown in any row and select a team member. They'll be notified instantly and can filter to see their assigned applications.",
     tags: ["applications", "assign", "team"],
+  },
+
+  {
+    id: "faq-016",
+    category: "Applications",
+    question: "Is a video required for applications?",
+    answer:
+      "Yes! All applications must include a video introduction. This helps you evaluate communication skills and personality before scheduling interviews. Applications without videos cannot be submitted through the application form.",
+    tags: ["applications", "video", "requirement"],
+  },
+  {
+    id: "faq-017",
+    category: "Applications",
+    question: "What happens to rejected applications?",
+    answer:
+      "Rejected applications are automatically deleted after 30 days to keep your system clean. The candidate's resume file is also removed from storage. If you think you might reconsider someone, add a note before rejecting or don't reject them yet - once deleted after 30 days, the data cannot be recovered.",
+    tags: ["applications", "reject", "cleanup", "automatic"],
   },
 
   // ==================== CANDIDATES ====================
@@ -117,7 +134,7 @@ const faqData: FAQItem[] = [
     category: "Candidates",
     question: "How do I view all my candidates?",
     answer:
-      "Click 'Candidates' in the left sidebar. You'll see a table with all approved candidates. You can view their name, email, assigned job, current stage (like Interview, Offer, etc.), client, and status. Click any row to open detailed information.",
+      "Click 'Candidates' in the sidebar. You'll see two tabs: 'Candidates' (approved people actively in your hiring process) and 'Applications' (new resumes waiting for review). The Candidates tab shows everyone you're currently working with, including their name, email, job, current interview stage, client, and status. Click any row to see full details.",
     tags: ["candidates", "view", "list"],
   },
   {
@@ -125,7 +142,7 @@ const faqData: FAQItem[] = [
     category: "Candidates",
     question: "How do I move a candidate through interview stages?",
     answer:
-      "There are two ways: 1) In the Candidates table, click the stage dropdown in any row and select a new stage, or 2) Go to the Jobs page, click on a job to see its pipeline view, then drag and drop candidates between the stage columns (like a board). Both methods work the same way.",
+      "Two ways: 1) Quick method - In the Candidates table, click the stage dropdown in any row and select the new stage. 2) Visual method - Go to Clients, select the client, click the job to see the pipeline board, then drag candidate cards between columns. Both update the candidate's status instantly.",
     tags: ["candidates", "stages", "pipeline", "movement"],
   },
   {
@@ -149,7 +166,7 @@ const faqData: FAQItem[] = [
     category: "Candidates",
     question: "How do I add notes about a candidate?",
     answer:
-      "Open the candidate's details page by clicking their row. Scroll to the 'Notes' section and click the 'Add Note' button. Type your note (like interview feedback, strengths, concerns) and click 'Save'. All notes are timestamped and show who wrote them.",
+      "Click on any candidate to open their profile. Find the 'Notes' section and click 'Add Note'. Write your observations (interview feedback, strengths, concerns, red flags, etc.) and save. All notes show who wrote them and when, creating a complete history.",
     tags: ["candidates", "notes", "feedback"],
   },
   {
@@ -165,7 +182,7 @@ const faqData: FAQItem[] = [
     category: "Candidates",
     question: "What are candidate tags and how do I use them?",
     answer:
-      "Tags are labels like 'JavaScript', 'Senior Level', or 'Remote Only' that help you organize candidates. Add tags by opening a candidate's profile and clicking in the tags field. Type to create new tags or select existing ones. Later, you can filter candidates by tags.",
+      "Tags are labels you create to organize candidates - like 'JavaScript', 'Senior', 'Remote', 'Bilingual', etc. Open any candidate profile, find the tags field, and type to create or select tags. Use tags to quickly find candidates with specific skills or attributes later.",
     tags: ["candidates", "tags", "organization"],
   },
   {
@@ -183,7 +200,7 @@ const faqData: FAQItem[] = [
     category: "Jobs",
     question: "How do I create a new job posting?",
     answer:
-      "Click 'Jobs' in the left sidebar, then click the blue 'Add Job' button at the top right. Fill in the job title, description, requirements, salary range, location, employment type (full-time, part-time, etc.), and select the client. Click 'Create Job' when done. The job will immediately be available for applications.",
+      "Click 'Clients' in the left sidebar, select the client you want to create a job for, then click the 'Add Job' button. Fill in the job title, description, requirements, salary range, location, employment type (full-time, part-time, etc.). Click 'Create Job' when done. The job will immediately be available for applications and appear on that client's job list.",
     tags: ["jobs", "create", "posting"],
   },
   {
@@ -191,7 +208,7 @@ const faqData: FAQItem[] = [
     category: "Jobs",
     question: "Can I edit a job after creating it?",
     answer:
-      "Yes! Go to the Jobs page, find your job in the list, and click on it. You'll see an 'Edit Job' button at the top. You can change the title, description, requirements, salary, status, or any other field. Changes are saved immediately.",
+      "Yes! Go to Clients page, click the client that owns the job, find the job in their list, and click on it. You'll see an 'Edit Job' button at the top. You can change the title, description, requirements, salary, status, or any other field. Changes are saved immediately.",
     tags: ["jobs", "edit", "update"],
   },
   {
@@ -199,7 +216,7 @@ const faqData: FAQItem[] = [
     category: "Jobs",
     question: "How do I see all candidates for a specific job?",
     answer:
-      "Click 'Jobs' in the sidebar, then click on any job title. You'll see a pipeline view (like a board) with columns for each stage (Screening, Interview, etc.). Each column shows candidates in that stage. You can drag candidates between columns to update their status.",
+      "Click 'Clients' in the sidebar, select the client, then click on any job title. You'll see a pipeline view (like a board) with columns for each stage (Screening, Interview, etc.). Each column shows candidates in that stage. You can drag candidates between columns to update their status.",
     tags: ["jobs", "pipeline", "candidates", "view"],
   },
   {
@@ -207,7 +224,7 @@ const faqData: FAQItem[] = [
     category: "Jobs",
     question: "What does 'Job Status' mean?",
     answer:
-      "Job Status shows if a job is Active (accepting applications), On Hold (temporarily paused), Closed (filled or cancelled), or Draft (not yet published). You can change the status in the job's edit page. Closed jobs won't accept new applications.",
+      "Job Status indicates: Active (currently accepting applications), On Hold (temporarily paused), Closed (position filled or cancelled), or Draft (not published yet). Change the status by editing the job. Only Active jobs accept new applications.",
     tags: ["jobs", "status", "active", "closed"],
   },
   {
@@ -215,7 +232,7 @@ const faqData: FAQItem[] = [
     category: "Jobs",
     question: "How do I schedule an interview for a candidate?",
     answer:
-      "Go to the Jobs page, click on a job to see the pipeline, find the candidate you want to interview, and click on their card. Look for the 'Schedule Interview' button. Fill in the interview details including date, time, type (video, phone, in-person), duration, and optionally create a Zoom meeting link. The candidate will receive an automated email invitation with all the details.",
+      "Go to Clients, click the client, click on a job to see the pipeline, find the candidate you want to interview, and click on their card. Look for the 'Schedule Interview' button. Fill in the interview details including date, time, type (video, phone, in-person), duration, and optionally create a Zoom meeting link. The candidate will receive an automated email invitation with all the details.",
     tags: ["jobs", "interview", "schedule", "zoom"],
   },
   {
@@ -223,7 +240,7 @@ const faqData: FAQItem[] = [
     category: "Jobs",
     question: "How do I close or archive an old job?",
     answer:
-      "Go to the Jobs page, click on the job you want to close, click 'Edit Job', and change the Status dropdown to 'Closed'. This stops new applications but keeps all historical data and candidate information accessible for future reference.",
+      "Go to Clients, click the client, click on the job you want to close, click 'Edit Job', and change the Status dropdown to 'Closed'. This stops new applications but keeps all historical data and candidate information accessible for future reference.",
     tags: ["jobs", "close", "archive"],
   },
   {
@@ -231,7 +248,7 @@ const faqData: FAQItem[] = [
     category: "Jobs",
     question: "What is the pipeline view?",
     answer:
-      "The pipeline view is like a board with columns for each interview stage. When you click on a job, you see all candidates organized by their current stage. You can drag candidates between columns to move them forward or backward in the process. It's a visual way to manage your hiring workflow.",
+      "The pipeline is a visual board (like Trello) showing all candidates for a job organized into columns by stage (Screening, Interview, Offer, etc.). Click on any job to see its pipeline. Drag candidate cards between columns to move them through your hiring process. It's the easiest way to see your progress at a glance.",
     tags: ["jobs", "pipeline", "kanban", "workflow"],
   },
 
@@ -241,7 +258,7 @@ const faqData: FAQItem[] = [
     category: "Clients",
     question: "How do I add a new client?",
     answer:
-      "Click 'Clients' in the left sidebar, then click the 'Add Client' button at the top. Fill in the company name, industry, website, address, and primary contact information. You can also add notes. Click 'Create Client' to save. The client will appear in your clients list and can be selected when creating jobs.",
+      "Go to Clients page and click 'Add Client'. Fill in company name, industry, website, address, and primary contact details. You can also add notes. Click 'Create Client' to save. The new client appears in your list and can be selected when creating jobs.",
     tags: ["clients", "add", "create"],
   },
   {
@@ -283,7 +300,7 @@ const faqData: FAQItem[] = [
     category: "Team",
     question: "How do I add a new team member?",
     answer:
-      "Click 'Team' in the left sidebar, then click the 'Add Member' button. Enter their name, email, and select their role (Admin, Recruiter, Hiring Manager, or Viewer). You can also add their department and job title. Click 'Send Invitation' - they'll receive an email to set up their account.",
+      "Go to Team page and click 'Add Member'. Enter their name, email, and select their role (Admin, Recruiter, Hiring Manager, or Viewer). Optionally add department and job title. Click 'Send Invitation' - they'll receive an email to create their account and log in.",
     tags: ["team", "add", "invite"],
   },
   {
@@ -291,7 +308,7 @@ const faqData: FAQItem[] = [
     category: "Team",
     question: "What are the different user roles?",
     answer:
-      "Admin: Full access to everything including settings and team management. Recruiter: Can manage clients, jobs, applications, and candidates. Hiring Manager: Can view and manage jobs and candidates, limited client access. Viewer: Read-only access to see reports and data but can't make changes.",
+      "Admin - Full control over everything (settings, team, all data). Recruiter - Manages clients, jobs, applications, and candidates. Hiring Manager - Reviews and manages candidates for specific jobs, limited editing. Viewer - Can only view information, cannot make any changes. Choose based on what each person needs to do.",
     tags: ["team", "roles", "permissions"],
   },
   {
@@ -325,7 +342,7 @@ const faqData: FAQItem[] = [
     category: "Dashboard",
     question: "What information is on the Dashboard?",
     answer:
-      "The Dashboard (home page) shows you an overview of your recruitment activity: total applications, approval rate, charts showing applications over time and by source (direct apply, manual, email automation), recent activity, and quick stats. It's your at-a-glance summary of everything happening.",
+      "The Dashboard is your command center showing: total applications received, approval rate percentage, charts of applications over time by source (direct apply, manual, email automation), recent activity log of all team actions, and quick stats. It gives you a complete snapshot of your recruitment activity at a glance.",
     tags: ["dashboard", "overview", "analytics"],
   },
   {
@@ -351,7 +368,7 @@ const faqData: FAQItem[] = [
     category: "Search",
     question: "How do I use the global search?",
     answer:
-      "Click 'Search' in the left sidebar or press Cmd+K (Mac) / Ctrl+K (Windows) from anywhere. Type what you're looking for - it searches across jobs, candidates, clients, applications, and team members. Results appear as you type, organized by category.",
+      "Click 'Search' in the sidebar or press Cmd+K (Mac) / Ctrl+K (Windows) anywhere in the app. Type what you're looking for - a person's name, company name, job title, skill, or email address. Results appear instantly, grouped by type (Jobs, Candidates, Clients, Applications, Team). Click any result to jump directly to it.",
     tags: ["search", "find", "global"],
   },
   {
@@ -377,7 +394,7 @@ const faqData: FAQItem[] = [
     category: "Settings",
     question: "Where do I find Settings?",
     answer:
-      "Click 'Settings' in the left sidebar at the bottom. You'll see different sections: General (company info), Email Automation (resume monitoring), Email Templates (message templates), Pipeline Stages (customize interview stages), Tags & Categories (organize candidates), and User Settings (your personal preferences).",
+      "Click 'Settings' at the bottom of the left sidebar. You'll find sections for: General (company info), Email Automation (automatic resume processing), Email Templates (reusable messages), Pipeline Stages (customize your workflow), Tags & Categories (organize data), and User Settings (your personal preferences and password).",
     tags: ["settings", "configuration", "preferences"],
   },
   {
@@ -385,7 +402,7 @@ const faqData: FAQItem[] = [
     category: "Settings",
     question: "What is Email Automation?",
     answer:
-      "Email Automation lets you set up email accounts that automatically receive and process resumes. When someone sends a resume to your monitoring email, the system reads it, extracts information (name, skills, experience), and creates an application automatically. Go to Settings > Email Automation to set this up.",
+      "Email Automation monitors an email inbox and automatically processes resumes sent to it. When someone emails a resume to your monitoring address, the system extracts their information (name, skills, experience) and creates an application automatically - no manual data entry needed! Set this up in Settings > Email Automation to save hours of work.",
     tags: ["settings", "email", "automation"],
   },
   {
@@ -401,7 +418,7 @@ const faqData: FAQItem[] = [
     category: "Settings",
     question: "What are Email Templates?",
     answer:
-      "Email Templates are pre-written email messages you can reuse. Go to Settings > Email Templates to create templates for common emails like interview invitations, rejection letters, offer letters, or follow-ups. You can use variables in two formats: {{candidateName}} or [Candidate Name], {{jobTitle}} or [Job Title], {{companyName}} or [Company Name], {{interviewDate}} or [Interview Date], etc. These variables get automatically replaced with real information when you send the email.",
+      "Email Templates are pre-written messages you can reuse for common emails (interview invitations, rejections, offers, follow-ups). Create them in Settings > Email Templates. Use variables like {{candidateName}} or [Candidate Name], {{jobTitle}} or [Job Title], {{companyName}} or [Company Name], {{interviewDate}} or [Interview Date] - the system automatically fills in the actual values when you send.",
     tags: ["settings", "email", "templates", "variables"],
   },
   {
@@ -409,7 +426,7 @@ const faqData: FAQItem[] = [
     category: "Settings",
     question: "Can I customize the pipeline stages?",
     answer:
-      "Yes! Go to Settings > Pipeline Stages. You can add, edit, or remove stages for your recruitment workflow. Common stages are Screening, Interview, Assessment, Offer, Hired, and Rejected. Changes apply to all new jobs, but existing jobs keep their current stages unless you update them.",
+      "Yes! Go to Settings > Pipeline Stages to add, edit, or remove stages. Common stages are: Screening, Phone Screen, Interview, Assessment, Reference Check, Offer, Hired, and Rejected. Customize to match your process. Changes apply to new jobs automatically.",
     tags: ["settings", "pipeline", "stages", "customize"],
   },
   {
@@ -425,7 +442,7 @@ const faqData: FAQItem[] = [
     category: "Settings",
     question: "How do I change my personal information?",
     answer:
-      "Click 'Settings' in the sidebar, then go to the 'User Settings' or 'Account' section. You can update your name, email, phone number, profile picture, password, and notification preferences. Changes to your profile are visible to other team members.",
+      "Go to Settings and find the 'User Settings' or 'Account' section. Update your name, email, phone, profile picture, password, and notification preferences. Your profile changes are visible to other team members.",
     tags: ["settings", "account", "profile"],
   },
 
@@ -435,7 +452,7 @@ const faqData: FAQItem[] = [
     category: "Common Tasks",
     question: "How do I process a new application start to finish?",
     answer:
-      "Step 1: Go to Applications page. Step 2: Click on an application to review their resume and details. Step 3: Click the green checkmark to Approve (or red X to Reject). Step 4: If approved, they automatically become a Candidate. Step 5: Go to Candidates page and move them through stages as you interview them. Step 6: When ready, change their stage to 'Offer' or 'Hired'.",
+      "Step 1: Go to Candidates page and click Applications tab. Step 2: Click on an application to review their resume and details. Step 3: Click the green 'Approve & Email' button to approve (opens email modal) or red X to Reject. Step 4: Send welcome email to approved candidate. Step 5: They become a Candidate in the Candidates tab. Step 6: Move them through stages as you interview them. Step 7: When ready, change their stage to 'Offer' or 'Hired'.",
     tags: ["workflow", "process", "applications", "candidates"],
   },
   {
@@ -443,7 +460,7 @@ const faqData: FAQItem[] = [
     category: "Common Tasks",
     question: "How do I post a new job and track applicants?",
     answer:
-      "Step 1: Click 'Jobs' in sidebar. Step 2: Click blue 'Add Job' button. Step 3: Fill in job details and select the client. Step 4: Click 'Create Job'. Step 5: Applications will start appearing in your Applications page. Step 6: Click the job name in Jobs page to see the pipeline view of all candidates for that job.",
+      "Step 1: Click 'Clients' in sidebar. Step 2: Select the client. Step 3: Click 'Add Job' button. Step 4: Fill in job details. Step 5: Click 'Create Job'. Step 6: Applications will start appearing in the Candidates page under Applications tab. Step 7: Click the job name in the client's job list to see the pipeline view of all candidates for that job.",
     tags: ["workflow", "jobs", "tracking"],
   },
   {
@@ -451,7 +468,7 @@ const faqData: FAQItem[] = [
     category: "Common Tasks",
     question: "How do I move a candidate through the interview process?",
     answer:
-      "Option 1: Go to Candidates page, find the candidate, click the stage dropdown in their row, and select the new stage. Option 2: Go to Jobs page, click the job, and drag the candidate's card between stage columns in the pipeline view. Both options update the candidate's status immediately.",
+      "Option 1: Go to Candidates page, find the candidate, click the stage dropdown in their row, and select the new stage. Option 2: Go to Clients, click the client, click the job, and drag the candidate's card between stage columns in the pipeline view. Both options update the candidate's status immediately.",
     tags: ["workflow", "candidates", "stages"],
   },
   {
@@ -459,7 +476,7 @@ const faqData: FAQItem[] = [
     category: "Common Tasks",
     question: "How do I assign work to my team members?",
     answer:
-      "For Applications: Go to Applications page and use the 'Assigned To' dropdown in each row. For Candidates: Go to Candidates page and use the 'Assigned To' field. The assigned person will see it in their list and can filter to see only their assignments.",
+      "For Applications: Go to Candidates page > Applications tab and use the 'Assigned To' dropdown in each row. For Candidates: Go to Candidates page > Candidates tab and use the 'Assigned To' field. The assigned person will see it in their list and can filter to see only their assignments.",
     tags: ["workflow", "team", "assignments"],
   },
   {
@@ -467,7 +484,7 @@ const faqData: FAQItem[] = [
     category: "Common Tasks",
     question: "How do I find a specific candidate or application?",
     answer:
-      "Quick search: Use the search box at the top of the Candidates or Applications page. Global search: Click 'Search' in the sidebar or press Cmd+K / Ctrl+K. Type the person's name, email, or any keyword. Results will show all matches across the system.",
+      "Quick search: Use the search box at the top of the Candidates page (works in both Candidates and Applications tabs). Global search: Click 'Search' in the sidebar or press Cmd+K / Ctrl+K. Type the person's name, email, or any keyword. Results will show all matches across the system.",
     tags: ["workflow", "search", "finding"],
   },
   {
@@ -475,7 +492,7 @@ const faqData: FAQItem[] = [
     category: "Common Tasks",
     question: "How do I check how many open positions I have?",
     answer:
-      "Click 'Jobs' in the sidebar. At the top, you'll see a count of total jobs. To see only active (open) positions, look at the status column - jobs marked 'Active' are currently accepting applications. You can also see this summary on the Dashboard.",
+      "Click 'Clients' in the sidebar, then click on each client to see their jobs. Jobs marked 'Active' are currently accepting applications. You can also see a summary on the Dashboard showing total jobs and applications across all clients.",
     tags: ["workflow", "jobs", "counting"],
   },
 
@@ -493,7 +510,7 @@ const faqData: FAQItem[] = [
     category: "Troubleshooting",
     question: "Why can't I move a candidate to a different stage?",
     answer:
-      "Check these: 1) Make sure you have permission to edit candidates (Viewers can't edit). 2) The candidate must be assigned to a job before you can move them through stages. 3) Some stages may be locked depending on your workflow rules. If still stuck, contact your admin.",
+      "Common reasons: 1) You may not have permission (Viewers cannot edit). 2) The candidate must be assigned to a job first. 3) The job needs a pipeline with stages set up. If everything looks correct, contact your administrator for help.",
     tags: ["troubleshooting", "candidates", "stages"],
   },
   {
@@ -501,7 +518,7 @@ const faqData: FAQItem[] = [
     category: "Troubleshooting",
     question: "Email automation isn't working - no applications are coming in.",
     answer:
-      "Check these: 1) Go to Settings > Email Automation and make sure the account is not paused (should show a pause icon, not a play icon). 2) Make sure 'Auto Process Resumes' is turned ON. 3) Verify people are actually sending emails to that address. 4) Check if there are errors shown next to the email account. Contact support if issues persist.",
+      "Troubleshooting steps: 1) Go to Settings > Email Automation and verify the account is active (not paused). 2) Make sure 'Auto Process Resumes' toggle is ON. 3) Confirm people are actually sending resumes to that email address. 4) Check for error messages next to the email account. Contact support if problems continue.",
     tags: ["troubleshooting", "email", "automation"],
   },
   {
@@ -517,7 +534,7 @@ const faqData: FAQItem[] = [
     category: "Troubleshooting",
     question: "I approved an application but can't find the candidate.",
     answer:
-      "When you approve an application, it becomes a candidate. Go to the 'Candidates' page (not Applications page) and search for their name. They should be there, assigned to the job they applied for, in the first stage of the pipeline.",
+      "When you approve an application, it becomes a candidate. Stay in the Candidates page and click the 'Candidates' tab (not the Applications tab) and search for their name. They should be there, assigned to the job they applied for, in the first stage of the pipeline.",
     tags: ["troubleshooting", "candidates", "applications"],
   },
   {
@@ -569,7 +586,7 @@ const faqData: FAQItem[] = [
     category: "Resume Parsing",
     question: "What is the Quick Import feature?",
     answer:
-      "Quick Import allows you to upload a resume file (PDF or DOCX) and have the system automatically extract candidate information like name, email, phone, skills, work experience, and education. Go to Candidates > Quick Import to access this feature. The system uses advanced parsing technology with three fallback methods (pdf-parse, pdf2json, and mammoth) to ensure successful extraction.",
+      "Quick Import lets you upload a resume file (PDF or DOCX) and the system automatically extracts all the information - name, email, phone, skills, work history, education. Go to Candidates > Quick Import, upload the file, review the extracted data (you can edit anything), and create the candidate. It's much faster than typing everything manually!",
     tags: ["resume", "parsing", "quick-import", "upload"],
   },
   {
@@ -577,7 +594,7 @@ const faqData: FAQItem[] = [
     category: "Resume Parsing",
     question: "What file formats are supported for resume uploads?",
     answer:
-      "The system supports PDF and DOCX (Microsoft Word) formats. The parser has a triple fallback strategy: it first tries pdf-parse for PDFs, then pdf2json if that fails, and uses mammoth for DOCX files. This ensures high success rates even with complex resume layouts.",
+      "The system supports PDF and DOCX (Microsoft Word) formats. The parser tries multiple methods to read the file, so even complex resume layouts usually work. If a resume fails to upload, try converting it to a simpler PDF format.",
     tags: ["resume", "formats", "pdf", "docx"],
   },
   {
@@ -601,7 +618,7 @@ const faqData: FAQItem[] = [
     category: "Resume Parsing",
     question: "What if the resume parser makes mistakes?",
     answer:
-      "Resume parsing accuracy depends on the resume format and layout. Complex layouts, tables, or images may result in extraction errors. Always review the extracted data before saving. You can manually correct any fields. If a resume consistently fails to parse, try asking for a cleaner PDF format or manually create the candidate profile.",
+      "The parser's accuracy depends on resume formatting - clean, standard layouts work best. Complex tables, images, or unusual fonts may cause errors. Always review the extracted data before saving. You can manually correct any field. If a resume consistently fails, ask for it in a simpler format or create the candidate profile manually.",
     tags: ["resume", "errors", "accuracy", "troubleshooting"],
   },
 
@@ -611,7 +628,7 @@ const faqData: FAQItem[] = [
     category: "Bulk Operations",
     question: "Can I approve or reject multiple applications at once?",
     answer:
-      "Yes! On the Applications page, use the checkboxes on the left side of each row to select multiple applications. You can also click the checkbox in the table header to select all applications on the current page. Once selected, bulk action buttons appear at the top allowing you to approve or reject multiple applications simultaneously.",
+      "Yes! Go to Candidates page > Applications tab. Use the checkboxes on the left side of each row to select multiple applications. You can also click the checkbox in the table header to select all applications on the current page. Once selected, bulk action buttons appear at the top allowing you to approve or reject multiple applications simultaneously.",
     tags: ["bulk", "applications", "approve", "reject"],
   },
   {
@@ -645,7 +662,7 @@ const faqData: FAQItem[] = [
     category: "Email Communication",
     question: "How do I send an email to a candidate?",
     answer:
-      "Open the candidate's profile or the candidate detail page from the job pipeline. Look for the 'Send Email' or communication section. You can compose a new email, use an email template, or reply to previous correspondence. The email will be tracked in the candidate's communication history.",
+      "Open the candidate's profile and look for the 'Send Email' or communication section. You can write a new email, use a saved template, or reply to previous messages. All emails are automatically saved in the candidate's communication history so you have a complete record.",
     tags: ["email", "candidates", "communication"],
   },
   {
@@ -669,7 +686,7 @@ const faqData: FAQItem[] = [
     category: "Email Communication",
     question: "What is email threading?",
     answer:
-      "Email threading groups related emails together into conversations. When you view emails, they're organized by thread ID, showing the entire conversation history. This makes it easy to follow the back-and-forth communication with candidates without losing context.",
+      "Email threading groups related messages together into conversations, like how Gmail groups emails. When you view emails, you see the entire back-and-forth conversation history in one place. This makes it easy to follow communication without losing context or scrolling through separate messages.",
     tags: ["email", "threading", "conversations"],
   },
   {
@@ -687,7 +704,7 @@ const faqData: FAQItem[] = [
     category: "Interviews",
     question: "How do I schedule an interview?",
     answer:
-      "Go to the Jobs page, click on a job, find the candidate in the pipeline, and click on their card. Look for 'Schedule Interview' button. Fill in details: interview date and time, type (video/phone/in-person), duration, interviewer, and location or meeting link. You can also create Zoom meetings directly from this form.",
+      "Go to Clients, click the client, click on a job, find the candidate in the pipeline, and click on their card. Look for 'Schedule Interview' button. Fill in details: interview date and time, type (video/phone/in-person), duration, interviewer, and location or meeting link. You can also create Zoom meetings directly from this form.",
     tags: ["interviews", "scheduling", "candidates"],
   },
   {
@@ -779,7 +796,7 @@ const faqData: FAQItem[] = [
     category: "Real-time Features",
     question: "Why do I see changes without refreshing the page?",
     answer:
-      "The application uses Firestore real-time synchronization. When anyone on your team makes a change (approves an application, moves a candidate, creates a job), the update appears immediately for all users without refreshing. This prevents duplicate work and keeps everyone synchronized.",
+      "The system updates in real-time using Firestore technology. When anyone on your team makes a change (approves an application, moves a candidate, creates a job), everyone sees it instantly - no refresh needed. This prevents duplicate work and keeps everyone on the same page.",
     tags: ["realtime", "firestore", "synchronization", "updates"],
   },
   {
@@ -787,7 +804,7 @@ const faqData: FAQItem[] = [
     category: "Real-time Features",
     question: "What is optimistic UI updating?",
     answer:
-      "When you drag a candidate to a new stage in the Kanban board, the UI updates immediately before the server confirms the change. This makes the interface feel fast and responsive. If the server operation fails, the UI automatically reverts the change and shows an error message.",
+      "When you drag a candidate to a new stage, the screen updates immediately to feel fast and responsive - even before the server saves it. If something goes wrong (like a connection issue), the system automatically reverts the change and shows an error. This makes the app feel instant while keeping data safe.",
     tags: ["optimistic", "ui", "performance", "ux"],
   },
   {
@@ -839,7 +856,7 @@ const faqData: FAQItem[] = [
     category: "Analytics",
     question: "What analytics are shown on the Dashboard?",
     answer:
-      "The Dashboard displays: total applications received, approval rate percentage, applications over time chart (by source: direct apply, manual, email automation), application status breakdown, recent activity timeline, and quick stats for jobs, candidates, and clients. You can change the time range for charts (7, 30, 90 days, etc.).",
+      "The Dashboard shows: total applications received, approval rate (what % you approve), applications over time chart (color-coded by source: direct apply, manual entry, email automation), status breakdown, recent activity log, and quick counts for jobs, candidates, and clients. Change the time range (7, 30, 90 days) to see different periods.",
     tags: ["analytics", "dashboard", "metrics", "reporting"],
   },
   {
@@ -899,7 +916,7 @@ const faqData: FAQItem[] = [
     category: "Data Management",
     question: "Where are uploaded files stored?",
     answer:
-      "All uploaded resumes and documents are stored in Cloudinary, a cloud-based file storage service. When you upload a resume through Quick Import or the application form, it's automatically uploaded to Cloudinary and the URL is saved in Firestore. Files are secure and accessible only to authenticated users.",
+      "All resumes and documents are securely stored in Cloudinary (a cloud storage service). When you upload a resume, it's automatically saved to Cloudinary and only accessible to logged-in users with proper permissions. Your files are safe and backed up.",
     tags: ["files", "storage", "cloudinary", "resumes"],
   },
   {
@@ -915,7 +932,7 @@ const faqData: FAQItem[] = [
     category: "Data Management",
     question: "Is my data backed up?",
     answer:
-      "Yes! Firestore (the database) automatically creates backups and provides point-in-time recovery. Your data is replicated across multiple data centers for redundancy. Cloudinary also maintains backups of uploaded files. However, you should periodically export important data for your own records.",
+      "Yes! Your data is automatically backed up. Firestore (the database) maintains backups and stores data across multiple data centers for safety. Cloudinary also backs up all uploaded files. Your data is protected, but it's still good practice to export important reports periodically for your own records.",
     tags: ["backup", "data", "firestore", "security"],
   },
   {
@@ -941,7 +958,7 @@ const faqData: FAQItem[] = [
     category: "Troubleshooting",
     question: "I see 'No data' on multiple pages. What should I do?",
     answer:
-      "This is usually a Firestore connection or data issue. Check: 1) Open browser DevTools Console and look for Firestore errors. 2) Verify you're logged in and authenticated. 3) Check if other team members see data. 4) Try the FirestoreDebug component (add it to DashboardLayout) to see connection status. 5) Verify Firestore Security Rules allow read access. See the FIRESTORE_NO_DATA_TROUBLESHOOTING.md guide for detailed steps.",
+      "Try these steps: 1) Refresh the page (Cmd+R or Ctrl+R). 2) Log out and log back in. 3) Check if other team members see data (if yes, it's your connection). 4) Try a different browser or clear your browser cache. 5) Press F12 to open developer tools and look for red error messages in the Console tab - take a screenshot and send to support if you see errors.",
     tags: ["troubleshooting", "no-data", "firestore", "connection"],
   },
   {
@@ -949,7 +966,7 @@ const faqData: FAQItem[] = [
     category: "Troubleshooting",
     question: "Resume upload fails or hangs. What's wrong?",
     answer:
-      "Common causes: 1) File too large (over 10MB) - compress the PDF or DOCX. 2) Network timeout - check your internet connection. 3) Cloudinary quota exceeded - contact admin to check storage limits. 4) Unsupported file format - only PDF and DOCX are supported. Try converting the file or use a different resume.",
+      "Common fixes: 1) File too large - keep resumes under 10MB. Compress or recreate the PDF if needed. 2) Check your internet connection. 3) Only PDF and DOCX formats work - convert other formats first. 4) Try a different browser. 5) If it still fails, the file may be corrupted - ask the candidate for a new copy.",
     tags: ["troubleshooting", "upload", "resume", "files"],
   },
   {
@@ -965,7 +982,7 @@ const faqData: FAQItem[] = [
     category: "Troubleshooting",
     question: "Why can't I see the changes I just made?",
     answer:
-      "If real-time updates aren't working: 1) Check your internet connection. 2) Look for Firestore connection errors in browser console. 3) Try hard refreshing (Cmd+Shift+R or Ctrl+Shift+R). 4) Clear browser cache. 5) Check if Firestore rules are blocking updates. Real-time sync requires active WebSocket connection to Firestore.",
+      "Quick fixes: 1) Check your internet connection. 2) Hard refresh the page (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows). 3) Log out and log back in. 4) Clear your browser cache (Google how for your specific browser). 5) Try a different browser. If none of this works, contact support - there may be a server issue.",
     tags: ["troubleshooting", "realtime", "updates", "sync"],
   },
   {
@@ -973,7 +990,7 @@ const faqData: FAQItem[] = [
     category: "Troubleshooting",
     question: "I get 'Permission Denied' errors. Why?",
     answer:
-      "This means either: 1) Your user role doesn't have permission for that action (e.g., Viewers can't edit data). Contact your admin to adjust permissions. 2) Firestore Security Rules are blocking the operation. 3) Your authentication session expired - try logging out and back in. 4) You're trying to access data from a different company/tenant.",
+      "This means: 1) Your user role doesn't allow that action (Viewers can't edit, Hiring Managers have limited access). Ask your admin to adjust your permissions. 2) Your login session expired - log out and log back in. 3) You're trying to access another company's data. Check with your admin if you're unsure about your permissions.",
     tags: ["troubleshooting", "permissions", "access", "firestore-rules"],
   },
 
@@ -983,7 +1000,7 @@ const faqData: FAQItem[] = [
     category: "Best Practices",
     question: "How often should I review new applications?",
     answer:
-      "Check applications at least once daily if you're actively hiring. Quick response times (within 24-48 hours) improve candidate experience and increase acceptance rates. Configure email notifications in Settings so you're alerted when new applications arrive.",
+      "Review applications at least once daily during active hiring. Responding within 24-48 hours significantly improves candidate experience and acceptance rates. Turn on email notifications in Settings so you're alerted immediately when new applications arrive.",
     tags: ["best-practices", "applications", "workflow"],
   },
   {
@@ -991,7 +1008,7 @@ const faqData: FAQItem[] = [
     category: "Best Practices",
     question: "Should I use tags for candidates?",
     answer:
-      "Yes! Tags make searching and organizing much easier. Create tags for: skills (JavaScript, Marketing), levels (Junior, Senior), preferences (Remote, Relocation), and specialties (Frontend, B2B Sales). Tag candidates as you review them - it takes seconds but saves hours of searching later.",
+      "Absolutely! Tags save massive amounts of time. Create tags for: Technical Skills (JavaScript, Python, AWS), Experience Level (Junior, Mid, Senior), Work Preferences (Remote, Hybrid, Willing to Relocate), and Specialties (Frontend, Backend, Full-Stack). Spend 10 seconds tagging as you review - save hours when searching later.",
     tags: ["best-practices", "tags", "organization"],
   },
   {
