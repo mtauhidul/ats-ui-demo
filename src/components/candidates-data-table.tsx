@@ -10,7 +10,6 @@ import {
   IconCircleCheck,
   IconClick,
   IconClockHour4,
-  IconCopy,
   IconDotsVertical,
   IconDownload,
   IconFilter,
@@ -101,6 +100,8 @@ import {
 } from "@/store/hooks/index";
 import type { schema } from "./data-table-schema.tsx";
 import { CandidateEmailModal } from "./candidate-email-modal";
+import type { Candidate } from "@/types/candidate";
+import type { Job } from "@/types/job";
 
 // Table cell viewer component for candidate name - decorated like applications table
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
@@ -318,8 +319,7 @@ function StageSelector({
     try {
       await updateCandidate(candidateId, {
         currentPipelineStageId: newStageId,
-        jobId: jobIdForRow,
-      } as any);
+      });
 
       toast.success("Stage updated successfully");
       if (onUpdate) onUpdate();
@@ -477,7 +477,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const clientLogo = row.original.clientLogo;
 
       return (
-        <div className="min-w-[240px] max-w-[240px] overflow-hidden">
+        <div className="min-w-60 max-w-60 overflow-hidden">
           <div className="flex flex-col gap-1.5 p-2 rounded-lg border bg-card">
             {/* Job Title on top */}
             <div className="text-xs font-semibold text-foreground truncate">
@@ -520,7 +520,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     header: () => (
       <div className="text-left">Stage</div>
     ),
-    cell: ({ row, table }) => {
+    cell: ({ row }) => {
       const isRejected = row.original.status?.toLowerCase() === "rejected";
       const isHired = row.original.status?.toLowerCase() === "hired";
       const isApplication = row.original.isApplication === true;
@@ -573,7 +573,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         <div className="min-w-[200px] max-w-[200px]">
           <StageSelector
             candidateId={row.original.candidateId!}
-            jobIdForRow={(row.original as any).jobIdForRow}
+            jobIdForRow={row.original.jobIdForRow as string}
             currentStageId={stageId}
             currentStageName={stageName}
             onUpdate={() => {
@@ -1321,7 +1321,8 @@ export function CandidatesDataTable({
 
     // Get the job - handle both string and object types
     let job = null;
-    const jobIdToFind = (rowData as any).jobIdForRow || (rowData as any).jobId;
+    const rowDataTyped = rowData as { jobIdForRow?: string; jobId?: string };
+    const jobIdToFind = rowDataTyped.jobIdForRow || rowDataTyped.jobId;
     
     if (jobIdToFind) {
       if (typeof jobIdToFind === "string") {
@@ -1335,7 +1336,7 @@ export function CandidatesDataTable({
     }
 
     // If job still not found, try to get from candidate's jobs array
-    const candidateJobs = (candidate as any).jobs;
+    const candidateJobs = (candidate as { jobs?: unknown[] }).jobs;
     if (!job && candidateJobs && Array.isArray(candidateJobs) && candidateJobs.length > 0) {
       const firstJobId = typeof candidateJobs[0] === "string" 
         ? candidateJobs[0] 
@@ -1452,7 +1453,7 @@ export function CandidatesDataTable({
   const [selectedJobForApproval, setSelectedJobForApproval] = React.useState<string>("");
   const [isApproving, setIsApproving] = React.useState(false);
   const [sendWelcomeEmail, setSendWelcomeEmail] = React.useState(true); // Default to true
-  const [newlyCreatedCandidate, setNewlyCreatedCandidate] = React.useState<{ candidate: any; job: any } | null>(null);
+  const [newlyCreatedCandidate, setNewlyCreatedCandidate] = React.useState<{ candidate: Candidate; job: Job } | null>(null);
 
   const handleApprove = (id: string | number) => {
     setApplicationToApprove(String(id));

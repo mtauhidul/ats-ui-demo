@@ -1,5 +1,16 @@
 import { FeatureCard } from "@/components/feature-card";
 import { LogoCloud } from "@/components/logo-cloud";
+import { MetricsSection } from "@/components/metrics-section";
+import { PlatformModuleCard } from "@/components/platform-module-card";
+import { WorkflowPreview } from "@/components/workflow-preview";
+import {
+  ClientCreationGraphic,
+  JobCreationGraphic,
+  CandidateSourcingGraphic,
+  ApplicationReviewGraphic,
+  InterviewSchedulingGraphic,
+  OnboardingGraphic,
+} from "@/components/workflow-graphics";
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +20,16 @@ import {
   Shield,
   Sparkles,
   Workflow,
+  Users,
+  Briefcase,
+  Calendar,
+  MessageSquare,
+  BarChart3,
+  Database,
+  Building2,
+  FileCheck,
+  UserPlus,
+  Handshake,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -45,6 +66,125 @@ export default function HomePage() {
       title: "Role-Based Access",
       description:
         "Enterprise-grade security with granular permissions and comprehensive RBAC system",
+    },
+  ];
+
+  const platformModules = [
+    {
+      icon: Database,
+      title: "Candidate Database",
+      description:
+        "Centralized repository for all candidate profiles with advanced search, filtering, and tagging capabilities",
+      href: "/dashboard/candidates",
+      color: "#3b82f6",
+    },
+    {
+      icon: Briefcase,
+      title: "Job Management",
+      description:
+        "Create, publish, and manage job openings with custom requirements and automated candidate matching",
+      href: "/dashboard/jobs",
+      color: "#8b5cf6",
+    },
+    {
+      icon: Calendar,
+      title: "Interview Scheduling",
+      description:
+        "Seamless interview coordination with calendar integration, automated reminders, and video conferencing",
+      href: "/dashboard/applications",
+      color: "#ec4899",
+    },
+    {
+      icon: Users,
+      title: "Team Collaboration",
+      description:
+        "Built-in communication tools, role assignments, and feedback collection for hiring teams",
+      href: "/dashboard/team",
+      color: "#10b981",
+    },
+    {
+      icon: MessageSquare,
+      title: "Email Integration",
+      description:
+        "Two-way email sync, custom templates, and automated communication workflows for candidate engagement",
+      href: "/dashboard/messages",
+      color: "#f59e0b",
+    },
+    {
+      icon: BarChart3,
+      title: "Analytics Dashboard",
+      description:
+        "Real-time insights on hiring metrics, pipeline health, and team performance with exportable reports",
+      href: "/dashboard/analytics",
+      color: "#06b6d4",
+    },
+  ];
+
+  const workflowStages = [
+    {
+      graphic: ClientCreationGraphic,
+      title: "Client Creation",
+      description: "Set up client profiles with company details, contact information, and custom requirements",
+      highlight: "Foundation for organized multi-client hiring",
+      color: "#3b82f6",
+    },
+    {
+      graphic: JobCreationGraphic,
+      title: "Job Creation Under Client",
+      description: "Define job roles, requirements, and workflows linked directly to specific clients",
+      highlight: "Structured hiring with client-specific parameters",
+      color: "#8b5cf6",
+    },
+    {
+      graphic: CandidateSourcingGraphic,
+      title: "Candidate Sourcing",
+      description: "Import resumes via email, upload, or quick-import with AI-powered parsing",
+      highlight: "Build talent pool automatically from multiple sources",
+      color: "#ec4899",
+    },
+    {
+      graphic: ApplicationReviewGraphic,
+      title: "Application Review",
+      description: "Screen and evaluate candidates against job criteria with collaborative feedback",
+      highlight: "Streamlined shortlisting with team input",
+      color: "#f59e0b",
+    },
+    {
+      graphic: InterviewSchedulingGraphic,
+      title: "Interview Scheduling",
+      description: "Coordinate meetings with calendar sync, automated reminders, and video links",
+      highlight: "Seamless scheduling across time zones",
+      color: "#10b981",
+    },
+    {
+      graphic: OnboardingGraphic,
+      title: "Offer & Onboarding",
+      description: "Send offers, track acceptance, and transition candidates to employee status",
+      highlight: "Complete the hiring cycle efficiently",
+      color: "#06b6d4",
+    },
+  ];
+
+  const metrics = [
+    {
+      value: "85%",
+      label: "Data Entry Reduction",
+      description: "AI extracts candidate info from resumes automatically vs manual typing"
+    },
+    {
+      value: "70%",
+      label: "Faster Screening",
+      description: "Automated validation detects invalid resumes instantly vs manual review"
+    },
+    {
+      value: "60%",
+      label: "Time Saved on Communication",
+      description: "Email automation and templates vs writing individual messages"
+    },
+    {
+      value: "3x",
+      label: "Pipeline Visibility",
+      description: "Real-time stage tracking vs spreadsheet-based manual updates"
     },
   ];
 
@@ -103,6 +243,57 @@ export default function HomePage() {
             />
           ))}
         </div>
+
+        {/* Platform Modules Section */}
+        <div className="mt-32 max-w-6xl mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-block">
+              <p className="text-xs font-semibold text-primary tracking-widest uppercase mb-3 relative">
+                Complete Recruitment Suite
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-px bg-primary/40"></span>
+              </p>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+              Platform Modules
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto leading-relaxed font-light">
+              End-to-end tools for managing your entire hiring workflow, from candidate sourcing to onboarding
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {platformModules.map((module) => (
+              <PlatformModuleCard
+                key={module.title}
+                module={module}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Workflow Preview Section */}
+        <div className="mt-32 max-w-7xl mx-auto">
+          <div className="text-center mb-20 space-y-4">
+            <div className="inline-flex items-center gap-2 mb-2">
+              <div className="w-8 h-px bg-primary/40"></div>
+              <p className="text-xs font-medium text-primary tracking-wider uppercase">
+                Your Hiring Journey
+              </p>
+              <div className="w-8 h-px bg-primary/40"></div>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+              Recruitment Workflow
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Seamless candidate journey from initial contact to successful onboarding
+            </p>
+          </div>
+
+          <WorkflowPreview stages={workflowStages} />
+        </div>
+
+        {/* Metrics Section */}
+        <MetricsSection metrics={metrics} className="mt-32" />
 
         {/* Powered By Section */}
         <div className="mt-24 max-w-5xl mx-auto">

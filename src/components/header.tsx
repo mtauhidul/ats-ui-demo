@@ -17,12 +17,13 @@ import { cn } from "@/lib/utils";
 import { LogOut, Settings } from "lucide-react";
 import React from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export function Header() {
   const [open, setOpen] = React.useState(false);
   const scrolled = useScroll(10);
   const { user, logout } = useAuth();
+  const location = useLocation();
 
   const links = [
     {
@@ -73,15 +74,24 @@ export function Header() {
           </span>
         </Link>
         <div className="hidden items-center gap-2 md:flex">
-          {links.map((link, i) => (
-            <Link
-              className={buttonVariants({ variant: "ghost" })}
-              to={link.href}
-              key={i}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link, i) => {
+            // For home page, use exact match. For others, match if path starts with link href
+            const isActive = link.href === "/" 
+              ? location.pathname === "/"
+              : location.pathname.startsWith(link.href);
+            return (
+              <Link
+                className={cn(
+                  buttonVariants({ variant: "ghost" }),
+                  isActive && "bg-accent text-accent-foreground font-semibold"
+                )}
+                to={link.href}
+                key={i}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           {!user ? (
             <>
               <Button variant="outline" asChild>
@@ -179,19 +189,28 @@ export function Header() {
       </nav>
       <MobileMenu className="flex flex-col justify-between gap-2" open={open}>
         <div className="grid gap-y-2">
-          {links.map((link) => (
-            <Link
-              className={buttonVariants({
-                variant: "ghost",
-                className: "justify-start",
-              })}
-              to={link.href}
-              key={link.label}
-              onClick={() => setOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link) => {
+            // For home page, use exact match. For others, match if path starts with link href
+            const isActive = link.href === "/" 
+              ? location.pathname === "/"
+              : location.pathname.startsWith(link.href);
+            return (
+              <Link
+                className={cn(
+                  buttonVariants({
+                    variant: "ghost",
+                    className: "justify-start",
+                  }),
+                  isActive && "bg-accent text-accent-foreground font-semibold"
+                )}
+                to={link.href}
+                key={link.label}
+                onClick={() => setOpen(false)}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
         <div className="flex flex-col gap-2">
           {!user ? (
