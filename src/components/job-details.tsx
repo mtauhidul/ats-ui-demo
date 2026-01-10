@@ -47,6 +47,7 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  Copy,
   DollarSign,
   Edit,
   FileText,
@@ -62,6 +63,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface JobDetailsProps {
   job: Job;
@@ -332,10 +334,22 @@ export function JobDetails({
             <ArrowLeft className="h-4 w-4 md:mr-2" />
             <span className="hidden md:inline">Back</span>
           </Button>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 flex items-center gap-2">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground truncate">
               {job.title}
             </h1>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-primary/10 shrink-0"
+              onClick={() => {
+                navigator.clipboard.writeText(job.title);
+                toast.success("Job title copied to clipboard!");
+              }}
+              title="Copy Job Title"
+            >
+              <Copy className="h-4 w-4 text-muted-foreground hover:text-primary" />
+            </Button>
           </div>
           <div className="flex items-center gap-2">
             <Badge
@@ -369,18 +383,36 @@ export function JobDetails({
           </div>
         </div>
 
-        {/* Client Info */}
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Building2 className="h-4 w-4" />
-          <span className="text-sm md:text-base">{clientName}</span>
-          <span className="text-xs">•</span>
-          <Calendar className="h-4 w-4" />
-          <span className="text-sm">
-            Posted {(() => {
-              const date = toSafeDate(job.createdAt);
-              return date ? date.toLocaleDateString() : 'N/A';
-            })()}
-          </span>
+        {/* Client Info and Job ID */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Building2 className="h-4 w-4" />
+            <span className="text-sm md:text-base">{clientName}</span>
+            <span className="text-xs">•</span>
+            <Calendar className="h-4 w-4" />
+            <span className="text-sm">
+              Posted {(() => {
+                const date = toSafeDate(job.createdAt);
+                return date ? date.toLocaleDateString() : 'N/A';
+              })()}
+            </span>
+          </div>
+          
+          {/* Job ID Badge */}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-md border border-primary/20 hover:bg-primary/15 transition-colors">
+            <span className="text-xs font-semibold text-primary">Job ID:</span>
+            <code className="text-xs font-mono font-bold text-foreground">{job.id}</code>
+            <button
+              className="p-0.5 hover:bg-primary/20 rounded text-primary transition-colors"
+              onClick={() => {
+                navigator.clipboard.writeText(job.id);
+                toast.success("Job ID copied to clipboard!");
+              }}
+              title="Copy Job ID"
+            >
+              <Copy className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
 
         {/* Categories Section */}
