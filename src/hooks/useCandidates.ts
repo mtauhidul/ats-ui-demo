@@ -81,8 +81,9 @@ export function useCandidates(options?: {
       constraints.push(where('jobIds', 'array-contains', jobId));
     }
 
-    // 🔒 RBAC: Non-admin users can only see candidates assigned to them
-    if (user && user.role !== 'admin' && user.id) {
+    // 🔒 RBAC: Users without canManageCandidates permission can only see candidates assigned to them
+    const canManageAllCandidates = user?.role === 'admin' || user?.permissions?.canManageCandidates === true;
+    if (user && !canManageAllCandidates && user.id) {
       constraints.push(where('assignedTo', '==', user.id));
     }
 
