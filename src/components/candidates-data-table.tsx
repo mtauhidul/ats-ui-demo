@@ -104,11 +104,35 @@ import type { Candidate } from "@/types/candidate";
 import type { Job } from "@/types/job";
 
 // Table cell viewer component for candidate name - decorated like applications table
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
+function TableCellViewer({ 
+  item, 
+  searchParams 
+}: { 
+  item: z.infer<typeof schema>;
+  searchParams?: URLSearchParams;
+}) {
   // Build URL with both candidateId and jobId for specific candidacy view
-  const url = item.jobIdForRow && item.jobIdForRow !== 'no-job'
-    ? `/dashboard/candidates/${item.candidateId!}?jobId=${item.jobIdForRow}`
-    : `/dashboard/candidates/${item.candidateId!}`;
+  // Preserve pagination, search, and tab state in the URL
+  const params = new URLSearchParams();
+  
+  if (item.jobIdForRow && item.jobIdForRow !== 'no-job') {
+    params.set('jobId', item.jobIdForRow);
+  }
+  
+  // Preserve current page, pageSize, search, and tab
+  if (searchParams) {
+    const page = searchParams.get('page');
+    const pageSize = searchParams.get('pageSize');
+    const search = searchParams.get('search');
+    const tab = searchParams.get('tab');
+    
+    if (page) params.set('page', page);
+    if (pageSize) params.set('pageSize', pageSize);
+    if (search) params.set('search', search);
+    if (tab) params.set('tab', tab);
+  }
+  
+  const url = `/dashboard/candidates/${item.candidateId!}?${params.toString()}`;
   
   return (
     <Link
@@ -829,9 +853,13 @@ const createActionsColumn = (handlers: {
 export function CandidatesDataTable({
   data: initialData,
   onDeleteCandidate,
+  searchParams,
+  setSearchParams,
 }: {
   data: z.infer<typeof schema>[];
   onDeleteCandidate?: (candidateId: string) => void;
+  searchParams?: URLSearchParams;
+  setSearchParams?: (params: URLSearchParams, options?: { replace?: boolean }) => void;
 }) {
   const [data, setData] = React.useState(() => initialData);
   const [rowSelection, setRowSelection] = React.useState({});
@@ -843,11 +871,17 @@ export function CandidatesDataTable({
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "target", desc: true }, // Default: sort by newest first (Date Applied - Newest)
   ]);
+  
+  // Initialize pagination from URL params or default
+  const initialPage = searchParams ? parseInt(searchParams.get("page") || "1") - 1 : 0;
+  const initialPageSize = searchParams ? parseInt(searchParams.get("pageSize") || "10") : 10;
+  const initialSearch = searchParams ? searchParams.get("search") || "" : "";
+  
   const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
+    pageIndex: initialPage,
+    pageSize: initialPageSize,
   });
-  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [globalFilter, setGlobalFilter] = React.useState(initialSearch);
 
   // 🔥 REALTIME: Get team members for assignee name lookup and candidate operations
   const { teamMembers } = useTeam();
@@ -915,6 +949,29 @@ export function CandidatesDataTable({
     lastManualUpdateRef.current = Date.now();
     setData(updater);
   };
+  
+  // Sync URL params when pagination changes
+  React.useEffect(() => {
+    if (setSearchParams && searchParams) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("page", (pagination.pageIndex + 1).toString());
+      newParams.set("pageSize", pagination.pageSize.toString());
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [pagination.pageIndex, pagination.pageSize]);
+  
+  // Sync URL params when search changes
+  React.useEffect(() => {
+    if (setSearchParams && searchParams) {
+      const newParams = new URLSearchParams(searchParams);
+      if (globalFilter) {
+        newParams.set("search", globalFilter);
+      } else {
+        newParams.delete("search");
+      }
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [globalFilter]);
 
   // Bulk action handlers
   const handleBulkHire = async () => {
@@ -1614,8 +1671,22 @@ export function CandidatesDataTable({
   };
 
   const columnsWithActions = React.useMemo(() => {
-    // Clone columns and update the "Assigned" column to use team members for name lookup
+    // Clone columns and update columns that need dynamic data
     const baseColumns = columns.slice(0, -1).map((col) => {
+      // Update candidateName column to pass searchParams
+      if ("accessorKey" in col && col.accessorKey === "candidateName") {
+        return {
+          ...col,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          cell: ({ row }: { row: any }) => (
+            <div className="min-w-[220px] max-w-[220px] overflow-hidden">
+              <TableCellViewer item={row.original} searchParams={searchParams} />
+            </div>
+          ),
+        };
+      }
+      
+      // Update "Assigned" column to use team members for name lookup
       if ("accessorKey" in col && col.accessorKey === "reviewer") {
         return {
           ...col,
@@ -1687,7 +1758,7 @@ export function CandidatesDataTable({
     });
     return [...baseColumns, actionsColumn];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, teamMembers]);
+  }, [data, teamMembers, searchParams]);
 
   const table = useReactTable({
     data,

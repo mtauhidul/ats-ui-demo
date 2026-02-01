@@ -68,7 +68,7 @@ export default function CandidateDetailsPage() {
   const clientIdFromUrl = searchParams.get('clientId');
   const navigate = useNavigate();
   
-  // Smart back navigation based on context
+  // Smart back navigation based on context - preserve candidates list state
   const handleBackNavigation = () => {
     if (jobIdFromUrl) {
       // Came from a job context, go back to that job
@@ -78,8 +78,22 @@ export default function CandidateDetailsPage() {
         navigate(`/dashboard/jobs/${jobIdFromUrl}`);
       }
     } else {
-      // No job context, go to candidates list
-      navigate('/dashboard/candidates');
+      // No job context, go to candidates list with preserved state
+      const params = new URLSearchParams();
+      
+      // Preserve pagination, search, and tab from URL params
+      const page = searchParams.get('page');
+      const pageSize = searchParams.get('pageSize');
+      const search = searchParams.get('search');
+      const tab = searchParams.get('tab');
+      
+      if (page) params.set('page', page);
+      if (pageSize) params.set('pageSize', pageSize);
+      if (search) params.set('search', search);
+      if (tab) params.set('tab', tab);
+      
+      const queryString = params.toString();
+      navigate(`/dashboard/candidates${queryString ? `?${queryString}` : ''}`);
     }
   };
   const [showResumePreview, setShowResumePreview] = React.useState(false);

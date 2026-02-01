@@ -9,6 +9,7 @@ import {
   useApplications,
 } from "@/store/hooks/index";
 import * as React from "react";
+import { useSearchParams } from "react-router-dom";
 
 const teamMembersPool = [
   "John Smith",
@@ -21,7 +22,12 @@ const teamMembersPool = [
 ];
 
 export default function CandidatesPage() {
-  const [activeTab, setActiveTab] = React.useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize state from URL params
+  const [activeTab, setActiveTab] = React.useState(
+    searchParams.get("tab") || "all"
+  );
   const [isTabChanging, setIsTabChanging] = React.useState(false);
 
   const {
@@ -47,6 +53,12 @@ export default function CandidatesPage() {
   const handleTabChange = (value: string) => {
     setIsTabChanging(true);
     setActiveTab(value);
+    
+    // Update URL params
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", value);
+    setSearchParams(newParams, { replace: true });
+    
     // Reset after animation
     setTimeout(() => setIsTabChanging(false), 300);
   };
@@ -417,6 +429,8 @@ export default function CandidatesPage() {
                   <CandidatesDataTable
                     data={filteredData}
                     onDeleteCandidate={handleDeleteCandidate}
+                    searchParams={searchParams}
+                    setSearchParams={setSearchParams}
                   />
                 )}
               </div>
