@@ -317,9 +317,12 @@ function StageSelector({
 
     setIsUpdating(true);
     try {
+      // Update the candidate with both currentPipelineStageId and jobId
+      // The backend will handle updating the specific job application's stage
       await updateCandidate(candidateId, {
         currentPipelineStageId: newStageId,
-      });
+        jobId: jobIdForRow, // Tell backend which job's stage to update
+      } as any);
 
       toast.success("Stage updated successfully");
       if (onUpdate) onUpdate();
@@ -892,9 +895,26 @@ export function CandidatesDataTable({
   } | null>(null);
 
   // Sync local data state with prop changes (important for when candidates are loaded/updated)
+  // Use a timestamp to prevent resets immediately after manual updates
+  const lastManualUpdateRef = React.useRef<number>(0);
+  
   React.useEffect(() => {
+    // If we just did a manual update in the last 2 seconds, don't reset from props
+    // This gives time for the parent to refetch and stabilize
+    const timeSinceManualUpdate = Date.now() - lastManualUpdateRef.current;
+    if (timeSinceManualUpdate < 2000) {
+      return;
+    }
+    
+    // Otherwise, sync with parent data
     setData(initialData);
   }, [initialData]);
+  
+  // Helper to update data and mark as manual update
+  const updateDataManually = (updater: (prev: typeof initialData) => typeof initialData) => {
+    lastManualUpdateRef.current = Date.now();
+    setData(updater);
+  };
 
   // Bulk action handlers
   const handleBulkHire = async () => {
@@ -1491,9 +1511,14 @@ export function CandidatesDataTable({
 
       toast.success("Application approved and candidate created");
       
-      // Remove from local state
-      setData((prevData) =>
-        prevData.filter((item) => item.id !== applicationToApprove)
+      // Update local state to mark as approved instead of removing
+      // This prevents pagination reset
+      updateDataManually((prevData) =>
+        prevData.map((item) =>
+          item.id === applicationToApprove
+            ? { ...item, status: "In Process", applicationStatus: "approved", isApplication: false }
+            : item
+        ).filter((item) => !(item.id === applicationToApprove && item.isApplication))
       );
 
       // If user wants to send welcome email, open email modal with new candidate
@@ -1578,13 +1603,9 @@ export function CandidatesDataTable({
       setRejectApplicationDialogOpen(false);
       setApplicationToReject(null);
       
-      // Update local state
-      setData((prevData) =>
-        prevData.map((item) =>
-          item.id === applicationToReject
-            ? { ...item, status: "Rejected", applicationStatus: "rejected" }
-            : item
-        )
+      // Update local state - filter out rejected application
+      updateDataManually((prevData) =>
+        prevData.filter((item) => item.id !== applicationToReject)
       );
     } catch (error) {
       toast.error("Failed to reject application");
