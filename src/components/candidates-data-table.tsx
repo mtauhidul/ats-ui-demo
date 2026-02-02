@@ -950,19 +950,45 @@ export function CandidatesDataTable({
     setData(updater);
   };
   
-  // Sync URL params when pagination changes
+  // Sync state FROM URL params when navigating back
   React.useEffect(() => {
-    if (setSearchParams && searchParams) {
+    if (searchParams) {
+      const urlPage = parseInt(searchParams.get("page") || "1") - 1;
+      const urlPageSize = parseInt(searchParams.get("pageSize") || "10");
+      const urlSearch = searchParams.get("search") || "";
+      
+      // Update pagination if different
+      if (urlPage !== pagination.pageIndex || urlPageSize !== pagination.pageSize) {
+        setPagination({ pageIndex: urlPage, pageSize: urlPageSize });
+      }
+      
+      // Update search if different
+      if (urlSearch !== globalFilter) {
+        setGlobalFilter(urlSearch);
+      }
+    }
+  }, [searchParams]);
+  
+  // Sync URL params when pagination changes (user interaction)
+  const prevPaginationRef = React.useRef(pagination);
+  React.useEffect(() => {
+    // Only update URL if pagination changed due to user interaction, not from URL sync
+    if (setSearchParams && searchParams && 
+        (prevPaginationRef.current.pageIndex !== pagination.pageIndex ||
+         prevPaginationRef.current.pageSize !== pagination.pageSize)) {
       const newParams = new URLSearchParams(searchParams);
       newParams.set("page", (pagination.pageIndex + 1).toString());
       newParams.set("pageSize", pagination.pageSize.toString());
       setSearchParams(newParams, { replace: true });
     }
+    prevPaginationRef.current = pagination;
   }, [pagination.pageIndex, pagination.pageSize]);
   
-  // Sync URL params when search changes
+  // Sync URL params when search changes (user interaction)
+  const prevSearchRef = React.useRef(globalFilter);
   React.useEffect(() => {
-    if (setSearchParams && searchParams) {
+    // Only update URL if search changed due to user interaction, not from URL sync
+    if (setSearchParams && searchParams && prevSearchRef.current !== globalFilter) {
       const newParams = new URLSearchParams(searchParams);
       if (globalFilter) {
         newParams.set("search", globalFilter);
@@ -971,6 +997,7 @@ export function CandidatesDataTable({
       }
       setSearchParams(newParams, { replace: true });
     }
+    prevSearchRef.current = globalFilter;
   }, [globalFilter]);
 
   // Bulk action handlers
@@ -1674,7 +1701,7 @@ export function CandidatesDataTable({
     // Clone columns and update columns that need dynamic data
     const baseColumns = columns.slice(0, -1).map((col) => {
       // Update candidateName column to pass searchParams
-      if ("accessorKey" in col && col.accessorKey === "candidateName") {
+      if (col.id === "candidateName") {
         return {
           ...col,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
