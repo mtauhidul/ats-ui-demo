@@ -312,21 +312,49 @@ export default function CandidatesPage() {
         return allData.filter((item) => "isApplication" in item && item.isApplication);
       case "active":
         // Active includes all candidates that are not hired and not rejected/withdrawn
+        // But EXCLUDE candidates who have been approved AND have a pipeline stage assigned
         return allData.filter((item) => {
           if ("isApplication" in item && item.isApplication) return false;
           const status = item.status;
-          return status !== "Hired" && status !== "Rejected";
+          
+          // Exclude hired, rejected, and withdrawn candidates
+          if (status === "Hired" || status === "Rejected") return false;
+          
+          // NEW: Exclude candidates with assigned pipeline stages (approved candidates in active hiring)
+          // These candidates have moved beyond initial screening into the pipeline
+          const hasAssignedStage = item.currentStage && 
+            item.currentStage !== "Not Started" && 
+            item.currentStage !== "Not Assigned" && 
+            item.currentStage !== "Application" &&
+            item.currentStage !== "N/A";
+          
+          if (hasAssignedStage) return false;
+          
+          return true;
         });
       case "hired":
         return allData.filter((item) => !("isApplication" in item && item.isApplication) && item.status === "Hired");
       case "all":
       default:
         // Show everything (pending applications + all candidates except rejected)
+        // But EXCLUDE approved candidates with assigned pipeline stages
         return allData.filter((item) => {
           // Applications are already filtered to pending only in transformedApplications
           if ("isApplication" in item && item.isApplication) return true;
+          
           // Exclude rejected candidates
-          return item.status !== "Rejected";
+          if (item.status === "Rejected") return false;
+          
+          // NEW: Exclude candidates with assigned pipeline stages (approved candidates in active hiring)
+          const hasAssignedStage = item.currentStage && 
+            item.currentStage !== "Not Started" && 
+            item.currentStage !== "Not Assigned" && 
+            item.currentStage !== "Application" &&
+            item.currentStage !== "N/A";
+          
+          if (hasAssignedStage) return false;
+          
+          return true;
         });
     }
   }, [activeTab, allData]);

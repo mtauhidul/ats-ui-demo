@@ -160,6 +160,15 @@ export default function CandidateDetailsPage() {
     React.useState(false);
   const [selectedJobForReassign, setSelectedJobForReassign] =
     React.useState<string>("");
+  
+  // Stage update state
+  const [isUpdatingStage, setIsUpdatingStage] = React.useState(false);
+  const [isChangingJob, setIsChangingJob] = React.useState(false);
+  
+  // Notes state and debounce
+  const [notes, setNotes] = React.useState("");
+  const [isSavingNotes, setIsSavingNotes] = React.useState(false);
+  const notesTimeoutRef = React.useRef<number | null>(null);
 
   // 🔥 REALTIME: Get interviews from Firestore for this candidate across all jobs
   // Use displayData.id if available, otherwise use candidateId from URL
@@ -313,6 +322,103 @@ export default function CandidateDetailsPage() {
     }
   };
 
+  // Handle stage change
+  const handleStageChange = async (newStageId: string) => {
+    if (!effectiveCandidateData?.id || !job?.id) return;
+    
+    const currentStageId =
+      (effectiveCandidateData as any)?.currentPipelineStageId ||
+      effectiveCandidateData?.currentStage;
+    
+    if (newStageId === currentStageId || isUpdatingStage) return;
+
+    setIsUpdatingStage(true);
+    try {
+      await updateCandidate(effectiveCandidateData.id, {
+        currentPipelineStageId: newStageId,
+        jobId: job.id,
+      } as any);
+
+      toast.success("Stage updated successfully");
+    } catch (error) {
+      toast.error("Failed to update stage");
+      console.error("Stage update error:", error);
+    } finally {
+      setIsUpdatingStage(false);
+    }
+  };
+
+  // Handle job change (switch candidate to different job)
+  const handleJobChange = async (newJobId: string) => {
+    if (!effectiveCandidateData?.id || !newJobId || isChangingJob) return;
+    if (newJobId === job?.id) return;
+
+    setIsChangingJob(true);
+    try {
+      const candidate = candidates.find((c) => c.id === effectiveCandidateData.id);
+      const newJob = jobs.find((j) => j.id === newJobId);
+
+      if (!candidate || !newJob) {
+        toast.error("Candidate or job not found");
+        return;
+      }
+
+      // Check if already assigned to this job
+      const existingJobApp = candidate.jobApplications?.find(
+        (app) => app.jobId === newJobId
+      );
+      if (existingJobApp && existingJobApp.status === "active") {
+        toast.error("Candidate is already actively assigned to this job");
+        setIsChangingJob(false);
+        return;
+      }
+
+      // Get the new job's pipeline and first stage
+      const newJobPipeline = pipelines.find((p) => p.id === newJob.pipelineId);
+      const firstStageId = newJobPipeline?.stages?.[0]?.id;
+
+      if (existingJobApp) {
+        // Reactivate existing application
+        await updateCandidate(candidate.id!, {
+          jobApplications: candidate.jobApplications?.map((app) =>
+            app.jobId === newJobId
+              ? {
+                  ...app,
+                  status: "active",
+                  currentStage: firstStageId || undefined,
+                }
+              : app
+          ),
+        } as any);
+      } else {
+        // Create new job application
+        await updateCandidate(candidate.id!, {
+          jobApplications: [
+            ...(candidate.jobApplications || []),
+            {
+              jobId: newJobId,
+              status: "active",
+              appliedDate: new Date(),
+              currentStage: firstStageId || undefined,
+            },
+          ],
+        } as any);
+      }
+
+      toast.success(`Candidate moved to ${newJob.title}`);
+      
+      // Navigate to the new job context
+      const params = new URLSearchParams(searchParams);
+      params.set('jobId', newJobId);
+      navigate(`/dashboard/candidates/${candidateId}?${params.toString()}`, { replace: true });
+    } catch (error) {
+      toast.error("Failed to move candidate to new job");
+      console.error("Job change error:", error);
+    } finally {
+      setIsChangingJob(false);
+    }
+  };
+
   // 🔥 REALTIME: Get emails from Firestore for this candidate
   const {
     data: emails,
@@ -408,8 +514,13 @@ export default function CandidateDetailsPage() {
       if (!candidateId) return;
 
       try {
+        // Use appropriate endpoint based on whether this is an application or candidate
+        const endpoint = isApplication 
+          ? `${API_BASE_URL}/applications/${candidateId}`
+          : `${API_BASE_URL}/candidates/${candidateId}`;
+          
         const response = await authenticatedFetch(
-          `${API_BASE_URL}/candidates/${candidateId}`,
+          endpoint,
           {
             method: "PATCH",
             headers: {
@@ -426,7 +537,7 @@ export default function CandidateDetailsPage() {
         // Firestore will automatically update candidate data in realtime
       } catch (error) {}
     },
-    [candidateId]
+    [candidateId, isApplication]
   );
 
   const toggleTag = (tagId: string) => {
@@ -437,6 +548,72 @@ export default function CandidateDetailsPage() {
     // Update backend - Firestore will sync automatically and update selectedTags via candidateData
     updateCandidateTags(newTags);
   };
+  
+  // Initialize notes from candidate data
+  React.useEffect(() => {
+    if (effectiveCandidateData) {
+      setNotes((effectiveCandidateData as any)?.notes || "");
+    }
+  }, [effectiveCandidateData?.id]); // Only update when candidate changes
+  
+  // Debounced notes save function
+  const saveNotes = React.useCallback(async (notesText: string) => {
+    if (!candidateId) return;
+    
+    setIsSavingNotes(true);
+    try {
+      // Use appropriate endpoint based on whether this is an application or candidate
+      const endpoint = isApplication 
+        ? `${API_BASE_URL}/applications/${candidateId}`
+        : `${API_BASE_URL}/candidates/${candidateId}`;
+        
+      const response = await authenticatedFetch(
+        endpoint,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ notes: notesText }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update notes");
+      }
+      
+      toast.success("Notes saved");
+    } catch (error) {
+      toast.error("Failed to save notes");
+      console.error("Notes update error:", error);
+    } finally {
+      setIsSavingNotes(false);
+    }
+  }, [candidateId, isApplication]);
+  
+  // Handle notes change with debouncing
+  const handleNotesChange = (newNotes: string) => {
+    setNotes(newNotes);
+    
+    // Clear existing timeout
+    if (notesTimeoutRef.current) {
+      clearTimeout(notesTimeoutRef.current);
+    }
+    
+    // Set new timeout to save after 1.5 seconds of no typing
+    notesTimeoutRef.current = setTimeout(() => {
+      saveNotes(newNotes);
+    }, 1500);
+  };
+  
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (notesTimeoutRef.current) {
+        clearTimeout(notesTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Loading state
   const isLoadingAll =
@@ -1166,6 +1343,35 @@ export default function CandidateDetailsPage() {
                 value="overview"
                 className="mt-4 md:mt-6 space-y-4 md:space-y-6"
               >
+                {/* Notes Section */}
+                <Card>
+                  <CardHeader className="p-3 md:p-4 lg:p-6">
+                    <CardTitle className="text-sm md:text-base flex items-center gap-2">
+                      <IconFileText className="h-4 w-4" />
+                      Notes
+                      {isSavingNotes && (
+                        <span className="text-xs text-muted-foreground font-normal flex items-center gap-1">
+                          <Loader size="sm" />
+                          Saving...
+                        </span>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 md:p-4 lg:p-6 pt-0">
+                    <div className="space-y-3">
+                      <textarea
+                        className="w-full min-h-[120px] p-3 text-sm border rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="Add notes about this candidate..."
+                        value={notes}
+                        onChange={(e) => handleNotesChange(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Notes auto-save after you stop typing.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Skills */}
                 {candidate.skills && candidate.skills.length > 0 && (
                   <Card>
@@ -1952,14 +2158,115 @@ export default function CandidateDetailsPage() {
                         Application Progress
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                        {/* Current Job Selector */}
                         <div className="p-2.5 md:p-3 rounded-lg border bg-card">
-                          <Label className="text-xs text-muted-foreground">
+                          <Label className="text-xs text-muted-foreground mb-2 block">
+                            Current Job
+                          </Label>
+                          <Select
+                            value={job?.id || ""}
+                            onValueChange={handleJobChange}
+                            disabled={isChangingJob || candidateData?.status?.toLowerCase() === "rejected"}
+                          >
+                            <SelectTrigger className="h-8 text-xs focus:ring-1 focus:ring-offset-0 w-full">
+                              <SelectValue>
+                                {isChangingJob ? (
+                                  <span className="flex items-center gap-1">
+                                    <Loader size="sm" />
+                                    Changing...
+                                  </span>
+                                ) : (
+                                  <span className="truncate font-medium">{candidate.jobTitle}</span>
+                                )}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {jobs.map((j) => (
+                                <SelectItem key={j.id} value={j.id!} className="text-xs">
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{j.title}</span>
+                                    <span className="text-muted-foreground text-xs">
+                                      {clients.find((c) => c.id === j.clientId)?.companyName || "Unknown Client"}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Current Stage Selector */}
+                        <div className="p-2.5 md:p-3 rounded-lg border bg-card">
+                          <Label className="text-xs text-muted-foreground mb-2 block">
                             Current Stage
                           </Label>
-                          <p className="text-xs md:text-sm font-semibold mt-1 text-primary">
-                            {candidate.currentStage}
-                          </p>
+                          {(() => {
+                            const jobPipeline = pipelines.find((p) => p.id === job?.pipelineId);
+                            const stages = jobPipeline?.stages || [];
+                            const currentStageId =
+                              (effectiveCandidateData as any)?.currentPipelineStageId ||
+                              effectiveCandidateData?.currentStage;
+                            
+                            const currentStage = stages.find((s) => s.id === currentStageId || s.name === currentStageId);
+                            const stageColor = currentStage?.color || "#6B7280";
+                            
+                            const hexToRgba = (hex: string, alpha: number) => {
+                              const r = parseInt(hex.slice(1, 3), 16);
+                              const g = parseInt(hex.slice(3, 5), 16);
+                              const b = parseInt(hex.slice(5, 7), 16);
+                              return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                            };
+
+                            if (stages.length === 0) {
+                              return (
+                                <Badge variant="outline" className="text-xs">
+                                  {candidate.currentStage}
+                                </Badge>
+                              );
+                            }
+
+                            return (
+                              <Select
+                                value={currentStageId}
+                                onValueChange={handleStageChange}
+                                disabled={isUpdatingStage || candidateData?.status?.toLowerCase() === "rejected"}
+                              >
+                                <SelectTrigger 
+                                  className="h-8 text-xs focus:ring-1 focus:ring-offset-0 w-full border-l-4"
+                                  style={{
+                                    borderLeftColor: stageColor,
+                                    backgroundColor: hexToRgba(stageColor, 0.1),
+                                  }}
+                                >
+                                  <SelectValue>
+                                    {isUpdatingStage ? (
+                                      <span className="flex items-center gap-1">
+                                        <Loader size="sm" />
+                                        Updating...
+                                      </span>
+                                    ) : (
+                                      <span className="truncate font-medium">{candidate.currentStage}</span>
+                                    )}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {stages.map((stage) => (
+                                    <SelectItem key={stage.id} value={stage.id} className="text-xs">
+                                      <div className="flex items-center gap-2">
+                                        <div
+                                          className="w-2 h-2 rounded-full shrink-0"
+                                          style={{ backgroundColor: stage.color }}
+                                        />
+                                        <span className="truncate">{stage.name}</span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            );
+                          })()}
                         </div>
+
                         <div className="p-2.5 md:p-3 rounded-lg border bg-card">
                           <Label className="text-xs text-muted-foreground">
                             Applied Date
