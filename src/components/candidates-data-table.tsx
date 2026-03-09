@@ -1800,6 +1800,7 @@ export function CandidatesDataTable({
     },
     getRowId: (row) => row.id.toString(),
     enableRowSelection: true,
+    autoResetPageIndex: false, // Prevent pagination reset when data changes (e.g. reject action)
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,

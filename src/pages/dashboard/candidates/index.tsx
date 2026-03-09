@@ -305,56 +305,51 @@ export default function CandidatesPage() {
     return [...transformedApplications, ...sortedCandidates];
   }, [transformedApplications, transformedData]);
 
+  // Helper to detect if a candidate has been moved into an active pipeline stage
+  const hasActivePipelineStage = (item: typeof allData[number]) => {
+    return Boolean(
+      item.currentStage &&
+      item.currentStage !== "Not Started" &&
+      item.currentStage !== "Not Assigned" &&
+      item.currentStage !== "Application" &&
+      item.currentStage !== "N/A"
+    );
+  };
+
   const filteredData = React.useMemo(() => {
     switch (activeTab) {
       case "pending":
-        // Only show pending applications
+        // Only pending applications (not yet approved)
         return allData.filter((item) => "isApplication" in item && item.isApplication);
-      case "active":
-        // Active includes all candidates that are not hired and not rejected/withdrawn
-        // But EXCLUDE candidates who have been approved AND have a pipeline stage assigned
+
+      case "approved":
+        // Approved candidates: real candidates (not applications) that have NOT yet been
+        // assigned a pipeline stage — they are in the "holding/approved" area
         return allData.filter((item) => {
           if ("isApplication" in item && item.isApplication) return false;
-          const status = item.status;
-          
-          // Exclude hired, rejected, and withdrawn candidates
-          if (status === "Hired" || status === "Rejected") return false;
-          
-          // NEW: Exclude candidates with assigned pipeline stages (approved candidates in active hiring)
-          // These candidates have moved beyond initial screening into the pipeline
-          const hasAssignedStage = item.currentStage && 
-            item.currentStage !== "Not Started" && 
-            item.currentStage !== "Not Assigned" && 
-            item.currentStage !== "Application" &&
-            item.currentStage !== "N/A";
-          
-          if (hasAssignedStage) return false;
-          
-          return true;
+          if (item.status === "Hired" || item.status === "Rejected") return false;
+          return !hasActivePipelineStage(item);
         });
+
+      case "active":
+        // Active candidates: in the pipeline with an assigned stage
+        return allData.filter((item) => {
+          if ("isApplication" in item && item.isApplication) return false;
+          if (item.status === "Hired" || item.status === "Rejected") return false;
+          return hasActivePipelineStage(item);
+        });
+
       case "hired":
-        return allData.filter((item) => !("isApplication" in item && item.isApplication) && item.status === "Hired");
+        return allData.filter(
+          (item) => !("isApplication" in item && item.isApplication) && item.status === "Hired"
+        );
+
       case "all":
       default:
-        // Show everything (pending applications + all candidates except rejected)
-        // But EXCLUDE approved candidates with assigned pipeline stages
+        // Show all: pending applications + all non-rejected candidates
         return allData.filter((item) => {
-          // Applications are already filtered to pending only in transformedApplications
           if ("isApplication" in item && item.isApplication) return true;
-          
-          // Exclude rejected candidates
-          if (item.status === "Rejected") return false;
-          
-          // NEW: Exclude candidates with assigned pipeline stages (approved candidates in active hiring)
-          const hasAssignedStage = item.currentStage && 
-            item.currentStage !== "Not Started" && 
-            item.currentStage !== "Not Assigned" && 
-            item.currentStage !== "Application" &&
-            item.currentStage !== "N/A";
-          
-          if (hasAssignedStage) return false;
-          
-          return true;
+          return item.status !== "Rejected";
         });
     }
   }, [activeTab, allData]);
@@ -384,7 +379,7 @@ export default function CandidatesPage() {
           </div>
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="px-4 lg:px-6">
-            <TabsList className="grid w-full grid-cols-4 max-w-[600px] h-12 p-1 bg-card border-2 shadow-sm">
+            <TabsList className="grid w-full grid-cols-5 max-w-[750px] h-12 p-1 bg-card border-2 shadow-sm">
               <TabsTrigger 
                 value="all"
                 className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 font-medium"
@@ -408,13 +403,24 @@ export default function CandidatesPage() {
                 </span>
               </TabsTrigger>
               <TabsTrigger 
+                value="approved"
+                className="data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 font-medium"
+              >
+                <span className="flex items-center gap-2">
+                  Approved
+                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full bg-green-100 text-green-900 data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                    {allData.filter((item) => !("isApplication" in item && item.isApplication) && item.status !== "Hired" && item.status !== "Rejected" && !(item.currentStage && item.currentStage !== "Not Started" && item.currentStage !== "Not Assigned" && item.currentStage !== "Application" && item.currentStage !== "N/A")).length}
+                  </span>
+                </span>
+              </TabsTrigger>
+              <TabsTrigger 
                 value="active"
                 className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 font-medium"
               >
                 <span className="flex items-center gap-2">
                   Active
                   <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-900 data-[state=active]:bg-white/20 data-[state=active]:text-white">
-                    {allData.filter((item) => !("isApplication" in item && item.isApplication) && item.status === "In Process").length}
+                    {allData.filter((item) => !("isApplication" in item && item.isApplication) && item.status !== "Hired" && item.status !== "Rejected" && !!(item.currentStage && item.currentStage !== "Not Started" && item.currentStage !== "Not Assigned" && item.currentStage !== "Application" && item.currentStage !== "N/A")).length}
                   </span>
                 </span>
               </TabsTrigger>
@@ -448,7 +454,8 @@ export default function CandidatesPage() {
                     <h3 className="text-lg font-semibold mb-2">No {activeTab === 'all' ? 'candidates or applications' : activeTab} found</h3>
                     <p className="text-sm text-muted-foreground max-w-md">
                       {activeTab === 'pending' && "There are no pending applications at the moment. New applications will appear here."}
-                      {activeTab === 'active' && "No active candidates found. Approve applications to add candidates here."}
+                      {activeTab === 'approved' && "No approved candidates yet. Approve applications to see candidates here."}
+                      {activeTab === 'active' && "No active candidates found. Assign a pipeline stage to an approved candidate to move them here."}
                       {activeTab === 'hired' && "No hired candidates yet. Mark candidates as hired to see them here."}
                       {activeTab === 'all' && "No candidates or applications found. Start by receiving some applications."}
                     </p>

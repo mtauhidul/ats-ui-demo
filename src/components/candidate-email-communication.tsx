@@ -31,7 +31,7 @@ import {
 } from "@/lib/email-template-helper";
 import { extractReplyContent, formatQuotedText } from "@/lib/email-parser";
 import { cn } from "@/lib/utils";
-import { useEmailTemplates } from "@/store/hooks/index";
+import { useEmailTemplates, usePipelines, useCandidates } from "@/store/hooks/index";
 import type { Candidate } from "@/types/candidate";
 import type { Job } from "@/types/job";
 import {
@@ -44,6 +44,7 @@ import {
   Download,
   FileText,
   Forward,
+  GitBranch,
   Image,
   Inbox,
   Mail,
@@ -110,6 +111,37 @@ export function CandidateEmailCommunication({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState<EmailThread | null>(null);
   const [showQuotedText, setShowQuotedText] = useState(false);
+
+  // 🔥 REALTIME: Pipeline stage management
+  const { pipelines } = usePipelines();
+  const { updateCandidate } = useCandidates();
+  const [isUpdatingStage, setIsUpdatingStage] = useState(false);
+
+  // Find pipeline for this job
+  const jobPipeline = pipelines.find((p) => p.jobId === job.id);
+  const pipelineStages = jobPipeline?.stages || [];
+
+  // Determine current stage from candidate's jobApplications for this job
+  const currentJobApp = (candidate as any).jobApplications?.find(
+    (app: any) => app.jobId === job.id
+  );
+  const currentStageId = currentJobApp?.currentStage || (candidate as any).currentPipelineStageId || "";
+
+  const handlePipelineStageChange = async (newStageId: string) => {
+    if (!newStageId || newStageId === currentStageId || isUpdatingStage) return;
+    setIsUpdatingStage(true);
+    try {
+      await updateCandidate(candidate.id, {
+        currentPipelineStageId: newStageId,
+        jobId: job.id,
+      } as any);
+      toast.success("Pipeline stage updated");
+    } catch {
+      toast.error("Failed to update pipeline stage");
+    } finally {
+      setIsUpdatingStage(false);
+    }
+  };
 
   // 🔥 REALTIME: Get ALL emails for candidate from Firestore (not just for this job)
   // This ensures reply emails are visible even if they're associated with a different job
@@ -334,6 +366,36 @@ export function CandidateEmailCommunication({
               <Mail className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
               <span className="truncate">Regarding: {job.title}</span>
             </div>
+            {/* Pipeline stage selector */}
+            {pipelineStages.length > 0 && (
+              <div className="flex items-center gap-2 mt-1.5">
+                <GitBranch className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground shrink-0">Pipeline stage:</span>
+                <Select
+                  value={currentStageId || ""}
+                  onValueChange={handlePipelineStageChange}
+                  disabled={isUpdatingStage}
+                >
+                  <SelectTrigger className="h-7 text-xs w-auto min-w-[140px] max-w-[200px]">
+                    <SelectValue placeholder="Set stage..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pipelineStages.map((stage) => (
+                      <SelectItem key={stage.id} value={stage.id} className="text-xs">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: stage.color || "#6B7280" }}
+                          />
+                          <span>{stage.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {isUpdatingStage && <span className="text-xs text-muted-foreground">Saving...</span>}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
             <Button
