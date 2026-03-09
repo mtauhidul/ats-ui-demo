@@ -82,4 +82,6 @@ export const schema = z.object({
   isValidResume: z.boolean().nullable().optional(),
   validationScore: z.number().min(0).max(100).nullable().optional(),
   validationReason: z.string().optional(),
+  // Talent Pool
+  inTalentPool: z.boolean().optional(),
 });

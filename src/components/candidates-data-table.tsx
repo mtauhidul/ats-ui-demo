@@ -16,6 +16,7 @@ import {
   IconLayoutColumns,
   IconMail,
   IconSearch,
+  IconStar,
   IconUpload,
   IconUserCheck,
   IconUsers,
@@ -717,6 +718,7 @@ const createActionsColumn = (handlers: {
   onApprove: (id: string | number) => void;
   onRejectApplication: (id: string | number) => void;
   onEmail: (id: string | number) => void;
+  onAddToTalentPool: (id: string | number) => void;
 }): ColumnDef<z.infer<typeof schema>> => ({
   id: "actions",
   cell: ({ row }) => {
@@ -724,6 +726,7 @@ const createActionsColumn = (handlers: {
     const isHired = row.original.status?.toLowerCase() === "hired";
     const isApplication = row.original.isApplication === true;
     const isPending = row.original.applicationStatus === "pending";
+    const isInTalentPool = row.original.inTalentPool === true;
 
     return (
       <div className="min-w-[180px] flex items-center gap-1.5 justify-start">
@@ -830,6 +833,14 @@ const createActionsColumn = (handlers: {
                 >
                   <IconBriefcase className="h-3 w-3 mr-2" />
                   Reassign to another Job
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => handlers.onAddToTalentPool(row.original.candidateId!)}
+                  className={isInTalentPool ? "text-yellow-600 dark:text-yellow-400" : ""}
+                >
+                  <IconStar className={`h-3 w-3 mr-2 ${isInTalentPool ? "text-yellow-500 fill-yellow-500" : ""}`} />
+                  {isInTalentPool ? "Remove from Talent Pool" : "Add to Talent Pool"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -1697,6 +1708,37 @@ export function CandidatesDataTable({
     }
   };
 
+  // Handle add/remove from Talent Pool
+  const handleAddToTalentPool = async (id: string | number) => {
+    const candidate = data.find((item) => item.candidateId === id);
+    if (!candidate?.candidateId) {
+      toast.error("Candidate not found");
+      return;
+    }
+
+    const newValue = !candidate.inTalentPool;
+
+    // Optimistic update
+    updateDataManually((prevData) =>
+      prevData.map((item) =>
+        item.candidateId === id ? { ...item, inTalentPool: newValue } : item
+      )
+    );
+
+    try {
+      await updateCandidate(candidate.candidateId, { inTalentPool: newValue } as any);
+      toast.success(newValue ? "Added to Talent Pool" : "Removed from Talent Pool");
+    } catch {
+      toast.error("Failed to update Talent Pool");
+      // Revert
+      updateDataManually((prevData) =>
+        prevData.map((item) =>
+          item.candidateId === id ? { ...item, inTalentPool: !newValue } : item
+        )
+      );
+    }
+  };
+
   const columnsWithActions = React.useMemo(() => {
     // Clone columns and update columns that need dynamic data
     const baseColumns = columns.slice(0, -1).map((col) => {
@@ -1782,6 +1824,7 @@ export function CandidatesDataTable({
       onApprove: handleApprove,
       onRejectApplication: handleRejectApplication,
       onEmail: handleEmail,
+      onAddToTalentPool: handleAddToTalentPool,
     });
     return [...baseColumns, actionsColumn];
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -296,6 +296,7 @@ export default function CandidatesPage() {
         videoIntroFilename: index === 0 ? "sarah_johnson_intro.mp4" : undefined,
         videoIntroFileSize: index === 0 ? "15.2 MB" : undefined,
         videoIntroDuration: index === 0 ? "2:30" : undefined,
+        inTalentPool: candidate.inTalentPool === true,
       };
     }
   }, [candidates, jobs, clients, pipelines]);
@@ -344,12 +345,21 @@ export default function CandidatesPage() {
           (item) => !("isApplication" in item && item.isApplication) && item.status === "Hired"
         );
 
+      case "talent_pool":
+        return allData.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (item) => !("isApplication" in item && item.isApplication) && (item as any).inTalentPool === true
+        );
+
       case "all":
       default:
-        // Show all: pending applications + all non-rejected candidates
+        // Show all: pending applications + all non-rejected, non-talent-pool candidates
         return allData.filter((item) => {
           if ("isApplication" in item && item.isApplication) return true;
-          return item.status !== "Rejected";
+          if (item.status === "Rejected") return false;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((item as any).inTalentPool === true) return false;
+          return true;
         });
     }
   }, [activeTab, allData]);
@@ -379,7 +389,7 @@ export default function CandidatesPage() {
           </div>
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="px-4 lg:px-6">
-            <TabsList className="grid w-full grid-cols-5 max-w-[750px] h-12 p-1 bg-card border-2 shadow-sm">
+            <TabsList className="grid w-full grid-cols-6 max-w-[900px] h-12 p-1 bg-card border-2 shadow-sm">
               <TabsTrigger 
                 value="all"
                 className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 font-medium"
@@ -435,6 +445,17 @@ export default function CandidatesPage() {
                   </span>
                 </span>
               </TabsTrigger>
+              <TabsTrigger 
+                value="talent_pool"
+                className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 font-medium"
+              >
+                <span className="flex items-center gap-2">
+                  Talent Pool
+                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-900 data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                    {allData.filter((item) => !("isApplication" in item && item.isApplication) && (item as any).inTalentPool === true).length}
+                  </span>
+                </span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-6 relative">
@@ -457,6 +478,7 @@ export default function CandidatesPage() {
                       {activeTab === 'approved' && "No approved candidates yet. Approve applications to see candidates here."}
                       {activeTab === 'active' && "No active candidates found. Assign a pipeline stage to an approved candidate to move them here."}
                       {activeTab === 'hired' && "No hired candidates yet. Mark candidates as hired to see them here."}
+                      {activeTab === 'talent_pool' && "No candidates in the Talent Pool yet. Use \"Add to Talent Pool\" from the candidate actions menu."}
                       {activeTab === 'all' && "No candidates or applications found. Start by receiving some applications."}
                     </p>
                   </div>

@@ -170,6 +170,9 @@ export interface Candidate extends BaseEntity {
   
   // Status
   status?: 'active' | 'interviewing' | 'offered' | 'hired' | 'rejected' | 'withdrawn';
+
+  // Talent Pool flag - candidate saved for future opportunities
+  inTalentPool?: boolean;
   
   // Relations (Database references - stored as IDs)
   assignedRecruiterId?: string; // Primary recruiter managing this candidate (for UI filtering)
