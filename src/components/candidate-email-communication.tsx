@@ -127,8 +127,13 @@ export function CandidateEmailCommunication({
   );
   const currentStageId = currentJobApp?.currentStage || (candidate as any).currentPipelineStageId || "";
 
+  // Local state to reflect stage changes immediately (candidate prop may be a static snapshot in modal mode)
+  const [localStageId, setLocalStageId] = useState<string>("");
+  const displayStageId = localStageId || currentStageId;
+
   const handlePipelineStageChange = async (newStageId: string) => {
-    if (!newStageId || newStageId === currentStageId || isUpdatingStage) return;
+    if (!newStageId || newStageId === displayStageId || isUpdatingStage) return;
+    setLocalStageId(newStageId); // Optimistic update
     setIsUpdatingStage(true);
     try {
       await updateCandidate(candidate.id, {
@@ -138,6 +143,7 @@ export function CandidateEmailCommunication({
       toast.success("Pipeline stage updated");
     } catch {
       toast.error("Failed to update pipeline stage");
+      setLocalStageId(""); // Revert to prop-derived value
     } finally {
       setIsUpdatingStage(false);
     }
@@ -372,7 +378,7 @@ export function CandidateEmailCommunication({
                 <GitBranch className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground shrink-0">Pipeline stage:</span>
                 <Select
-                  value={currentStageId || ""}
+                  value={displayStageId || ""}
                   onValueChange={handlePipelineStageChange}
                   disabled={isUpdatingStage}
                 >

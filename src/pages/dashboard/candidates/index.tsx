@@ -329,6 +329,8 @@ export default function CandidatesPage() {
         return allData.filter((item) => {
           if ("isApplication" in item && item.isApplication) return false;
           if (item.status === "Hired" || item.status === "Rejected") return false;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((item as any).inTalentPool === true) return false;
           return !hasActivePipelineStage(item);
         });
 
@@ -419,7 +421,7 @@ export default function CandidatesPage() {
                 <span className="flex items-center gap-2">
                   Approved
                   <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full bg-green-100 text-green-900 data-[state=active]:bg-white/20 data-[state=active]:text-white">
-                    {allData.filter((item) => !("isApplication" in item && item.isApplication) && item.status !== "Hired" && item.status !== "Rejected" && !(item.currentStage && item.currentStage !== "Not Started" && item.currentStage !== "Not Assigned" && item.currentStage !== "Application" && item.currentStage !== "N/A")).length}
+                    {allData.filter((item) => !("isApplication" in item && item.isApplication) && item.status !== "Hired" && item.status !== "Rejected" && !(item as any).inTalentPool && !(item.currentStage && item.currentStage !== "Not Started" && item.currentStage !== "Not Assigned" && item.currentStage !== "Application" && item.currentStage !== "N/A")).length}
                   </span>
                 </span>
               </TabsTrigger>
