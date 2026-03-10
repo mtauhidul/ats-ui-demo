@@ -791,7 +791,7 @@ const createActionsColumn = (handlers: {
             ) : (
               <>
                 <DropdownMenuItem
-                  onClick={() => handlers.onHire(row.original.candidateId!)}
+                  onClick={() => handlers.onHire(row.original.id)}
                   disabled={isHired}
                   className={
                     isRejected
@@ -813,7 +813,7 @@ const createActionsColumn = (handlers: {
                     : "Mark as Hired"}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handlers.onReject(row.original.candidateId!)}
+                  onClick={() => handlers.onReject(row.original.id)}
                   disabled={isRejected || isHired}
                   className={isHired ? "opacity-50 cursor-not-allowed" : ""}
                 >
@@ -829,7 +829,7 @@ const createActionsColumn = (handlers: {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => handlers.onReassignJob(row.original.candidateId!)}
+                  onClick={() => handlers.onReassignJob(row.original.id)}
                 >
                   <IconBriefcase className="h-3 w-3 mr-2" />
                   Reassign to another Job
