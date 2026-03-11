@@ -22,7 +22,6 @@ const ResetPasswordPage = React.lazy(() => import("./pages/auth/reset-password")
 const VerifyEmailPage = React.lazy(() => import("./pages/auth/verify-email"));
 const VerifyMagicLinkPage = React.lazy(() => import("./pages/auth/verify-magic-link"));
 const AccountPage = React.lazy(() => import("./pages/dashboard/account"));
-const ApplicationsPage = React.lazy(() => import("./pages/dashboard/applications"));
 const CandidatesPage = React.lazy(() => import("./pages/dashboard/candidates"));
 const CandidateDetailsPage = React.lazy(() => import("./pages/dashboard/candidates/details"));
 const QuickImportPage = React.lazy(() => import("./pages/dashboard/candidates/quick-import"));
@@ -147,7 +146,6 @@ function App() {
           />
 
           {/* Other Routes */}
-          <Route path="applications" element={<PermissionGuard permission="canReviewApplications"><ApplicationsPage /></PermissionGuard>} />
           <Route path="emails" element={<PermissionGuard permission="canSendEmails"><EmailsPage /></PermissionGuard>} />
           <Route path="team" element={<PermissionGuard permission="canManageTeam"><TeamPage /></PermissionGuard>} />
           <Route path="team/:memberId" element={<PermissionGuard permission="canManageTeam"><TeamMemberDetailPage /></PermissionGuard>} />

@@ -507,7 +507,7 @@ export default function SearchPage() {
             ).toLocaleDateString()} • ${app.status}`,
             avatar: undefined,
             badges: [app.status, app.source],
-            link: `/dashboard/applications`,
+            link: `/dashboard/candidates`,
             relevance,
             matchedFields,
           });

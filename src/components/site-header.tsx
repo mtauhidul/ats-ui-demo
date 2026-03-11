@@ -8,7 +8,6 @@ const routeTitles: { [key: string]: string } = {
   "/dashboard/clients": "Clients",
   "/dashboard/jobs": "Jobs",
   "/dashboard/candidates": "Candidates",
-  "/dashboard/applications": "Applications",
   "/dashboard/team": "Team",
   "/dashboard/analytics": "Analytics",
   "/dashboard/tags": "Tags",

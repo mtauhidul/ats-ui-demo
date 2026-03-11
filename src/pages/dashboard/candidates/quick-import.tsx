@@ -315,9 +315,9 @@ export default function QuickImportPage() {
         }
       );
 
-      // Navigate to applications list
+      // Navigate to candidates list
       setTimeout(() => {
-        navigate("/dashboard/applications");
+        navigate("/dashboard/candidates");
       }, 1500);
     } catch (error) {
       setIsUploading(false);

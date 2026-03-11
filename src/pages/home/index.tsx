@@ -91,7 +91,7 @@ export default function HomePage() {
       title: "Interview Scheduling",
       description:
         "Seamless interview coordination with calendar integration, automated reminders, and video conferencing",
-      href: "/dashboard/applications",
+      href: "/dashboard/candidates",
       color: "#ec4899",
     },
     {
