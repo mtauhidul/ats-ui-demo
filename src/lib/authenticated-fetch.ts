@@ -11,6 +11,7 @@ import {
   setAccessToken,
   setRefreshToken,
 } from "./auth-utils";
+import { navigateTo } from "./navigation";
 
 export interface AuthenticatedFetchOptions extends RequestInit {
   skipAuth?: boolean;
@@ -48,8 +49,7 @@ async function refreshAccessToken(): Promise<string | null> {
       const fetchTime = performance.now() - startTime;
       if (!response.ok) {
         clearTokens();
-        // Redirect to login
-        window.location.href = "/login";
+        navigateTo("/login");
         return null;
       }
 
@@ -65,7 +65,7 @@ async function refreshAccessToken(): Promise<string | null> {
       return newAccessToken;
     } catch (error) {
       clearTokens();
-      window.location.href = "/login";
+      navigateTo("/login");
       return null;
     } finally {
       isRefreshing = false;

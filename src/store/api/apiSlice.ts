@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { getAccessToken, getRefreshToken, setAccessToken, setRefreshToken, clearTokens } from "@/lib/auth-utils";
 import { API_BASE_URL } from "@/config/api";
+import { navigateTo } from "@/lib/navigation";
 
 // Custom base query with token refresh logic
 const baseQuery = fetchBaseQuery({
@@ -55,15 +56,15 @@ const baseQueryWithReauth: BaseQueryFn<
           result = await baseQuery(args, api, extraOptions);
         } else {
           clearTokens();
-          window.location.href = '/login';
+          navigateTo('/login');
         }
       } catch (error) {
         clearTokens();
-        window.location.href = '/login';
+        navigateTo('/login');
       }
     } else {
       clearTokens();
-      window.location.href = '/login';
+      navigateTo('/login');
     }
   }
   

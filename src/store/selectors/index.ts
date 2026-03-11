@@ -1,3 +1,5 @@
+import type { RootState } from "../index";
+
 // Export all selectors
 export * from "./clientSelectors";
 export * from "./jobSelectors";
@@ -5,7 +7,7 @@ export * from "./candidateSelectors";
 export * from "./applicationSelectors";
 
 // Simple selectors for other entities with array conversion
-export const selectCategories = (state: any) => {
+export const selectCategories = (state: RootState) => {
   const categories = state.categories.categories;
   return Array.isArray(categories)
     ? categories
@@ -14,7 +16,7 @@ export const selectCategories = (state: any) => {
     : [];
 };
 
-export const selectTags = (state: any) => {
+export const selectTags = (state: RootState) => {
   const tags = state.tags.tags;
   return Array.isArray(tags)
     ? tags
@@ -23,7 +25,7 @@ export const selectTags = (state: any) => {
     : [];
 };
 
-export const selectTeam = (state: any) => {
+export const selectTeam = (state: RootState) => {
   const teamMembers = state.team.teamMembers;
   return Array.isArray(teamMembers)
     ? teamMembers
@@ -32,7 +34,7 @@ export const selectTeam = (state: any) => {
     : [];
 };
 
-export const selectEmails = (state: any) => {
+export const selectEmails = (state: RootState) => {
   const emails = state.emails.emails;
   return Array.isArray(emails)
     ? emails
@@ -41,7 +43,7 @@ export const selectEmails = (state: any) => {
     : [];
 };
 
-export const selectPipelines = (state: any) => {
+export const selectPipelines = (state: RootState) => {
   const pipelines = state.pipelines.pipelines;
   return Array.isArray(pipelines)
     ? pipelines
@@ -50,7 +52,7 @@ export const selectPipelines = (state: any) => {
     : [];
 };
 
-export const selectInterviews = (state: any) => {
+export const selectInterviews = (state: RootState) => {
   const interviews = state.interviews.interviews;
   return Array.isArray(interviews)
     ? interviews
@@ -59,7 +61,7 @@ export const selectInterviews = (state: any) => {
     : [];
 };
 
-export const selectUsers = (state: any) => {
+export const selectUsers = (state: RootState) => {
   const users = state.users.users;
   return Array.isArray(users)
     ? users

@@ -11,16 +11,6 @@ import {
 import * as React from "react";
 import { useSearchParams } from "react-router-dom";
 
-const teamMembersPool = [
-  "John Smith",
-  "Sarah Wilson",
-  "Mike Johnson",
-  "Lisa Brown",
-  "Tom Davis",
-  "Emma Davis",
-  "Alex Chen",
-];
-
 export default function CandidatesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -132,9 +122,7 @@ export default function CandidatesPage() {
       jobIdOrObject: unknown,
       index: number
     ) {
-      const teamMemberCount = Math.floor(Math.random() * 4);
-      const shuffled = [...teamMembersPool].sort(() => 0.5 - Math.random());
-      const selectedTeamMembers = teamMemberCount > 0 ? shuffled.slice(0, teamMemberCount) : [];
+      const selectedTeamMembers: string[] = [];
 
       const firstJobId = jobIdOrObject;
       let job = null;
@@ -292,10 +280,10 @@ export default function CandidatesPage() {
         expectedSalary: undefined,
         languages: candidate.languages?.map((l) => typeof l === "string" ? l : l.name) || undefined,
         notes: undefined,
-        videoIntroUrl: index === 0 ? "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" : undefined,
-        videoIntroFilename: index === 0 ? "sarah_johnson_intro.mp4" : undefined,
-        videoIntroFileSize: index === 0 ? "15.2 MB" : undefined,
-        videoIntroDuration: index === 0 ? "2:30" : undefined,
+        videoIntroUrl: undefined,
+        videoIntroFilename: undefined,
+        videoIntroFileSize: undefined,
+        videoIntroDuration: undefined,
         inTalentPool: candidate.inTalentPool === true,
       };
     }

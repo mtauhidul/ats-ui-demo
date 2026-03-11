@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DOMPurify from "dompurify";
 import {
   Command,
   CommandEmpty,
@@ -2009,7 +2010,7 @@ export default function CandidateDetailsPage() {
                                 {candidate.rawEmailBodyHtml ? (
                                   <div 
                                     className="p-4 prose prose-sm max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: candidate.rawEmailBodyHtml }}
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(candidate.rawEmailBodyHtml) }}
                                   />
                                 ) : (
                                   <div className="p-4 bg-muted/30">

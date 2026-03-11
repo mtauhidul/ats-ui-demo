@@ -1,4 +1,5 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import * as React from "react";
+import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import DashboardLayout from "./components/dashboard-layout";
 import Layout from "./components/layout";
 import { CandidateRouteRedirect } from "./components/CandidateRouteRedirect";
@@ -6,47 +7,64 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PermissionGuard } from "./components/auth/PermissionGuard";
 import { RoleGuard } from "./components/auth/RoleGuard";
 import { Toaster } from "./components/ui/sonner";
-import PublicApplyPage from "./pages/apply";
-import ApplySuccessPage from "./pages/apply/success";
-import ForgotPasswordPage from "./pages/auth/forgot-password";
-import LoginPage from "./pages/auth/login";
-import MagicLinkPage from "./pages/auth/magic-link";
-import RegisterAdminPage from "./pages/auth/register-admin";
-import ResetPasswordPage from "./pages/auth/reset-password";
-import VerifyEmailPage from "./pages/auth/verify-email";
-import VerifyMagicLinkPage from "./pages/auth/verify-magic-link";
-import AccountPage from "./pages/dashboard/account";
-import ApplicationsPage from "./pages/dashboard/applications";
-import CandidatesPage from "./pages/dashboard/candidates";
-import CandidateDetailsPage from "./pages/dashboard/candidates/details";
-import QuickImportPage from "./pages/dashboard/candidates/quick-import";
-import CategoriesPage from "./pages/dashboard/categories";
-import ClientsPage from "./pages/dashboard/clients";
-import ClientDetailPage from "./pages/dashboard/clients/detail";
-import DashboardMainPage from "./pages/dashboard/dashboard-main";
-import HelpPage from "./pages/dashboard/help";
-import DashboardJobsPage from "./pages/dashboard/jobs";
-import JobCandidateCommunicationPage from "./pages/dashboard/jobs/candidate-communication";
-import JobCandidateDetailPage from "./pages/dashboard/jobs/candidate-detail";
-import JobDetailPage from "./pages/dashboard/jobs/detail";
-import InterviewPage from "./pages/dashboard/jobs/interview";
-import JobPipelinePage from "./pages/dashboard/jobs/pipeline";
-import MessagesPage from "./pages/dashboard/messages";
-import NotificationsPage from "./pages/dashboard/notifications";
-import SearchPage from "./pages/dashboard/search";
-import SettingsPage from "./pages/dashboard/settings";
-import TagsPage from "./pages/dashboard/tags";
-import TeamPage from "./pages/dashboard/team";
-import TeamMemberDetailPage from "./pages/dashboard/team/detail";
-import EmailsPage from "./pages/dashboard/emails";
-import HomePage from "./pages/home";
-import JobsPage from "./pages/jobs";
-import PublicJobDetailPage from "./pages/jobs/detail";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { LoaderFullPage } from "./components/ui/loader";
+import { setNavigate } from "./lib/navigation";
+
+// Lazy-loaded page components — each page chunk is loaded on demand
+const PublicApplyPage = React.lazy(() => import("./pages/apply"));
+const ApplySuccessPage = React.lazy(() => import("./pages/apply/success"));
+const ForgotPasswordPage = React.lazy(() => import("./pages/auth/forgot-password"));
+const LoginPage = React.lazy(() => import("./pages/auth/login"));
+const MagicLinkPage = React.lazy(() => import("./pages/auth/magic-link"));
+const RegisterAdminPage = React.lazy(() => import("./pages/auth/register-admin"));
+const ResetPasswordPage = React.lazy(() => import("./pages/auth/reset-password"));
+const VerifyEmailPage = React.lazy(() => import("./pages/auth/verify-email"));
+const VerifyMagicLinkPage = React.lazy(() => import("./pages/auth/verify-magic-link"));
+const AccountPage = React.lazy(() => import("./pages/dashboard/account"));
+const ApplicationsPage = React.lazy(() => import("./pages/dashboard/applications"));
+const CandidatesPage = React.lazy(() => import("./pages/dashboard/candidates"));
+const CandidateDetailsPage = React.lazy(() => import("./pages/dashboard/candidates/details"));
+const QuickImportPage = React.lazy(() => import("./pages/dashboard/candidates/quick-import"));
+const CategoriesPage = React.lazy(() => import("./pages/dashboard/categories"));
+const ClientsPage = React.lazy(() => import("./pages/dashboard/clients"));
+const ClientDetailPage = React.lazy(() => import("./pages/dashboard/clients/detail"));
+const DashboardMainPage = React.lazy(() => import("./pages/dashboard/dashboard-main"));
+const HelpPage = React.lazy(() => import("./pages/dashboard/help"));
+const DashboardJobsPage = React.lazy(() => import("./pages/dashboard/jobs"));
+const JobCandidateCommunicationPage = React.lazy(() => import("./pages/dashboard/jobs/candidate-communication"));
+const JobCandidateDetailPage = React.lazy(() => import("./pages/dashboard/jobs/candidate-detail"));
+const JobDetailPage = React.lazy(() => import("./pages/dashboard/jobs/detail"));
+const InterviewPage = React.lazy(() => import("./pages/dashboard/jobs/interview"));
+const JobPipelinePage = React.lazy(() => import("./pages/dashboard/jobs/pipeline"));
+const MessagesPage = React.lazy(() => import("./pages/dashboard/messages"));
+const NotificationsPage = React.lazy(() => import("./pages/dashboard/notifications"));
+const SearchPage = React.lazy(() => import("./pages/dashboard/search"));
+const SettingsPage = React.lazy(() => import("./pages/dashboard/settings"));
+const TagsPage = React.lazy(() => import("./pages/dashboard/tags"));
+const TeamPage = React.lazy(() => import("./pages/dashboard/team"));
+const TeamMemberDetailPage = React.lazy(() => import("./pages/dashboard/team/detail"));
+const EmailsPage = React.lazy(() => import("./pages/dashboard/emails"));
+const HomePage = React.lazy(() => import("./pages/home"));
+const JobsPage = React.lazy(() => import("./pages/jobs"));
+const PublicJobDetailPage = React.lazy(() => import("./pages/jobs/detail"));
+
+/** Registers the React Router navigate function into the navigation singleton */
+function NavigationSetup() {
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    setNavigate(navigate);
+  }, [navigate]);
+  return null;
+}
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <NavigationSetup />
+      <ErrorBoundary>
+        <React.Suspense fallback={<LoaderFullPage />}>
+          <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="jobs" element={<JobsPage />} />
@@ -142,7 +160,9 @@ function App() {
           <Route path="help" element={<HelpPage />} />
           <Route path="messages" element={<MessagesPage />} />
         </Route>
-      </Routes>
+          </Routes>
+        </React.Suspense>
+      </ErrorBoundary>
       <Toaster />
     </BrowserRouter>
   );
