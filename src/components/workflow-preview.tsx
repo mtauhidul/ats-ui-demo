@@ -15,12 +15,12 @@ type WorkflowPreviewProps = React.ComponentProps<"div"> & {
 export function WorkflowPreview({ stages, className, ...props }: WorkflowPreviewProps) {
   return (
     <div className={cn("relative max-w-5xl mx-auto py-8", className)} {...props}>
-      {/* Vertical dotted spine */}
-      <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
+      {/* Vertical dotted spine - hidden on mobile */}
+      <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 hidden md:block">
         <div className="h-full w-px border-l-2 border-dotted border-border/60" />
       </div>
       
-      <div className="relative space-y-8">
+      <div className="relative space-y-6 md:space-y-8">
         {stages.map((stage, index) => {
           const isLeft = index % 2 === 0;
           
@@ -29,16 +29,16 @@ export function WorkflowPreview({ stages, className, ...props }: WorkflowPreview
               key={stage.title}
               className="relative flex items-center justify-center"
             >
-              {/* Connecting line from spine to card */}
+              {/* Connecting line from spine to card - hidden on mobile */}
               <div
                 className={cn(
-                  "absolute top-1/2 h-px bg-border/40 z-0",
+                  "absolute top-1/2 h-px bg-border/40 z-0 hidden md:block",
                   isLeft ? "left-1/2 right-[52.5%]" : "left-[52.5%] right-1/2"
                 )}
               />
               
-              {/* Spine node */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+              {/* Spine node - hidden on mobile */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hidden md:block">
                 {/* Expanding pulse animation */}
                 <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: stage.color }} />
                 {/* Outer glow ring */}
@@ -59,12 +59,12 @@ export function WorkflowPreview({ stages, className, ...props }: WorkflowPreview
               {/* Content card */}
               <div
                 className={cn(
-                  "relative w-[42%] z-10",
-                  isLeft ? "mr-auto" : "ml-auto"
+                  "relative w-full md:w-[42%] z-10",
+                  isLeft ? "md:mr-auto" : "md:ml-auto"
                 )}
               >
                 <div 
-                  className="group relative rounded-[20px] p-8 transition-all duration-500 overflow-hidden backdrop-blur-sm"
+                  className="group relative rounded-[20px] p-5 md:p-8 transition-all duration-500 overflow-hidden backdrop-blur-sm"
                   style={{
                     backgroundColor: 'rgba(11, 15, 20, 0.85)',
                     border: '1px solid rgba(20, 184, 166, 0.15)',
