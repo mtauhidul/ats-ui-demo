@@ -1,45 +1,50 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import DOMPurify from "dompurify";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "@/components/ui/command";
-import { Label } from "@/components/ui/label";
-import { Loader } from "@/components/ui/loader";
+} from '@/components/ui/command'
+import { Label } from '@/components/ui/label'
+import { Loader } from '@/components/ui/loader'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { API_BASE_URL } from "@/config/api";
-import { useCandidate, useEmailsByCandidate, useTags, useApplication } from "@/hooks/firestore";
-import { useInterviewsByCandidate } from "@/hooks/useInterviews";
-import { analyzeVideoUrl, getVideoSourceName } from "@/lib/videoUtils";
-import { authenticatedFetch } from "@/lib/authenticated-fetch";
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { API_BASE_URL } from '@/config/api'
+import {
+  useApplication,
+  useCandidate,
+  useEmailsByCandidate,
+  useTags,
+} from '@/hooks/firestore'
+import { useInterviewsByCandidate } from '@/hooks/useInterviews'
+import { authenticatedFetch } from '@/lib/authenticated-fetch'
+import { analyzeVideoUrl, getVideoSourceName } from '@/lib/videoUtils'
 import {
   useCandidates,
   useClients,
   useJobs,
   usePipelines,
   useTeam,
-} from "@/store/hooks/index";
+} from '@/store/hooks/index'
 import {
   IconArrowDown,
   IconArrowLeft,
+  IconArrowRight,
   IconArrowUp,
   IconBriefcase,
   IconCalendar,
@@ -57,153 +62,154 @@ import {
   IconUserCheck,
   IconUsers,
   IconX,
-} from "@tabler/icons-react";
-import * as React from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
+} from '@tabler/icons-react'
+import DOMPurify from 'dompurify'
+import * as React from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { toast } from 'sonner'
 
 export default function CandidateDetailsPage() {
-  const { candidateId } = useParams<{ candidateId: string }>();
-  const [searchParams] = useSearchParams();
-  const jobIdFromUrl = searchParams.get('jobId');
-  const clientIdFromUrl = searchParams.get('clientId');
-  const navigate = useNavigate();
-  
+  const { candidateId } = useParams<{ candidateId: string }>()
+  const [searchParams] = useSearchParams()
+  const jobIdFromUrl = searchParams.get('jobId')
+  const clientIdFromUrl = searchParams.get('clientId')
+  const navigate = useNavigate()
+
   // Smart back navigation based on context - preserve candidates list state
   const handleBackNavigation = () => {
     if (jobIdFromUrl) {
       // Came from a job context, go back to that job
       if (clientIdFromUrl) {
-        navigate(`/dashboard/clients/${clientIdFromUrl}/jobs/${jobIdFromUrl}`);
+        navigate(`/dashboard/clients/${clientIdFromUrl}/jobs/${jobIdFromUrl}`)
       } else {
-        navigate(`/dashboard/jobs/${jobIdFromUrl}`);
+        navigate(`/dashboard/jobs/${jobIdFromUrl}`)
       }
     } else {
       // No job context, go to candidates list with preserved state
-      const params = new URLSearchParams();
-      
+      const params = new URLSearchParams()
+
       // Preserve pagination, search, and tab from URL params
-      const page = searchParams.get('page');
-      const pageSize = searchParams.get('pageSize');
-      const search = searchParams.get('search');
-      const tab = searchParams.get('tab');
-      
-      if (page) params.set('page', page);
-      if (pageSize) params.set('pageSize', pageSize);
-      if (search) params.set('search', search);
-      if (tab) params.set('tab', tab);
-      
-      const queryString = params.toString();
-      navigate(`/dashboard/candidates${queryString ? `?${queryString}` : ''}`);
+      const page = searchParams.get('page')
+      const pageSize = searchParams.get('pageSize')
+      const search = searchParams.get('search')
+      const tab = searchParams.get('tab')
+
+      if (page) params.set('page', page)
+      if (pageSize) params.set('pageSize', pageSize)
+      if (search) params.set('search', search)
+      if (tab) params.set('tab', tab)
+
+      const queryString = params.toString()
+      navigate(`/dashboard/candidates${queryString ? `?${queryString}` : ''}`)
     }
-  };
-  const [showResumePreview, setShowResumePreview] = React.useState(false);
-  const [showVideoPreview, setShowVideoPreview] = React.useState(false);
-  const [showEmailPreview, setShowEmailPreview] = React.useState(false);
-  const [openTagPopover, setOpenTagPopover] = React.useState(false);
+  }
+  const [showResumePreview, setShowResumePreview] = React.useState(false)
+  const [showVideoPreview, setShowVideoPreview] = React.useState(false)
+  const [showEmailPreview, setShowEmailPreview] = React.useState(false)
+  const [openTagPopover, setOpenTagPopover] = React.useState(false)
 
   // 🔥 REALTIME: Get ALL tags from Firestore (including inactive ones for display)
-  const { data: allTags, loading: isLoadingTags } = useTags();
+  const { data: allTags, loading: isLoadingTags } = useTags()
 
   // Interview interface for history
   interface Interview {
-    id?: string;
-    _id?: string;
-    scheduledAt: string;
-    type: string;
-    status: string;
-    title: string;
-    duration: number;
-    notes?: string;
-    description?: string;
+    id?: string
+    _id?: string
+    scheduledAt: string
+    type: string
+    status: string
+    title: string
+    duration: number
+    notes?: string
+    description?: string
     feedback?: Array<{
-      comments: string;
-      rating: number;
-      recommendation: string;
+      comments: string
+      rating: number
+      recommendation: string
       interviewerId?: {
-        firstName?: string;
-        lastName?: string;
-      };
-    }>;
+        firstName?: string
+        lastName?: string
+      }
+    }>
     jobId?: {
-      title?: string;
-    };
+      title?: string
+    }
     clientId?: {
-      companyName?: string;
-    };
+      companyName?: string
+    }
     interviewerIds?: Array<{
-      firstName?: string;
-      lastName?: string;
-    }>;
+      firstName?: string
+      lastName?: string
+    }>
   }
 
   // Get realtime data from Firestore - try both candidate and application
   const { candidate: candidateData, loading: candidatesLoading } =
-    useCandidate(candidateId);
+    useCandidate(candidateId)
   const { application: applicationData, loading: applicationLoading } =
-    useApplication(candidateId);
-    
+    useApplication(candidateId)
+
   // Determine if viewing an application or candidate
-  const isApplication = !candidateData && applicationData;
-  const displayData = isApplication ? applicationData : candidateData;
-  const isLoading = candidatesLoading || applicationLoading;
-  
+  const isApplication = !candidateData && applicationData
+  const displayData = isApplication ? applicationData : candidateData
+  const isLoading = candidatesLoading || applicationLoading
+
   // Create a compatibility layer - map application data to candidate structure for existing code
-  const effectiveCandidateData = displayData as typeof candidateData;
-  
-  const { jobs, isLoading: jobsLoading } = useJobs();
-  const { clients, isLoading: clientsLoading } = useClients();
-  const { pipelines, isLoading: pipelinesLoading } = usePipelines();
-  const { updateCandidate, candidates } = useCandidates();
+  const effectiveCandidateData = displayData as typeof candidateData
+
+  const { jobs, isLoading: jobsLoading } = useJobs()
+  const { clients, isLoading: clientsLoading } = useClients()
+  const { pipelines, isLoading: pipelinesLoading } = usePipelines()
+  const { updateCandidate, candidates } = useCandidates()
 
   // Reassignment dialog state
   const [reassignJobDialogOpen, setReassignJobDialogOpen] =
-    React.useState(false);
+    React.useState(false)
   const [selectedJobForReassign, setSelectedJobForReassign] =
-    React.useState<string>("");
-  
+    React.useState<string>('')
+
   // Stage update state
-  const [isUpdatingStage, setIsUpdatingStage] = React.useState(false);
-  const [isChangingJob, setIsChangingJob] = React.useState(false);
-  
+  const [isUpdatingStage, setIsUpdatingStage] = React.useState(false)
+  const [isChangingJob, setIsChangingJob] = React.useState(false)
+
   // Notes state and debounce
-  const [notes, setNotes] = React.useState("");
-  const [isSavingNotes, setIsSavingNotes] = React.useState(false);
-  const notesTimeoutRef = React.useRef<number | null>(null);
+  const [notes, setNotes] = React.useState('')
+  const [isSavingNotes, setIsSavingNotes] = React.useState(false)
+  const notesTimeoutRef = React.useRef<number | null>(null)
 
   // 🔥 REALTIME: Get interviews from Firestore for this candidate across all jobs
   // Use displayData.id if available, otherwise use candidateId from URL
   // Note: Applications don't have interviews yet
-  const actualCandidateId = displayData?.id || candidateId;
+  const actualCandidateId = displayData?.id || candidateId
 
   const {
     data: firestoreInterviews,
     loading: isLoadingInterviews,
     error: interviewsError,
-  } = useInterviewsByCandidate(actualCandidateId);
+  } = useInterviewsByCandidate(actualCandidateId)
 
   if (interviewsError) {
   }
 
   // Transform Firestore interviews to match the interface
   const interviews: Interview[] = React.useMemo(() => {
-    if (!firestoreInterviews || firestoreInterviews.length === 0) return [];
+    if (!firestoreInterviews || firestoreInterviews.length === 0) return []
 
-    return firestoreInterviews.map((interview) => {
+    return firestoreInterviews.map(interview => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const interviewData = interview as any;
+      const interviewData = interview as any
 
       // Look up job and client from store if jobTitle/clientName not available
       const job = jobs.find(
-        (j) => j.id === interview.jobId || j.id === interviewData.jobId
-      );
+        j => j.id === interview.jobId || j.id === interviewData.jobId
+      )
       const client = clients.find(
-        (c) => c.id === interview.clientId || c.id === interviewData.clientId
-      );
+        c => c.id === interview.clientId || c.id === interviewData.clientId
+      )
 
-      const jobTitle = interview.jobTitle || job?.title || "Unknown Position";
+      const jobTitle = interview.jobTitle || job?.title || 'Unknown Position'
       const clientName =
-        interview.clientName || client?.companyName || "Unknown Client";
+        interview.clientName || client?.companyName || 'Unknown Client'
 
       return {
         id: interview.id,
@@ -211,8 +217,8 @@ export default function CandidateDetailsPage() {
         scheduledAt:
           interview.interviewDate instanceof Date
             ? interview.interviewDate.toISOString()
-            : (interview.interviewDate as unknown as string) || "",
-        type: interview.interviewType || "video",
+            : (interview.interviewDate as unknown as string) || '',
+        type: interview.interviewType || 'video',
         status: interview.status,
         title: interviewData.title || `${interview.interviewType} Interview`,
         duration: interview.duration || 60,
@@ -226,67 +232,67 @@ export default function CandidateDetailsPage() {
           companyName: clientName,
         },
         interviewerIds: interviewData.interviewerIds,
-      };
-    });
-  }, [firestoreInterviews, jobs, clients]);
+      }
+    })
+  }, [firestoreInterviews, jobs, clients])
 
   // 🔥 REALTIME: Get team members for assignee name lookup
-  const { teamMembers } = useTeam();
+  const { teamMembers } = useTeam()
 
   // Handler for reassigning candidate to another job
   const handleReassignJob = () => {
-    setSelectedJobForReassign("");
-    setReassignJobDialogOpen(true);
-  };
+    setSelectedJobForReassign('')
+    setReassignJobDialogOpen(true)
+  }
 
   const handleReassignJobConfirm = async () => {
-    if (!effectiveCandidateData?.id || !selectedJobForReassign) return;
+    if (!effectiveCandidateData?.id || !selectedJobForReassign) return
 
     try {
       // Find the full candidate and job
-      const candidate = candidates.find((c) => c.id === effectiveCandidateData.id);
-      const job = jobs.find((j) => j.id === selectedJobForReassign);
+      const candidate = candidates.find(c => c.id === effectiveCandidateData.id)
+      const job = jobs.find(j => j.id === selectedJobForReassign)
 
       if (!candidate || !job) {
-        toast.error("Candidate or job not found");
-        return;
+        toast.error('Candidate or job not found')
+        return
       }
 
       // Check if candidate is already ACTIVELY assigned to this job
       const existingJobApp = candidate.jobApplications?.find(
-        (app) => app.jobId === selectedJobForReassign
-      );
-      if (existingJobApp && existingJobApp.status === "active") {
-        toast.error("Candidate is already actively assigned to this job");
-        return;
+        app => app.jobId === selectedJobForReassign
+      )
+      if (existingJobApp && existingJobApp.status === 'active') {
+        toast.error('Candidate is already actively assigned to this job')
+        return
       }
 
-      let updatedJobIds = candidate.jobIds || [];
-      let updatedJobApplications = candidate.jobApplications || [];
+      let updatedJobIds = candidate.jobIds || []
+      let updatedJobApplications = candidate.jobApplications || []
 
       // Get the job's pipeline and first stage
       const jobPipeline = pipelines.find(
-        (p) => p.jobId === selectedJobForReassign
-      );
-      const firstStageId = jobPipeline?.stages?.[0]?.id;
+        p => p.jobId === selectedJobForReassign
+      )
+      const firstStageId = jobPipeline?.stages?.[0]?.id
 
       if (existingJobApp) {
         // Candidate was previously assigned to this job (rejected/hired) - reactivate
-        updatedJobApplications = updatedJobApplications.map((app) =>
+        updatedJobApplications = updatedJobApplications.map(app =>
           app.jobId === selectedJobForReassign
             ? {
                 ...app,
-                status: "active" as const,
+                status: 'active' as const,
                 currentStage: firstStageId || undefined, // Reset to first stage of pipeline
                 lastStatusChange: new Date(),
               }
             : app
-        );
+        )
       } else {
         // New assignment - add to arrays
         const newJobApplication = {
           jobId: selectedJobForReassign,
-          status: "active" as const,
+          status: 'active' as const,
           appliedAt: new Date(),
           currentStage: firstStageId || undefined, // Use first stage of pipeline
           lastStatusChange: new Date(),
@@ -294,10 +300,10 @@ export default function CandidateDetailsPage() {
           emailIds: [],
           emailsSent: 0,
           emailsReceived: 0,
-        };
+        }
 
-        updatedJobIds = [...updatedJobIds, selectedJobForReassign];
-        updatedJobApplications = [...updatedJobApplications, newJobApplication];
+        updatedJobIds = [...updatedJobIds, selectedJobForReassign]
+        updatedJobApplications = [...updatedJobApplications, newJobApplication]
       }
 
       // Update candidate
@@ -307,90 +313,90 @@ export default function CandidateDetailsPage() {
         clientIds: [
           ...new Set([...(candidate.clientIds || []), job.clientId as string]),
         ],
-        status: "active", // Reactivate candidate if they were globally rejected
+        status: 'active', // Reactivate candidate if they were globally rejected
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      } as any)
 
       toast.success(
-        `Candidate ${existingJobApp ? "reactivated for" : "assigned to"} ${
+        `Candidate ${existingJobApp ? 'reactivated for' : 'assigned to'} ${
           job.title
         }`
-      );
-      setReassignJobDialogOpen(false);
-      setSelectedJobForReassign("");
+      )
+      setReassignJobDialogOpen(false)
+      setSelectedJobForReassign('')
     } catch (error) {
-      toast.error("Failed to reassign candidate");
+      toast.error('Failed to reassign candidate')
     }
-  };
+  }
 
   // Handle stage change
   const handleStageChange = async (newStageId: string) => {
-    if (!effectiveCandidateData?.id || !job?.id) return;
-    
+    if (!effectiveCandidateData?.id || !job?.id) return
+
     const currentStageId =
       (effectiveCandidateData as any)?.currentPipelineStageId ||
-      effectiveCandidateData?.currentStage;
-    
-    if (newStageId === currentStageId || isUpdatingStage) return;
+      effectiveCandidateData?.currentStage
 
-    setIsUpdatingStage(true);
+    if (newStageId === currentStageId || isUpdatingStage) return
+
+    setIsUpdatingStage(true)
     try {
       await updateCandidate(effectiveCandidateData.id, {
         currentPipelineStageId: newStageId,
         jobId: job.id,
-      } as any);
+      } as any)
 
-      toast.success("Stage updated successfully");
+      toast.success('Stage updated successfully')
     } catch (error) {
-      toast.error("Failed to update stage");
-      console.error("Stage update error:", error);
+      toast.error('Failed to update stage')
+      console.error('Stage update error:', error)
     } finally {
-      setIsUpdatingStage(false);
+      setIsUpdatingStage(false)
     }
-  };
+  }
 
   // Handle job change (switch candidate to different job)
   const handleJobChange = async (newJobId: string) => {
-    if (!effectiveCandidateData?.id || !newJobId || isChangingJob) return;
-    if (newJobId === job?.id) return;
+    if (!effectiveCandidateData?.id || !newJobId || isChangingJob) return
+    if (newJobId === job?.id) return
 
-    setIsChangingJob(true);
+    setIsChangingJob(true)
     try {
-      const candidate = candidates.find((c) => c.id === effectiveCandidateData.id);
-      const newJob = jobs.find((j) => j.id === newJobId);
+      const candidate = candidates.find(c => c.id === effectiveCandidateData.id)
+      const newJob = jobs.find(j => j.id === newJobId)
 
       if (!candidate || !newJob) {
-        toast.error("Candidate or job not found");
-        return;
+        toast.error('Candidate or job not found')
+        return
       }
 
       // Check if already assigned to this job
       const existingJobApp = candidate.jobApplications?.find(
-        (app) => app.jobId === newJobId
-      );
-      if (existingJobApp && existingJobApp.status === "active") {
-        toast.error("Candidate is already actively assigned to this job");
-        setIsChangingJob(false);
-        return;
+        app => app.jobId === newJobId
+      )
+      if (existingJobApp && existingJobApp.status === 'active') {
+        toast.error('Candidate is already actively assigned to this job')
+        setIsChangingJob(false)
+        return
       }
 
       // Get the new job's pipeline and first stage
-      const newJobPipeline = pipelines.find((p) => p.id === newJob.pipelineId);
-      const firstStageId = newJobPipeline?.stages?.[0]?.id;
+      const newJobPipeline = pipelines.find(p => p.id === newJob.pipelineId)
+      const firstStageId = newJobPipeline?.stages?.[0]?.id
 
       if (existingJobApp) {
         // Reactivate existing application
         await updateCandidate(candidate.id!, {
-          jobApplications: candidate.jobApplications?.map((app) =>
+          jobApplications: candidate.jobApplications?.map(app =>
             app.jobId === newJobId
               ? {
                   ...app,
-                  status: "active",
+                  status: 'active',
                   currentStage: firstStageId || undefined,
                 }
               : app
           ),
-        } as any);
+        } as any)
       } else {
         // Create new job application
         await updateCandidate(candidate.id!, {
@@ -398,34 +404,36 @@ export default function CandidateDetailsPage() {
             ...(candidate.jobApplications || []),
             {
               jobId: newJobId,
-              status: "active",
+              status: 'active',
               appliedDate: new Date(),
               currentStage: firstStageId || undefined,
             },
           ],
-        } as any);
+        } as any)
       }
 
-      toast.success(`Candidate moved to ${newJob.title}`);
-      
+      toast.success(`Candidate moved to ${newJob.title}`)
+
       // Navigate to the new job context
-      const params = new URLSearchParams(searchParams);
-      params.set('jobId', newJobId);
-      navigate(`/dashboard/candidates/${candidateId}?${params.toString()}`, { replace: true });
+      const params = new URLSearchParams(searchParams)
+      params.set('jobId', newJobId)
+      navigate(`/dashboard/candidates/${candidateId}?${params.toString()}`, {
+        replace: true,
+      })
     } catch (error) {
-      toast.error("Failed to move candidate to new job");
-      console.error("Job change error:", error);
+      toast.error('Failed to move candidate to new job')
+      console.error('Job change error:', error)
     } finally {
-      setIsChangingJob(false);
+      setIsChangingJob(false)
     }
-  };
+  }
 
   // 🔥 REALTIME: Get emails from Firestore for this candidate
   const {
     data: emails,
     loading: isLoadingEmails,
     error: emailsError,
-  } = useEmailsByCandidate(actualCandidateId);
+  } = useEmailsByCandidate(actualCandidateId)
 
   // DISABLED: Excessive refetching causes performance issues and API spam
   // Only refetch on user action or manual page refresh
@@ -461,7 +469,7 @@ export default function CandidateDetailsPage() {
     if (effectiveCandidateData) {
       // Backend uses 'experience' field, frontend type has 'workExperience'
     }
-  }, [effectiveCandidateData]);
+  }, [effectiveCandidateData])
 
   // DISABLED: Interviews not yet migrated to Firestore - no API call
   // Interviews will show as empty until data is migrated to Firestore
@@ -489,209 +497,212 @@ export default function CandidateDetailsPage() {
   // 🔥 REALTIME: Derive selected tags directly from candidate data (updates automatically with Firestore)
   const selectedTags = React.useMemo(() => {
     if (!effectiveCandidateData) {
-      return [];
+      return []
     }
 
     // Access tagIds directly from effectiveCandidateData
-    const tagIds = effectiveCandidateData.tagIds;
+    const tagIds = effectiveCandidateData.tagIds
 
     if (!tagIds || !Array.isArray(tagIds)) {
-      return [];
+      return []
     }
 
     // Handle both string IDs and object IDs for backward compatibility
     const processedTags = tagIds
       .map((id: string | { _id?: string; id?: string }) =>
-        typeof id === "object" ? id._id || id.id || "" : id
+        typeof id === 'object' ? id._id || id.id || '' : id
       )
-      .filter(Boolean);
+      .filter(Boolean)
 
-    return processedTags;
-  }, [effectiveCandidateData, allTags.length]);
+    return processedTags
+  }, [effectiveCandidateData, allTags.length])
 
   // Update candidate tags on the backend
   const updateCandidateTags = React.useCallback(
     async (tagIds: string[]) => {
-      if (!candidateId) return;
+      if (!candidateId) return
 
       try {
         // Use appropriate endpoint based on whether this is an application or candidate
-        const endpoint = isApplication 
+        const endpoint = isApplication
           ? `${API_BASE_URL}/applications/${candidateId}`
-          : `${API_BASE_URL}/candidates/${candidateId}`;
-          
-        const response = await authenticatedFetch(
-          endpoint,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ tagIds }),
-          }
-        );
+          : `${API_BASE_URL}/candidates/${candidateId}`
+
+        const response = await authenticatedFetch(endpoint, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ tagIds }),
+        })
 
         if (!response.ok) {
-          throw new Error("Failed to update tags");
+          throw new Error('Failed to update tags')
         }
 
         // Firestore will automatically update candidate data in realtime
       } catch (error) {}
     },
     [candidateId, isApplication]
-  );
+  )
 
   const toggleTag = (tagId: string) => {
     const newTags = selectedTags.includes(tagId)
-      ? selectedTags.filter((id) => id !== tagId)
-      : [...selectedTags, tagId];
+      ? selectedTags.filter(id => id !== tagId)
+      : [...selectedTags, tagId]
 
     // Update backend - Firestore will sync automatically and update selectedTags via candidateData
-    updateCandidateTags(newTags);
-  };
-  
+    updateCandidateTags(newTags)
+  }
+
   // Initialize notes from candidate data
   React.useEffect(() => {
     if (effectiveCandidateData) {
-      setNotes((effectiveCandidateData as any)?.notes || "");
+      setNotes((effectiveCandidateData as any)?.notes || '')
     }
-  }, [effectiveCandidateData?.id]); // Only update when candidate changes
-  
+  }, [effectiveCandidateData?.id]) // Only update when candidate changes
+
   // Debounced notes save function
-  const saveNotes = React.useCallback(async (notesText: string) => {
-    if (!candidateId) return;
-    
-    setIsSavingNotes(true);
-    try {
-      // Use appropriate endpoint based on whether this is an application or candidate
-      const endpoint = isApplication 
-        ? `${API_BASE_URL}/applications/${candidateId}`
-        : `${API_BASE_URL}/candidates/${candidateId}`;
-        
-      const response = await authenticatedFetch(
-        endpoint,
-        {
-          method: "PATCH",
+  const saveNotes = React.useCallback(
+    async (notesText: string) => {
+      if (!candidateId) return
+
+      setIsSavingNotes(true)
+      try {
+        // Use appropriate endpoint based on whether this is an application or candidate
+        const endpoint = isApplication
+          ? `${API_BASE_URL}/applications/${candidateId}`
+          : `${API_BASE_URL}/candidates/${candidateId}`
+
+        const response = await authenticatedFetch(endpoint, {
+          method: 'PATCH',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ notes: notesText }),
-        }
-      );
+        })
 
-      if (!response.ok) {
-        throw new Error("Failed to update notes");
+        if (!response.ok) {
+          throw new Error('Failed to update notes')
+        }
+
+        toast.success('Notes saved')
+      } catch (error) {
+        toast.error('Failed to save notes')
+        console.error('Notes update error:', error)
+      } finally {
+        setIsSavingNotes(false)
       }
-      
-      toast.success("Notes saved");
-    } catch (error) {
-      toast.error("Failed to save notes");
-      console.error("Notes update error:", error);
-    } finally {
-      setIsSavingNotes(false);
-    }
-  }, [candidateId, isApplication]);
-  
+    },
+    [candidateId, isApplication]
+  )
+
   // Handle notes change with debouncing
   const handleNotesChange = (newNotes: string) => {
-    setNotes(newNotes);
-    
+    setNotes(newNotes)
+
     // Clear existing timeout
     if (notesTimeoutRef.current) {
-      clearTimeout(notesTimeoutRef.current);
+      clearTimeout(notesTimeoutRef.current)
     }
-    
+
     // Set new timeout to save after 1.5 seconds of no typing
     notesTimeoutRef.current = setTimeout(() => {
-      saveNotes(newNotes);
-    }, 1500);
-  };
-  
+      saveNotes(newNotes)
+    }, 1500)
+  }
+
   // Cleanup timeout on unmount
   React.useEffect(() => {
     return () => {
       if (notesTimeoutRef.current) {
-        clearTimeout(notesTimeoutRef.current);
+        clearTimeout(notesTimeoutRef.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   // Loading state
   const isLoadingAll =
-    isLoading || jobsLoading || clientsLoading || pipelinesLoading;
+    isLoading || jobsLoading || clientsLoading || pipelinesLoading
 
   if (isLoadingAll) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader size="lg" text={`Loading ${isApplication ? 'application' : 'candidate'} details...`} />
+        <Loader
+          size="lg"
+          text={`Loading ${isApplication ? 'application' : 'candidate'} details...`}
+        />
       </div>
-    );
+    )
   }
 
   if (!displayData) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="text-lg font-semibold mb-2">{isApplication ? 'Application' : 'Candidate'} not found</div>
-          <Button
-            onClick={handleBackNavigation}
-            className="mt-4"
-          >
+          <div className="text-lg font-semibold mb-2">
+            {isApplication ? 'Application' : 'Candidate'} not found
+          </div>
+          <Button onClick={handleBackNavigation} className="mt-4">
             <IconArrowLeft className="h-4 w-4 mr-2" />
             {jobIdFromUrl ? 'Back to Job' : 'Back to Candidates'}
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   // Get job and client details
   // Use jobId from URL if provided, otherwise fall back to first job
-  const targetJobId = jobIdFromUrl || (isApplication ? applicationData?.jobId : (displayData as { jobIds?: string[] })?.jobIds?.[0]);
-  const firstJobId = targetJobId;
-  let job: (typeof jobs)[0] | null = null;
-  let client: (typeof clients)[0] | null = null;
+  const targetJobId =
+    jobIdFromUrl ||
+    (isApplication
+      ? applicationData?.jobId
+      : (displayData as { jobIds?: string[] })?.jobIds?.[0])
+  const firstJobId = targetJobId
+  let job: (typeof jobs)[0] | null = null
+  let client: (typeof clients)[0] | null = null
 
   if (firstJobId) {
-    if (typeof firstJobId === "object" && "title" in firstJobId) {
+    if (typeof firstJobId === 'object' && 'title' in firstJobId) {
       // jobId is already populated with job object
       const populatedJob = firstJobId as Record<string, unknown> & {
-        id?: string;
-        _id?: string;
-        title?: string;
-        clientId?: unknown;
-      };
+        id?: string
+        _id?: string
+        title?: string
+        clientId?: unknown
+      }
       job = {
         ...populatedJob,
         id: populatedJob.id || populatedJob._id,
-      } as (typeof jobs)[0];
+      } as (typeof jobs)[0]
       if (
         job?.clientId &&
-        typeof job.clientId === "object" &&
-        "companyName" in job.clientId
+        typeof job.clientId === 'object' &&
+        'companyName' in job.clientId
       ) {
         // clientId is already populated
         const populatedClient = job.clientId as Record<string, unknown> & {
-          id?: string;
-          _id?: string;
-          companyName?: string;
-        };
+          id?: string
+          _id?: string
+          companyName?: string
+        }
         client = {
           ...populatedClient,
           id: populatedClient.id || populatedClient._id,
-        } as (typeof clients)[0];
+        } as (typeof clients)[0]
       } else if (job?.clientId) {
         const clientIdStr =
-          typeof job.clientId === "object"
+          typeof job.clientId === 'object'
             ? (job.clientId as { _id?: string; id?: string })._id ||
               (job.clientId as { _id?: string; id?: string }).id
-            : job.clientId;
-        client = clients.find((c) => c.id === clientIdStr) || null;
+            : job.clientId
+        client = clients.find(c => c.id === clientIdStr) || null
       }
     } else {
-      job = jobs.find((j) => j.id === firstJobId) || null;
+      job = jobs.find(j => j.id === firstJobId) || null
       if (job?.clientId) {
-        client = clients.find((c) => c.id === job?.clientId) || null;
+        client = clients.find(c => c.id === job?.clientId) || null
       }
     }
   }
@@ -700,170 +711,189 @@ export default function CandidateDetailsPage() {
   // Helper function to safely convert date values (Firestore Timestamps, Date objects, or strings)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toSafeDate = (dateValue: any): string => {
-    if (!dateValue) return "N/A";
+    if (!dateValue) return 'N/A'
 
     try {
       // Handle Firestore Timestamp objects
       if (
         dateValue &&
-        typeof dateValue === "object" &&
-        "seconds" in dateValue
+        typeof dateValue === 'object' &&
+        'seconds' in dateValue
       ) {
-        const date = new Date(dateValue.seconds * 1000);
-        return date.toLocaleDateString();
+        const date = new Date(dateValue.seconds * 1000)
+        return date.toLocaleDateString()
       }
 
       // Handle string dates
-      if (typeof dateValue === "string") {
-        const date = new Date(dateValue);
+      if (typeof dateValue === 'string') {
+        const date = new Date(dateValue)
         if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString();
+          return date.toLocaleDateString()
         }
       }
 
       // Handle Date objects
       if (dateValue instanceof Date) {
         if (!isNaN(dateValue.getTime())) {
-          return dateValue.toLocaleDateString();
+          return dateValue.toLocaleDateString()
         }
       }
 
       // If we can't convert it, return N/A
-      return "N/A";
+      return 'N/A'
     } catch (error) {
-      return "N/A";
+      return 'N/A'
     }
-  };
+  }
 
   const candidate = {
-    id: displayData?.id || "",
-    firstName: displayData?.firstName || "Unknown",
-    lastName: displayData?.lastName || "Applicant",
-    fullName: `${displayData?.firstName || "Unknown"} ${displayData?.lastName || "Applicant"}`,
-    email: displayData?.email || "No email provided",
-    phone: displayData?.phone || "N/A",
-    photo: (displayData as { avatar?: string })?.avatar || (displayData as { photo?: string })?.photo,
+    id: displayData?.id || '',
+    firstName: displayData?.firstName || 'Unknown',
+    lastName: displayData?.lastName || 'Applicant',
+    fullName: `${displayData?.firstName || 'Unknown'} ${displayData?.lastName || 'Applicant'}`,
+    email: displayData?.email || 'No email provided',
+    phone: displayData?.phone || 'N/A',
+    photo:
+      (displayData as { avatar?: string })?.avatar ||
+      (displayData as { photo?: string })?.photo,
     currentTitle: displayData?.currentTitle,
     currentCompany: displayData?.currentCompany,
     yearsOfExperience: displayData?.yearsOfExperience || 0,
     skills: displayData?.skills || [],
-    coverLetter: (typeof displayData?.coverLetter === 'object' && displayData?.coverLetter !== null ? (displayData.coverLetter as { url?: string }).url : displayData?.coverLetter) || (displayData as { notes?: string })?.notes || (displayData as { coverLetter?: string })?.coverLetter,
-    resumeText: (displayData as { notes?: string })?.notes || (displayData as { resumeText?: string })?.resumeText || (displayData as { resumeRawText?: string })?.resumeRawText,
+    coverLetter:
+      (typeof displayData?.coverLetter === 'object' &&
+      displayData?.coverLetter !== null
+        ? (displayData.coverLetter as { url?: string }).url
+        : displayData?.coverLetter) ||
+      (displayData as { notes?: string })?.notes ||
+      (displayData as { coverLetter?: string })?.coverLetter,
+    resumeText:
+      (displayData as { notes?: string })?.notes ||
+      (displayData as { resumeText?: string })?.resumeText ||
+      (displayData as { resumeRawText?: string })?.resumeRawText,
     resumeFilename:
       (displayData as { resumeOriginalName?: string }).resumeOriginalName ||
       displayData.resume?.name ||
-      "resume.pdf",
+      'resume.pdf',
     resumeFileSize: displayData.resume?.size
       ? `${Math.round(displayData.resume.size / 1024)} KB`
-      : "N/A",
+      : 'N/A',
     resumeUrl:
       (displayData as { resumeUrl?: string }).resumeUrl ||
       displayData.resume?.url,
-    location: displayData?.address && typeof displayData.address === 'object'
-      ? `${(displayData.address as { city?: string }).city || ''}, ${(displayData.address as { country?: string }).country || ''}`
-      : (displayData as { address?: string })?.address || undefined,
-    linkedInUrl: displayData.linkedInUrl || (displayData as { linkedInUrl?: string }).linkedInUrl,
-    portfolioUrl: displayData.portfolioUrl || (displayData as { portfolioUrl?: string }).portfolioUrl,
-    githubUrl: displayData.githubUrl || (displayData as { githubUrl?: string }).githubUrl,
+    location:
+      displayData?.address && typeof displayData.address === 'object'
+        ? `${(displayData.address as { city?: string }).city || ''}, ${(displayData.address as { country?: string }).country || ''}`
+        : (displayData as { address?: string })?.address || undefined,
+    linkedInUrl:
+      displayData.linkedInUrl ||
+      (displayData as { linkedInUrl?: string }).linkedInUrl,
+    portfolioUrl:
+      displayData.portfolioUrl ||
+      (displayData as { portfolioUrl?: string }).portfolioUrl,
+    githubUrl:
+      displayData.githubUrl ||
+      (displayData as { githubUrl?: string }).githubUrl,
     // Email automation fields
     source: (displayData as { source?: string }).source,
     rawEmailBody: (displayData as { rawEmailBody?: string }).rawEmailBody,
-    rawEmailBodyHtml: (displayData as { rawEmailBodyHtml?: string }).rawEmailBodyHtml,
+    rawEmailBodyHtml: (displayData as { rawEmailBodyHtml?: string })
+      .rawEmailBodyHtml,
     emailSubject: (displayData as { emailSubject?: string }).emailSubject,
     // Use actual status from backend model
     status: (() => {
       const backendStatus = (
         displayData as {
           status?:
-            | "active"
-            | "interviewing"
-            | "offered"
-            | "hired"
-            | "rejected"
-            | "withdrawn";
+            | 'active'
+            | 'interviewing'
+            | 'offered'
+            | 'hired'
+            | 'rejected'
+            | 'withdrawn'
         }
-      ).status;
-      if (!backendStatus) return "In Process";
+      ).status
+      if (!backendStatus) return 'In Process'
 
       switch (backendStatus) {
-        case "hired":
-          return "Hired";
-        case "rejected":
-          return "Rejected";
-        case "offered":
-          return "Offered";
-        case "interviewing":
-          return "Interviewing";
-        case "withdrawn":
-          return "Withdrawn";
-        case "active":
+        case 'hired':
+          return 'Hired'
+        case 'rejected':
+          return 'Rejected'
+        case 'offered':
+          return 'Offered'
+        case 'interviewing':
+          return 'Interviewing'
+        case 'withdrawn':
+          return 'Withdrawn'
+        case 'active':
         default:
-          return "In Process";
+          return 'In Process'
       }
     })(),
-    jobId: job?.id || "N/A",
-    jobTitle: job?.title || "N/A",
+    jobId: job?.id || 'N/A',
+    jobTitle: job?.title || 'N/A',
     currentStage: (() => {
       const stageId =
         (effectiveCandidateData as any)?.currentPipelineStageId ||
-        effectiveCandidateData?.currentStage;
+        effectiveCandidateData?.currentStage
 
-      if (!stageId || typeof stageId !== "string" || !job?.pipelineId) {
-        return isApplication ? "Application" : "Not Assigned";
+      if (!stageId || typeof stageId !== 'string' || !job?.pipelineId) {
+        return isApplication ? 'Application' : 'Not Assigned'
       }
 
-      const jobPipeline = pipelines.find((p) => p.id === job.pipelineId);
+      const jobPipeline = pipelines.find(p => p.id === job.pipelineId)
 
       if (jobPipeline?.stages && jobPipeline.stages.length > 0) {
-        let stage;
+        let stage
 
         // Step 1: Try exact stage ID match (current pipeline)
-        stage = jobPipeline.stages.find((s: any) => s.id === stageId);
+        stage = jobPipeline.stages.find((s: any) => s.id === stageId)
 
         // Step 2: If not found, try exact stage name match (case-insensitive)
         if (!stage) {
           stage = jobPipeline.stages.find(
             (s: any) => s.name?.toLowerCase() === stageId.toLowerCase()
-          );
+          )
         }
 
         // Step 3: If not found and stageId is an old stage ID format, match by index
-        if (!stage && stageId.includes("stage_") && stageId.includes("_")) {
-          const parts = stageId.split("_");
-          const stageIndex = parseInt(parts[parts.length - 1]);
+        if (!stage && stageId.includes('stage_') && stageId.includes('_')) {
+          const parts = stageId.split('_')
+          const stageIndex = parseInt(parts[parts.length - 1])
           if (!isNaN(stageIndex) && stageIndex < jobPipeline.stages.length) {
-            stage = jobPipeline.stages[stageIndex];
+            stage = jobPipeline.stages[stageIndex]
           }
         }
 
         // Step 4: Fuzzy match for renamed stages
         if (!stage) {
-          const stageIdLower = stageId.toLowerCase();
+          const stageIdLower = stageId.toLowerCase()
           stage = jobPipeline.stages.find((s: any) => {
-            const stageName = s.name?.toLowerCase() || "";
+            const stageName = s.name?.toLowerCase() || ''
             const significantWords = stageIdLower
-              .split(" ")
-              .filter((w) => w.length > 2);
+              .split(' ')
+              .filter(w => w.length > 2)
             if (significantWords.length >= 2) {
-              const matchCount = significantWords.filter((word) =>
+              const matchCount = significantWords.filter(word =>
                 stageName.includes(word)
-              ).length;
-              if (matchCount >= 2) return true;
+              ).length
+              if (matchCount >= 2) return true
             }
-            return false;
-          });
+            return false
+          })
         }
 
-        if (stage?.name) return stage.name;
+        if (stage?.name) return stage.name
       }
 
-      return "Not Assigned";
+      return 'Not Assigned'
     })(),
-    clientName: client?.companyName || "N/A",
+    clientName: client?.companyName || 'N/A',
     clientLogo:
       client?.logo ||
       `https://api.dicebear.com/7.x/initials/svg?seed=${
-        client?.companyName || "C"
+        client?.companyName || 'C'
       }`,
     appliedDate: toSafeDate(effectiveCandidateData?.createdAt),
     lastStatusChange: toSafeDate(effectiveCandidateData?.updatedAt),
@@ -873,57 +903,65 @@ export default function CandidateDetailsPage() {
         effectiveCandidateData as {
           assignedTo?:
             | string
-            | { firstName?: string; lastName?: string; email?: string };
+            | { firstName?: string; lastName?: string; email?: string }
         }
-      )?.assignedTo;
+      )?.assignedTo
 
       if (!assignedTo) {
-        return "N/A";
+        return 'N/A'
       }
 
-      if (typeof assignedTo === "object") {
+      if (typeof assignedTo === 'object') {
         // Populated user object from backend
         const name =
-          `${assignedTo.firstName || ""} ${assignedTo.lastName || ""}`.trim() ||
+          `${assignedTo.firstName || ''} ${assignedTo.lastName || ''}`.trim() ||
           assignedTo.email ||
-          "N/A";
-        return name;
-      } else if (typeof assignedTo === "string") {
+          'N/A'
+        return name
+      } else if (typeof assignedTo === 'string') {
         // User ID - look up in team members (THIS IS THE ASSIGNED USER, NOT LOGGED-IN USER)
         const member = teamMembers.find(
-          (m) => m.userId === assignedTo || m.id === assignedTo
-        );
+          m => m.userId === assignedTo || m.id === assignedTo
+        )
         if (member) {
           const name =
             `${member.firstName} ${member.lastName}`.trim() ||
             member.email ||
-            "N/A";
-          return name;
+            'N/A'
+          return name
         } else {
         }
       }
 
-      return "N/A";
+      return 'N/A'
     })(),
     teamMembers: [] as string[],
     interviewScheduled: undefined as Date | undefined, // Backend doesn't have this in Candidate model
     totalEmails:
       (effectiveCandidateData?.totalEmailsSent || 0) +
       (effectiveCandidateData?.totalEmailsReceived || 0),
-    videoIntroUrl: (effectiveCandidateData as any)?.videoIntroUrl as string | undefined,
-    videoIntroFilename: (effectiveCandidateData as any)?.videoIntroFilename as string | undefined,
-    videoIntroFileSize: (effectiveCandidateData as any)?.videoIntroFileSize as string | undefined,
-    videoIntroDuration: (effectiveCandidateData as any)?.videoIntroDuration as string | undefined,
+    videoIntroUrl: (effectiveCandidateData as any)?.videoIntroUrl as
+      | string
+      | undefined,
+    videoIntroFilename: (effectiveCandidateData as any)?.videoIntroFilename as
+      | string
+      | undefined,
+    videoIntroFileSize: (effectiveCandidateData as any)?.videoIntroFileSize as
+      | string
+      | undefined,
+    videoIntroDuration: (effectiveCandidateData as any)?.videoIntroDuration as
+      | string
+      | undefined,
     // Additional fields from backend - use 'experience' field from backend
     experience:
       (
         effectiveCandidateData as {
           experience?: Array<{
-            company: string;
-            title: string;
-            duration: string;
-            description?: string;
-          }>;
+            company: string
+            title: string
+            duration: string
+            description?: string
+          }>
         }
       )?.experience ||
       effectiveCandidateData?.workExperience ||
@@ -934,97 +972,107 @@ export default function CandidateDetailsPage() {
     aiScore: (
       effectiveCandidateData as {
         aiScore?: {
-          overallScore: number;
-          skillsMatch: number;
-          experienceMatch: number;
-          educationMatch: number;
-          summary: string;
-          strengths: string[];
-          concerns: string[];
-          recommendation: string;
-        };
+          overallScore: number
+          skillsMatch: number
+          experienceMatch: number
+          educationMatch: number
+          summary: string
+          strengths: string[]
+          concerns: string[]
+          recommendation: string
+        }
       }
     )?.aiScore,
-  };
+  }
 
   // Log transformed candidate object
   // Build history data from jobApplications
   const historyData: Array<{
-    id: string;
-    jobTitle: string;
-    jobId: string;
-    clientName: string;
-    appliedDate: string;
-    appliedDateRaw: Date; // Keep raw date for timeline
-    status: string;
-    stage: string;
-    lastUpdated: string;
-    lastUpdatedRaw: Date; // Keep raw date for timeline
+    id: string
+    jobTitle: string
+    jobId: string
+    clientName: string
+    appliedDate: string
+    appliedDateRaw: Date // Keep raw date for timeline
+    status: string
+    stage: string
+    lastUpdated: string
+    lastUpdatedRaw: Date // Keep raw date for timeline
+    stageHistory: Array<{
+      fromStageName: string
+      toStageName: string
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      changedAt: any
+      changedBy: string
+      notes?: string
+    }>
   }> = effectiveCandidateData?.jobApplications
-    ? effectiveCandidateData.jobApplications.map((jobApp) => {
+    ? effectiveCandidateData.jobApplications.map(jobApp => {
         // Find the job details
         const jobAppJobId =
-          typeof jobApp.jobId === "object" && jobApp.jobId !== null
+          typeof jobApp.jobId === 'object' && jobApp.jobId !== null
             ? (jobApp.jobId as { _id?: string; id?: string })._id ||
               (jobApp.jobId as { _id?: string; id?: string }).id
-            : jobApp.jobId;
+            : jobApp.jobId
         const jobDetails = jobs.find(
-          (j) => j.id === jobAppJobId || j.id === jobAppJobId?.toString()
-        );
+          j => j.id === jobAppJobId || j.id === jobAppJobId?.toString()
+        )
 
         // Find the client details
-        let clientName = "Unknown Client";
+        let clientName = 'Unknown Client'
         if (jobDetails?.clientId) {
           const clientIdStr =
-            typeof jobDetails.clientId === "object" &&
+            typeof jobDetails.clientId === 'object' &&
             jobDetails.clientId !== null
               ? (jobDetails.clientId as { _id?: string; id?: string })._id ||
                 (jobDetails.clientId as { _id?: string; id?: string }).id
-              : jobDetails.clientId;
-          const clientDetails = clients.find((c) => c.id === clientIdStr);
-          clientName = clientDetails?.companyName || "Unknown Client";
+              : jobDetails.clientId
+          const clientDetails = clients.find(c => c.id === clientIdStr)
+          clientName = clientDetails?.companyName || 'Unknown Client'
         }
 
         // Helper to convert any date value to Date object
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const toDateObject = (dateValue: any): Date => {
-          if (!dateValue) return new Date();
+          if (!dateValue) return new Date()
 
           // Handle Firestore Timestamp
           if (
             dateValue &&
-            typeof dateValue === "object" &&
-            "seconds" in dateValue
+            typeof dateValue === 'object' &&
+            'seconds' in dateValue
           ) {
-            return new Date(dateValue.seconds * 1000);
+            return new Date(dateValue.seconds * 1000)
           }
 
           // Handle string or Date
-          const date = new Date(dateValue);
-          return isNaN(date.getTime()) ? new Date() : date;
-        };
+          const date = new Date(dateValue)
+          return isNaN(date.getTime()) ? new Date() : date
+        }
 
-        const appliedDateObj = toDateObject(jobApp.appliedAt);
+        const appliedDateObj = toDateObject(jobApp.appliedAt)
         const lastUpdatedObj = toDateObject(
           jobApp.lastStatusChange || jobApp.appliedAt
-        );
+        )
 
         return {
           id:
             (jobApp as { _id?: string })._id ||
             `${jobAppJobId}-${jobApp.appliedAt}`,
-          jobTitle: jobDetails?.title || "Unknown Job",
-          jobId: jobAppJobId?.toString() || "",
+          jobTitle: jobDetails?.title || 'Unknown Job',
+          jobId: jobAppJobId?.toString() || '',
           clientName,
           appliedDate: appliedDateObj.toLocaleDateString(),
           appliedDateRaw: appliedDateObj,
-          status: jobApp.status || "active",
-          stage: jobApp.currentStage || "Not Started",
+          status: jobApp.status || 'active',
+          stage: jobApp.currentStage || 'Not Started',
           lastUpdated: lastUpdatedObj.toLocaleDateString(),
           lastUpdatedRaw: lastUpdatedObj,
-        };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          stageHistory: (jobApp as any).stageHistory || [],
+        }
       })
-    : [];
+    : []
 
   return (
     <div className="flex flex-1 flex-col">
@@ -1040,7 +1088,9 @@ export default function CandidateDetailsPage() {
                 className="gap-2"
               >
                 <IconArrowLeft className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">{jobIdFromUrl ? 'Back to Job' : 'Back to Candidates'}</span>
+                <span className="hidden md:inline">
+                  {jobIdFromUrl ? 'Back to Job' : 'Back to Candidates'}
+                </span>
               </Button>
             </div>
 
@@ -1051,7 +1101,7 @@ export default function CandidateDetailsPage() {
                   {/* Avatar */}
                   <Avatar className="h-20 w-20 md:h-24 md:w-24 border-2 rounded-lg shrink-0">
                     <AvatarImage
-                      src={candidate.photo || ""}
+                      src={candidate.photo || ''}
                       className="object-cover"
                     />
                     <AvatarFallback className="text-xl md:text-2xl font-semibold rounded-lg">
@@ -1069,7 +1119,7 @@ export default function CandidateDetailsPage() {
                             {candidate.fullName}
                           </h1>
                           {candidateData?.status?.toLowerCase() ===
-                            "rejected" && (
+                            'rejected' && (
                             <Badge
                               variant="destructive"
                               className="text-sm px-3 py-1 animate-pulse"
@@ -1084,8 +1134,8 @@ export default function CandidateDetailsPage() {
                                   key={i}
                                   className={`h-3.5 w-3.5 md:h-4 md:w-4 ${
                                     i < candidate.rating!
-                                      ? "fill-amber-500 text-amber-500"
-                                      : "fill-muted text-muted"
+                                      ? 'fill-amber-500 text-amber-500'
+                                      : 'fill-muted text-muted'
                                   }`}
                                   viewBox="0 0 20 20"
                                 >
@@ -1117,7 +1167,7 @@ export default function CandidateDetailsPage() {
                           {candidate.email}
                         </a>
                       </div>
-                      {candidate.phone && candidate.phone !== "N/A" && (
+                      {candidate.phone && candidate.phone !== 'N/A' && (
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <IconPhone className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
                           <a
@@ -1144,17 +1194,17 @@ export default function CandidateDetailsPage() {
                           No tags
                         </span>
                       ) : (
-                        selectedTags.map((tagId) => {
-                          const tag = allTags.find((t) => t.id === tagId);
-                          if (!tag) return null;
+                        selectedTags.map(tagId => {
+                          const tag = allTags.find(t => t.id === tagId)
+                          if (!tag) return null
                           return (
                             <Badge
                               key={tag.id}
                               variant="secondary"
                               style={{
-                                backgroundColor: `${tag.color || "#10B981"}15`,
-                                color: tag.color || "#10B981",
-                                borderColor: `${tag.color || "#10B981"}40`,
+                                backgroundColor: `${tag.color || '#10B981'}15`,
+                                color: tag.color || '#10B981',
+                                borderColor: `${tag.color || '#10B981'}40`,
                               }}
                               className="px-2 py-1 text-xs border"
                             >
@@ -1166,7 +1216,7 @@ export default function CandidateDetailsPage() {
                                 <IconX className="h-3 w-3" />
                               </button>
                             </Badge>
-                          );
+                          )
                         })
                       )}
                       <Popover
@@ -1194,19 +1244,19 @@ export default function CandidateDetailsPage() {
                               <CommandEmpty>No tags found.</CommandEmpty>
                             )}
                             <CommandGroup className="max-h-[200px] overflow-auto">
-                              {allTags.map((tag) => (
+                              {allTags.map(tag => (
                                 <CommandItem
                                   key={tag.id}
                                   value={tag.name}
                                   onSelect={() => {
-                                    toggleTag(tag.id!);
+                                    toggleTag(tag.id!)
                                   }}
                                 >
                                   <div className="flex items-center gap-2 flex-1">
                                     <div
                                       className="h-3 w-3 rounded-full"
                                       style={{
-                                        backgroundColor: tag.color || "#10B981",
+                                        backgroundColor: tag.color || '#10B981',
                                       }}
                                     />
                                     <span>{tag.name}</span>
@@ -1232,7 +1282,7 @@ export default function CandidateDetailsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                              window.open(candidate.linkedInUrl, "_blank")
+                              window.open(candidate.linkedInUrl, '_blank')
                             }
                           >
                             <svg
@@ -1250,7 +1300,7 @@ export default function CandidateDetailsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                              window.open(candidate.githubUrl, "_blank")
+                              window.open(candidate.githubUrl, '_blank')
                             }
                           >
                             <svg
@@ -1268,7 +1318,7 @@ export default function CandidateDetailsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                              window.open(candidate.portfolioUrl, "_blank")
+                              window.open(candidate.portfolioUrl, '_blank')
                             }
                           >
                             <IconBriefcase className="h-4 w-4 mr-1.5" />
@@ -1364,7 +1414,7 @@ export default function CandidateDetailsPage() {
                         className="w-full min-h-[120px] p-3 text-sm border rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="Add notes about this candidate..."
                         value={notes}
-                        onChange={(e) => handleNotesChange(e.target.value)}
+                        onChange={e => handleNotesChange(e.target.value)}
                       />
                       <p className="text-xs text-muted-foreground">
                         Notes auto-save after you stop typing.
@@ -1389,7 +1439,7 @@ export default function CandidateDetailsPage() {
                             variant="secondary"
                             className="text-xs md:text-sm font-normal"
                           >
-                            {typeof skill === "string" ? skill : skill.name}
+                            {typeof skill === 'string' ? skill : skill.name}
                           </Badge>
                         ))}
                       </div>
@@ -1409,24 +1459,24 @@ export default function CandidateDetailsPage() {
                       <div className="space-y-3 md:space-y-4">
                         {candidate.experience.map((exp, index) => {
                           const workExp = exp as {
-                            company?: string;
-                            title?: string;
-                            position?: string;
-                            duration?: string;
-                            description?: string;
-                          };
+                            company?: string
+                            title?: string
+                            position?: string
+                            duration?: string
+                            description?: string
+                          }
                           const title =
                             workExp.title ||
                             workExp.position ||
-                            "Position Not Specified";
+                            'Position Not Specified'
 
                           return (
                             <div
                               key={index}
                               className={`pb-3 md:pb-4 ${
                                 index !== candidate.experience.length - 1
-                                  ? "border-b"
-                                  : ""
+                                  ? 'border-b'
+                                  : ''
                               }`}
                             >
                               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 md:gap-3 mb-2">
@@ -1456,7 +1506,7 @@ export default function CandidateDetailsPage() {
                                 </p>
                               )}
                             </div>
-                          );
+                          )
                         })}
                       </div>
                     </CardContent>
@@ -1475,29 +1525,29 @@ export default function CandidateDetailsPage() {
                       <div className="space-y-3 md:space-y-4">
                         {candidate.education.map((edu, index) => {
                           const education = edu as {
-                            institution?: string;
-                            degree?: string;
-                            field?: string;
-                            year?: string;
-                          };
+                            institution?: string
+                            degree?: string
+                            field?: string
+                            year?: string
+                          }
 
                           return (
                             <div
                               key={index}
                               className={`pb-3 md:pb-4 ${
                                 index !== candidate.education.length - 1
-                                  ? "border-b"
-                                  : ""
+                                  ? 'border-b'
+                                  : ''
                               }`}
                             >
                               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 md:gap-3 mb-2">
                                 <div className="flex-1 min-w-0">
                                   <h4 className="font-semibold text-xs md:text-sm">
-                                    {education.degree || "Degree Not Specified"}
+                                    {education.degree || 'Degree Not Specified'}
                                   </h4>
                                   <p className="text-xs md:text-sm text-muted-foreground mt-1">
                                     {education.institution ||
-                                      "Institution Not Specified"}
+                                      'Institution Not Specified'}
                                   </p>
                                 </div>
                                 <div className="text-left sm:text-right">
@@ -1517,7 +1567,7 @@ export default function CandidateDetailsPage() {
                                 </p>
                               )}
                             </div>
-                          );
+                          )
                         })}
                       </div>
                     </CardContent>
@@ -1567,7 +1617,7 @@ export default function CandidateDetailsPage() {
                               variant="outline"
                               className="text-xs md:text-sm font-normal"
                             >
-                              {typeof lang === "string" ? lang : lang.name}
+                              {typeof lang === 'string' ? lang : lang.name}
                             </Badge>
                           ))}
                         </div>
@@ -1588,16 +1638,16 @@ export default function CandidateDetailsPage() {
                           variant="outline"
                           className={`text-xs w-fit ${
                             candidate.aiScore.overallScore >= 80
-                              ? "bg-green-100 text-green-700 border-green-200"
+                              ? 'bg-green-100 text-green-700 border-green-200'
                               : candidate.aiScore.overallScore >= 60
-                              ? "bg-blue-100 text-blue-700 border-blue-200"
-                              : candidate.aiScore.overallScore >= 40
-                              ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-                              : "bg-red-100 text-red-700 border-red-200"
+                                ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                : candidate.aiScore.overallScore >= 40
+                                  ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                  : 'bg-red-100 text-red-700 border-red-200'
                           }`}
                         >
                           {candidate.aiScore.recommendation
-                            .replace("_", " ")
+                            .replace('_', ' ')
                             .toUpperCase()}
                         </Badge>
                       </div>
@@ -1617,12 +1667,12 @@ export default function CandidateDetailsPage() {
                           <div
                             className={`h-2 rounded-full ${
                               candidate.aiScore.overallScore >= 80
-                                ? "bg-green-600"
+                                ? 'bg-green-600'
                                 : candidate.aiScore.overallScore >= 60
-                                ? "bg-blue-600"
-                                : candidate.aiScore.overallScore >= 40
-                                ? "bg-yellow-600"
-                                : "bg-red-600"
+                                  ? 'bg-blue-600'
+                                  : candidate.aiScore.overallScore >= 40
+                                    ? 'bg-yellow-600'
+                                    : 'bg-red-600'
                             }`}
                             style={{
                               width: `${candidate.aiScore.overallScore}%`,
@@ -1759,7 +1809,7 @@ export default function CandidateDetailsPage() {
                                 className="h-8 px-3"
                               >
                                 <span className="text-xs">
-                                  {showResumePreview ? "Hide" : "View"}
+                                  {showResumePreview ? 'Hide' : 'View'}
                                 </span>
                               </Button>
                               {candidate.resumeUrl && (
@@ -1767,7 +1817,7 @@ export default function CandidateDetailsPage() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() =>
-                                    window.open(candidate.resumeUrl, "_blank")
+                                    window.open(candidate.resumeUrl, '_blank')
                                   }
                                 >
                                   <IconDownload className="h-4 w-4" />
@@ -1780,7 +1830,7 @@ export default function CandidateDetailsPage() {
                               {candidate.resumeUrl ? (
                                 candidate.resumeUrl
                                   .toLowerCase()
-                                  .endsWith(".pdf") ? (
+                                  .endsWith('.pdf') ? (
                                   <div className="relative bg-muted/30">
                                     <iframe
                                       src={`${candidate.resumeUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
@@ -1832,7 +1882,7 @@ export default function CandidateDetailsPage() {
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium truncate">
                                   {candidate.videoIntroFilename ||
-                                    "Video Introduction"}
+                                    'Video Introduction'}
                                 </p>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                                   {candidate.videoIntroDuration && (
@@ -1859,7 +1909,7 @@ export default function CandidateDetailsPage() {
                                 className="h-8 px-3"
                               >
                                 <span className="text-xs">
-                                  {showVideoPreview ? "Hide" : "View"}
+                                  {showVideoPreview ? 'Hide' : 'View'}
                                 </span>
                               </Button>
                               <Button variant="ghost" size="sm">
@@ -1867,163 +1917,177 @@ export default function CandidateDetailsPage() {
                               </Button>
                             </div>
                           </div>
-                          {showVideoPreview && (() => {
-                            const videoInfo = analyzeVideoUrl(candidate.videoIntroUrl || '');
-                            const sourceName = getVideoSourceName(videoInfo);
-                            
-                            return (
-                              <div className="border-t">
-                                {videoInfo.canEmbed ? (
-                                  videoInfo.type === 'google-drive' ? (
-                                    // Google Drive embedded video
-                                    <div className="bg-black aspect-video">
-                                      <iframe
-                                        src={videoInfo.embedUrl}
-                                        className="w-full h-full"
-                                        allow="autoplay; fullscreen"
-                                        sandbox="allow-same-origin allow-scripts"
-                                        title="Google Drive Video"
-                                      />
-                                    </div>
-                                  ) : (
-                                    // Direct video file player for Cloudinary or other direct video URLs
-                                    <div className="bg-black flex items-center justify-center">
-                                      <video
-                                        controls
-                                        className="w-full h-[600px] object-contain"
-                                        preload="metadata"
-                                        poster={candidate.photo || undefined}
-                                      >
-                                        <source
-                                          src={candidate.videoIntroUrl}
-                                          type="video/mp4"
+                          {showVideoPreview &&
+                            (() => {
+                              const videoInfo = analyzeVideoUrl(
+                                candidate.videoIntroUrl || ''
+                              )
+                              const sourceName = getVideoSourceName(videoInfo)
+
+                              return (
+                                <div className="border-t">
+                                  {videoInfo.canEmbed ? (
+                                    videoInfo.type === 'google-drive' ? (
+                                      // Google Drive embedded video
+                                      <div className="bg-black aspect-video">
+                                        <iframe
+                                          src={videoInfo.embedUrl}
+                                          className="w-full h-full"
+                                          allow="autoplay; fullscreen"
+                                          sandbox="allow-same-origin allow-scripts"
+                                          title="Google Drive Video"
                                         />
-                                        <source
-                                          src={candidate.videoIntroUrl}
-                                          type="video/webm"
-                                        />
-                                        <source
-                                          src={candidate.videoIntroUrl}
-                                          type="video/ogg"
-                                        />
-                                        Your browser does not support the video tag.
-                                      </video>
-                                    </div>
-                                  )
-                                ) : (
-                                  // External link (Loom, Dropbox, OneDrive, YouTube, etc.)
-                                  <div className="bg-muted/30 p-6 text-center space-y-3">
-                                    <div className="flex justify-center">
-                                      <div className="rounded-full bg-blue-500/10 p-3">
-                                        <svg
-                                          className="w-6 h-6 text-blue-600"
-                                          fill="none"
-                                          viewBox="0 0 24 24"
-                                          stroke="currentColor"
+                                      </div>
+                                    ) : (
+                                      // Direct video file player for Cloudinary or other direct video URLs
+                                      <div className="bg-black flex items-center justify-center">
+                                        <video
+                                          controls
+                                          className="w-full h-[600px] object-contain"
+                                          preload="metadata"
+                                          poster={candidate.photo || undefined}
                                         >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                          <source
+                                            src={candidate.videoIntroUrl}
+                                            type="video/mp4"
                                           />
-                                        </svg>
+                                          <source
+                                            src={candidate.videoIntroUrl}
+                                            type="video/webm"
+                                          />
+                                          <source
+                                            src={candidate.videoIntroUrl}
+                                            type="video/ogg"
+                                          />
+                                          Your browser does not support the
+                                          video tag.
+                                        </video>
+                                      </div>
+                                    )
+                                  ) : (
+                                    // External link (Loom, Dropbox, OneDrive, YouTube, etc.)
+                                    <div className="bg-muted/30 p-6 text-center space-y-3">
+                                      <div className="flex justify-center">
+                                        <div className="rounded-full bg-blue-500/10 p-3">
+                                          <svg
+                                            className="w-6 h-6 text-blue-600"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2}
+                                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                            />
+                                          </svg>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm font-medium mb-1">
+                                          {sourceName}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mb-3">
+                                          Click the link below to watch the
+                                          video introduction.
+                                        </p>
+                                        <a
+                                          href={candidate.videoIntroUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                        >
+                                          <svg
+                                            className="w-4 h-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2}
+                                              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                            />
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2}
+                                              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                            />
+                                          </svg>
+                                          Watch Video
+                                        </a>
                                       </div>
                                     </div>
-                                    <div>
-                                      <p className="text-sm font-medium mb-1">
-                                        {sourceName}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground mb-3">
-                                        Click the link below to watch the video introduction.
-                                      </p>
-                                      <a
-                                        href={candidate.videoIntroUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-                                      >
-                                        <svg
-                                          className="w-4 h-4"
-                                          fill="none"
-                                          viewBox="0 0 24 24"
-                                          stroke="currentColor"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                                          />
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                          />
-                                        </svg>
-                                        Watch Video
-                                      </a>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
+                                  )}
+                                </div>
+                              )
+                            })()}
                         </div>
                       )}
 
                       {/* Email Content - Only show if applied via email */}
-                      {(candidate.source === 'email_automation' || candidate.source === 'email') && 
-                       (candidate.rawEmailBody || candidate.rawEmailBodyHtml) && (
-                        <div className="rounded-lg border overflow-hidden">
-                          <div className="flex items-center justify-between gap-3 p-3 bg-muted/50">
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              <div className="rounded-md bg-background p-2 border">
-                                <IconMail className="h-5 w-5 text-muted-foreground" />
+                      {(candidate.source === 'email_automation' ||
+                        candidate.source === 'email') &&
+                        (candidate.rawEmailBody ||
+                          candidate.rawEmailBodyHtml) && (
+                          <div className="rounded-lg border overflow-hidden">
+                            <div className="flex items-center justify-between gap-3 p-3 bg-muted/50">
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <div className="rounded-md bg-background p-2 border">
+                                  <IconMail className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-medium truncate">
+                                    {candidate.emailSubject ||
+                                      'Email Application Content'}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {candidate.emailSubject
+                                      ? 'Original email subject and body'
+                                      : 'Original email body received'}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium truncate">
-                                  {candidate.emailSubject || 'Email Application Content'}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {candidate.emailSubject ? 'Original email subject and body' : 'Original email body received'}
-                                </p>
-                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  setShowEmailPreview(!showEmailPreview)
+                                }
+                                className="h-8 px-3"
+                              >
+                                <span className="text-xs">
+                                  {showEmailPreview ? 'Hide' : 'View'}
+                                </span>
+                              </Button>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                setShowEmailPreview(!showEmailPreview)
-                              }
-                              className="h-8 px-3"
-                            >
-                              <span className="text-xs">
-                                {showEmailPreview ? "Hide" : "View"}
-                              </span>
-                            </Button>
+                            {showEmailPreview && (
+                              <div className="border-t">
+                                <div className="max-h-[600px] overflow-y-auto">
+                                  {candidate.rawEmailBodyHtml ? (
+                                    <div
+                                      className="p-4 prose prose-sm max-w-none"
+                                      dangerouslySetInnerHTML={{
+                                        __html: DOMPurify.sanitize(
+                                          candidate.rawEmailBodyHtml
+                                        ),
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="p-4 bg-muted/30">
+                                      <pre className="text-xs whitespace-pre-wrap leading-relaxed">
+                                        {candidate.rawEmailBody}
+                                      </pre>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          {showEmailPreview && (
-                            <div className="border-t">
-                              <div className="max-h-[600px] overflow-y-auto">
-                                {candidate.rawEmailBodyHtml ? (
-                                  <div 
-                                    className="p-4 prose prose-sm max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(candidate.rawEmailBodyHtml) }}
-                                  />
-                                ) : (
-                                  <div className="p-4 bg-muted/30">
-                                    <pre className="text-xs whitespace-pre-wrap leading-relaxed">
-                                      {candidate.rawEmailBody}
-                                    </pre>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                        )}
                     </CardContent>
                   </Card>
                 )}
@@ -2051,7 +2115,7 @@ export default function CandidateDetailsPage() {
                 className="mt-4 md:mt-6 space-y-4 md:space-y-6"
               >
                 {/* Rejection Warning Banner */}
-                {candidateData?.status?.toLowerCase() === "rejected" && (
+                {candidateData?.status?.toLowerCase() === 'rejected' && (
                   <div className="p-4 bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800 rounded-lg">
                     <div className="flex items-start gap-3">
                       <IconX className="h-6 w-6 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
@@ -2080,9 +2144,9 @@ export default function CandidateDetailsPage() {
                           <AvatarImage src={candidate.clientLogo} />
                           <AvatarFallback className="rounded-md text-xs md:text-sm">
                             {candidate.clientName
-                              .split(" ")
+                              .split(' ')
                               .map((n: string) => n[0])
-                              .join("")}
+                              .join('')}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -2105,9 +2169,9 @@ export default function CandidateDetailsPage() {
                             <AvatarImage src="" alt={candidate.reviewedBy} />
                             <AvatarFallback className="text-xs md:text-sm font-semibold bg-primary/20 text-primary">
                               {candidate.reviewedBy
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
+                                .split(' ')
+                                .map(n => n[0])
+                                .join('')}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
@@ -2165,9 +2229,13 @@ export default function CandidateDetailsPage() {
                             Current Job
                           </Label>
                           <Select
-                            value={job?.id || ""}
+                            value={job?.id || ''}
                             onValueChange={handleJobChange}
-                            disabled={isChangingJob || candidateData?.status?.toLowerCase() === "rejected"}
+                            disabled={
+                              isChangingJob ||
+                              candidateData?.status?.toLowerCase() ===
+                                'rejected'
+                            }
                           >
                             <SelectTrigger className="h-8 text-xs focus:ring-1 focus:ring-offset-0 w-full">
                               <SelectValue>
@@ -2177,17 +2245,26 @@ export default function CandidateDetailsPage() {
                                     Changing...
                                   </span>
                                 ) : (
-                                  <span className="truncate font-medium">{candidate.jobTitle}</span>
+                                  <span className="truncate font-medium">
+                                    {candidate.jobTitle}
+                                  </span>
                                 )}
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {jobs.map((j) => (
-                                <SelectItem key={j.id} value={j.id!} className="text-xs">
+                              {jobs.map(j => (
+                                <SelectItem
+                                  key={j.id}
+                                  value={j.id!}
+                                  className="text-xs"
+                                >
                                   <div className="flex flex-col">
-                                    <span className="font-medium">{j.title}</span>
+                                    <span className="font-medium">
+                                      {j.title}
+                                    </span>
                                     <span className="text-muted-foreground text-xs">
-                                      {clients.find((c) => c.id === j.clientId)?.companyName || "Unknown Client"}
+                                      {clients.find(c => c.id === j.clientId)
+                                        ?.companyName || 'Unknown Client'}
                                     </span>
                                   </div>
                                 </SelectItem>
@@ -2202,37 +2279,48 @@ export default function CandidateDetailsPage() {
                             Current Stage
                           </Label>
                           {(() => {
-                            const jobPipeline = pipelines.find((p) => p.id === job?.pipelineId);
-                            const stages = jobPipeline?.stages || [];
+                            const jobPipeline = pipelines.find(
+                              p => p.id === job?.pipelineId
+                            )
+                            const stages = jobPipeline?.stages || []
                             const currentStageId =
-                              (effectiveCandidateData as any)?.currentPipelineStageId ||
-                              effectiveCandidateData?.currentStage;
-                            
-                            const currentStage = stages.find((s) => s.id === currentStageId || s.name === currentStageId);
-                            const stageColor = currentStage?.color || "#6B7280";
-                            
+                              (effectiveCandidateData as any)
+                                ?.currentPipelineStageId ||
+                              effectiveCandidateData?.currentStage
+
+                            const currentStage = stages.find(
+                              s =>
+                                s.id === currentStageId ||
+                                s.name === currentStageId
+                            )
+                            const stageColor = currentStage?.color || '#6B7280'
+
                             const hexToRgba = (hex: string, alpha: number) => {
-                              const r = parseInt(hex.slice(1, 3), 16);
-                              const g = parseInt(hex.slice(3, 5), 16);
-                              const b = parseInt(hex.slice(5, 7), 16);
-                              return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-                            };
+                              const r = parseInt(hex.slice(1, 3), 16)
+                              const g = parseInt(hex.slice(3, 5), 16)
+                              const b = parseInt(hex.slice(5, 7), 16)
+                              return `rgba(${r}, ${g}, ${b}, ${alpha})`
+                            }
 
                             if (stages.length === 0) {
                               return (
                                 <Badge variant="outline" className="text-xs">
                                   {candidate.currentStage}
                                 </Badge>
-                              );
+                              )
                             }
 
                             return (
                               <Select
                                 value={currentStageId}
                                 onValueChange={handleStageChange}
-                                disabled={isUpdatingStage || candidateData?.status?.toLowerCase() === "rejected"}
+                                disabled={
+                                  isUpdatingStage ||
+                                  candidateData?.status?.toLowerCase() ===
+                                    'rejected'
+                                }
                               >
-                                <SelectTrigger 
+                                <SelectTrigger
                                   className="h-8 text-xs focus:ring-1 focus:ring-offset-0 w-full border-l-4"
                                   style={{
                                     borderLeftColor: stageColor,
@@ -2246,25 +2334,35 @@ export default function CandidateDetailsPage() {
                                         Updating...
                                       </span>
                                     ) : (
-                                      <span className="truncate font-medium">{candidate.currentStage}</span>
+                                      <span className="truncate font-medium">
+                                        {candidate.currentStage}
+                                      </span>
                                     )}
                                   </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {stages.map((stage) => (
-                                    <SelectItem key={stage.id} value={stage.id} className="text-xs">
+                                  {stages.map(stage => (
+                                    <SelectItem
+                                      key={stage.id}
+                                      value={stage.id}
+                                      className="text-xs"
+                                    >
                                       <div className="flex items-center gap-2">
                                         <div
                                           className="w-2 h-2 rounded-full shrink-0"
-                                          style={{ backgroundColor: stage.color }}
+                                          style={{
+                                            backgroundColor: stage.color,
+                                          }}
                                         />
-                                        <span className="truncate">{stage.name}</span>
+                                        <span className="truncate">
+                                          {stage.name}
+                                        </span>
                                       </div>
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
-                            );
+                            )
                           })()}
                         </div>
 
@@ -2313,8 +2411,8 @@ export default function CandidateDetailsPage() {
                                   key={i}
                                   className={`h-4 w-4 md:h-5 md:w-5 ${
                                     i < Math.floor(candidate.rating!)
-                                      ? "text-yellow-500 fill-yellow-500"
-                                      : "text-gray-300 dark:text-gray-600"
+                                      ? 'text-yellow-500 fill-yellow-500'
+                                      : 'text-gray-300 dark:text-gray-600'
                                   }`}
                                 />
                               ))}
@@ -2342,7 +2440,7 @@ export default function CandidateDetailsPage() {
                 className="mt-4 md:mt-6 space-y-4 md:space-y-6"
               >
                 {/* Info Notice for Rejected Candidates */}
-                {candidateData?.status?.toLowerCase() === "rejected" && (
+                {candidateData?.status?.toLowerCase() === 'rejected' && (
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
                     <div className="flex items-start gap-3">
                       <IconMail className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
@@ -2385,7 +2483,7 @@ export default function CandidateDetailsPage() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {emailsError.message ||
-                            "Failed to load email communications"}
+                            'Failed to load email communications'}
                         </p>
                       </div>
                     ) : (
@@ -2411,7 +2509,7 @@ export default function CandidateDetailsPage() {
                               </Label>
                             </div>
                             <p className="text-lg md:text-2xl font-bold text-green-800 dark:text-green-300">
-                              {emails?.filter((e) => e.direction === "outbound")
+                              {emails?.filter(e => e.direction === 'outbound')
                                 .length || 0}
                             </p>
                           </div>
@@ -2423,7 +2521,7 @@ export default function CandidateDetailsPage() {
                               </Label>
                             </div>
                             <p className="text-lg md:text-2xl font-bold text-purple-800 dark:text-purple-300">
-                              {emails?.filter((e) => e.direction === "inbound")
+                              {emails?.filter(e => e.direction === 'inbound')
                                 .length || 0}
                             </p>
                           </div>
@@ -2439,9 +2537,9 @@ export default function CandidateDetailsPage() {
                                   <AvatarImage src={candidate.clientLogo} />
                                   <AvatarFallback className="rounded-md text-xs">
                                     {candidate.clientName
-                                      .split(" ")
+                                      .split(' ')
                                       .map((n: string) => n[0])
-                                      .join("")}
+                                      .join('')}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
@@ -2480,7 +2578,7 @@ export default function CandidateDetailsPage() {
                                     ? new Date(
                                         emails[0].sentAt || emails[0].createdAt
                                       ).toLocaleDateString()
-                                    : "N/A"}
+                                    : 'N/A'}
                                 </p>
                               </div>
                             </div>
@@ -2502,42 +2600,44 @@ export default function CandidateDetailsPage() {
                           {/* Previous Jobs */}
                           {historyData
                             .filter(
-                              (history) => history.jobId !== candidate.jobId
+                              history => history.jobId !== candidate.jobId
                             )
-                            .map((history) => {
+                            .map(history => {
                               // Get email data from jobApplications
                               const jobApp =
-                                effectiveCandidateData?.jobApplications?.find((app) => {
-                                  const appJobId =
-                                    typeof app.jobId === "object" &&
-                                    app.jobId !== null
-                                      ? (
-                                          app.jobId as {
-                                            _id?: string;
-                                            id?: string;
-                                          }
-                                        )._id ||
-                                        (
-                                          app.jobId as {
-                                            _id?: string;
-                                            id?: string;
-                                          }
-                                        ).id
-                                      : app.jobId;
-                                  return appJobId === history.jobId;
-                                });
+                                effectiveCandidateData?.jobApplications?.find(
+                                  app => {
+                                    const appJobId =
+                                      typeof app.jobId === 'object' &&
+                                      app.jobId !== null
+                                        ? (
+                                            app.jobId as {
+                                              _id?: string
+                                              id?: string
+                                            }
+                                          )._id ||
+                                          (
+                                            app.jobId as {
+                                              _id?: string
+                                              id?: string
+                                            }
+                                          ).id
+                                        : app.jobId
+                                    return appJobId === history.jobId
+                                  }
+                                )
 
                               const emailCount = jobApp
                                 ? (jobApp.emailsSent || 0) +
                                   (jobApp.emailsReceived || 0)
-                                : 0;
-                              const sentCount = jobApp?.emailsSent || 0;
-                              const receivedCount = jobApp?.emailsReceived || 0;
+                                : 0
+                              const sentCount = jobApp?.emailsSent || 0
+                              const receivedCount = jobApp?.emailsReceived || 0
                               const lastEmailDate = jobApp?.lastEmailDate
                                 ? new Date(
                                     jobApp.lastEmailDate
                                   ).toLocaleDateString()
-                                : "N/A";
+                                : 'N/A'
 
                               return (
                                 <div
@@ -2549,9 +2649,9 @@ export default function CandidateDetailsPage() {
                                       <Avatar className="h-10 w-10 rounded-md border shrink-0">
                                         <AvatarFallback className="rounded-md text-xs">
                                           {history.clientName
-                                            .split(" ")
+                                            .split(' ')
                                             .map((n: string) => n[0])
-                                            .join("")}
+                                            .join('')}
                                         </AvatarFallback>
                                       </Avatar>
                                       <div className="flex-1 min-w-0">
@@ -2582,7 +2682,7 @@ export default function CandidateDetailsPage() {
                                       </p>
                                       {emailCount > 0 && (
                                         <p className="text-muted-foreground mt-0.5 text-[10px]">
-                                          {sentCount} sent, {receivedCount}{" "}
+                                          {sentCount} sent, {receivedCount}{' '}
                                           received
                                         </p>
                                       )}
@@ -2610,7 +2710,7 @@ export default function CandidateDetailsPage() {
                                     View Communication Details
                                   </Button>
                                 </div>
-                              );
+                              )
                             })}
                         </div>
 
@@ -2651,30 +2751,31 @@ export default function CandidateDetailsPage() {
                           size="sm"
                           onClick={() => {
                             // Get the first job ID from the candidate's job applications
-                            const firstJobId = effectiveCandidateData?.jobIds?.[0];
-                            let jobIdStr: string | undefined;
+                            const firstJobId =
+                              effectiveCandidateData?.jobIds?.[0]
+                            let jobIdStr: string | undefined
 
-                            if (typeof firstJobId === "string") {
-                              jobIdStr = firstJobId;
+                            if (typeof firstJobId === 'string') {
+                              jobIdStr = firstJobId
                             } else if (
                               firstJobId &&
-                              typeof firstJobId === "object"
+                              typeof firstJobId === 'object'
                             ) {
                               const jobIdObj = firstJobId as {
-                                id?: string;
-                                _id?: string;
-                                toString?: () => string;
-                              };
+                                id?: string
+                                _id?: string
+                                toString?: () => string
+                              }
                               jobIdStr =
                                 jobIdObj.id ||
                                 jobIdObj._id ||
-                                jobIdObj.toString?.();
+                                jobIdObj.toString?.()
                             }
 
                             if (jobIdStr) {
                               navigate(
                                 `/dashboard/jobs/${jobIdStr}/candidates/${candidateId}/communication`
-                              );
+                              )
                             } else {
                               // Fallback: show error message
                             }
@@ -2700,19 +2801,22 @@ export default function CandidateDetailsPage() {
                           Interview History Across All Jobs
                         </CardTitle>
                         <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                          Read-only overview of all interviews this candidate has
-                          had
+                          Read-only overview of all interviews this candidate
+                          has had
                         </p>
                       </div>
                       {jobIdFromUrl && (
                         <Button
                           size="sm"
                           onClick={() => {
-                            const params = new URLSearchParams();
-                            params.append('jobId', jobIdFromUrl);
-                            const clientIdParam = searchParams.get('clientId');
-                            if (clientIdParam) params.append('clientId', clientIdParam);
-                            navigate(`/dashboard/candidates/${candidateId}/interviews?${params.toString()}`);
+                            const params = new URLSearchParams()
+                            params.append('jobId', jobIdFromUrl)
+                            const clientIdParam = searchParams.get('clientId')
+                            if (clientIdParam)
+                              params.append('clientId', clientIdParam)
+                            navigate(
+                              `/dashboard/candidates/${candidateId}/interviews?${params.toString()}`
+                            )
                           }}
                           className="shrink-0"
                         >
@@ -2721,7 +2825,7 @@ export default function CandidateDetailsPage() {
                         </Button>
                       )}
                     </div>
-                    {candidateData?.status?.toLowerCase() === "rejected" && (
+                    {candidateData?.status?.toLowerCase() === 'rejected' && (
                       <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800 rounded-lg">
                         <div className="flex items-start gap-2">
                           <IconX className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
@@ -2757,23 +2861,23 @@ export default function CandidateDetailsPage() {
                       </div>
                     ) : (
                       <div className="space-y-2 md:space-y-3">
-                        {interviews.map((interview) => {
+                        {interviews.map(interview => {
                           const feedback =
                             interview.feedback && interview.feedback.length > 0
                               ? interview.feedback[0]
-                              : null;
-                          const isCompleted = interview.status === "completed";
-                          const outcome = feedback?.recommendation;
+                              : null
+                          const isCompleted = interview.status === 'completed'
+                          const outcome = feedback?.recommendation
 
                           return (
                             <div
                               key={interview.id || interview._id}
                               className={`p-2.5 md:p-3 rounded-lg border-2 transition-colors ${
-                                outcome === "strong_yes"
-                                  ? "bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-700"
-                                  : outcome === "no"
-                                  ? "bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-700"
-                                  : "bg-card hover:bg-muted/30 border-border hover:border-primary/30"
+                                outcome === 'strong_yes'
+                                  ? 'bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-700'
+                                  : outcome === 'no'
+                                    ? 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-700'
+                                    : 'bg-card hover:bg-muted/30 border-border hover:border-primary/30'
                               }`}
                             >
                               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 md:gap-3 mb-2">
@@ -2781,32 +2885,32 @@ export default function CandidateDetailsPage() {
                                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                     <h4 className="font-semibold text-xs md:text-sm truncate">
                                       {interview.jobId?.title ||
-                                        "Unknown Position"}
+                                        'Unknown Position'}
                                     </h4>
                                     <Badge
                                       variant="outline"
                                       className="text-xs shrink-0"
                                     >
-                                      {interview.type.replace("_", " ")}
+                                      {interview.type.replace('_', ' ')}
                                     </Badge>
                                   </div>
                                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                                     <IconBriefcase className="h-3 w-3 shrink-0" />
                                     <span className="truncate">
                                       {interview.clientId?.companyName ||
-                                        "Unknown Client"}
+                                        'Unknown Client'}
                                     </span>
                                   </p>
                                 </div>
                                 <Badge
                                   className={`text-xs shrink-0 ${
-                                    isCompleted && outcome === "strong_yes"
-                                      ? "bg-green-600 text-white"
-                                      : isCompleted && outcome === "no"
-                                      ? "bg-red-600 text-white"
-                                      : interview.status === "scheduled"
-                                      ? "bg-blue-600 text-white"
-                                      : "bg-gray-600 text-white"
+                                    isCompleted && outcome === 'strong_yes'
+                                      ? 'bg-green-600 text-white'
+                                      : isCompleted && outcome === 'no'
+                                        ? 'bg-red-600 text-white'
+                                        : interview.status === 'scheduled'
+                                          ? 'bg-blue-600 text-white'
+                                          : 'bg-gray-600 text-white'
                                   }`}
                                 >
                                   {interview.status}
@@ -2819,10 +2923,10 @@ export default function CandidateDetailsPage() {
                                   <span>
                                     {new Date(
                                       interview.scheduledAt
-                                    ).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                      year: "numeric",
+                                    ).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric',
                                     })}
                                   </span>
                                 </div>
@@ -2836,34 +2940,34 @@ export default function CandidateDetailsPage() {
                                       <IconUserCheck className="h-3 w-3 shrink-0" />
                                       <span className="truncate">
                                         {interview.interviewerIds
-                                          .map((i) =>
-                                            `${i.firstName || ""} ${
-                                              i.lastName || ""
+                                          .map(i =>
+                                            `${i.firstName || ''} ${
+                                              i.lastName || ''
                                             }`.trim()
                                           )
-                                          .filter((n) => n)
-                                          .join(", ") || "Not assigned"}
+                                          .filter(n => n)
+                                          .join(', ') || 'Not assigned'}
                                       </span>
                                     </div>
                                   )}
                                 <div className="flex items-center gap-1 sm:ml-auto">
                                   <span className="font-mono text-muted-foreground truncate">
-                                    Job ID:{" "}
-                                    {typeof interview.jobId === "object"
+                                    Job ID:{' '}
+                                    {typeof interview.jobId === 'object'
                                       ? (
                                           interview.jobId as {
-                                            _id?: string;
-                                            id?: string;
+                                            _id?: string
+                                            id?: string
                                           }
                                         )?._id ||
                                         (
                                           interview.jobId as {
-                                            _id?: string;
-                                            id?: string;
+                                            _id?: string
+                                            id?: string
                                           }
                                         )?.id ||
-                                        "N/A"
-                                      : interview.jobId || "N/A"}
+                                        'N/A'
+                                      : interview.jobId || 'N/A'}
                                   </span>
                                 </div>
                               </div>
@@ -2890,16 +2994,16 @@ export default function CandidateDetailsPage() {
                                           variant="outline"
                                           className={`text-xs ${
                                             feedback.recommendation ===
-                                            "strong_yes"
-                                              ? "bg-green-100 text-green-700 border-green-200"
-                                              : feedback.recommendation === "no"
-                                              ? "bg-red-100 text-red-700 border-red-200"
-                                              : "bg-yellow-100 text-yellow-700 border-yellow-200"
+                                            'strong_yes'
+                                              ? 'bg-green-100 text-green-700 border-green-200'
+                                              : feedback.recommendation === 'no'
+                                                ? 'bg-red-100 text-red-700 border-red-200'
+                                                : 'bg-yellow-100 text-yellow-700 border-yellow-200'
                                           }`}
                                         >
                                           {feedback.recommendation.replace(
-                                            "_",
-                                            " "
+                                            '_',
+                                            ' '
                                           )}
                                         </Badge>
                                       )}
@@ -2924,7 +3028,7 @@ export default function CandidateDetailsPage() {
                                 </div>
                               )}
                             </div>
-                          );
+                          )
                         })}
                       </div>
                     )}
@@ -2937,346 +3041,189 @@ export default function CandidateDetailsPage() {
                 value="history"
                 className="mt-4 md:mt-6 space-y-4 md:space-y-6"
               >
-                {/* Career Timeline - Enhanced */}
-                <Card>
-                  <CardHeader className="p-3 md:p-4 lg:p-6">
-                    <CardTitle className="text-sm md:text-base flex items-center gap-2">
-                      <IconClockHour4 className="h-4 w-4 md:h-5 md:w-5 text-primary shrink-0" />
-                      Career Timeline
-                    </CardTitle>
-                    <p className="text-xs md:text-sm text-muted-foreground">
-                      Complete journey across all job applications with detailed
-                      milestones
-                    </p>
-                  </CardHeader>
-                  <CardContent className="p-3 md:p-4 lg:p-6 pt-0">
-                    {(() => {
-                      // Create comprehensive timeline events
-                      type TimelineEvent = {
-                        id: string;
-                        date: Date;
-                        type: string;
-                        title: string;
-                        description: string;
-                        status: "success" | "error" | "warning" | "info";
-                        icon: React.ComponentType<{ className?: string }>;
-                        jobTitle?: string;
-                        clientName?: string;
-                        jobId?: string;
-                        metadata?: {
-                          stage?: string;
-                          interviewCount?: number;
-                          rating?: number;
-                          recommendation?: string;
-                        };
-                      };
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <IconHistory className="h-5 w-5 text-primary shrink-0" />
+                    <h3 className="font-semibold text-sm md:text-base">
+                      Application History
+                    </h3>
+                    <Badge variant="secondary" className="text-xs ml-auto">
+                      {historyData.length} job
+                      {historyData.length !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
 
-                      const timelineEvents: TimelineEvent[] = [];
+                  {historyData.length === 0 ? (
+                    <Card>
+                      <CardContent className="flex flex-col items-center justify-center py-12 gap-3">
+                        <IconHistory className="h-10 w-10 text-muted-foreground/40" />
+                        <p className="text-sm text-muted-foreground">
+                          No application history yet
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    historyData.map(history => {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      const toDate = (val: any): Date => {
+                        if (!val) return new Date()
+                        if (
+                          typeof val === 'object' &&
+                          'seconds' in val
+                        )
+                          return new Date(val.seconds * 1000)
+                        const d = new Date(val)
+                        return isNaN(d.getTime()) ? new Date() : d
+                      }
 
-                      // Add job application events
-                      historyData.forEach((history) => {
-                        // Application submitted
-                        timelineEvents.push({
-                          id: `applied-${history.id}`,
+                      // Build the stage trail starting from "Applied"
+                      const trail: Array<{
+                        label: string
+                        date?: Date
+                        type: 'applied' | 'stage' | 'final'
+                      }> = [
+                        {
+                          label: 'Applied',
                           date: history.appliedDateRaw,
-                          type: "applied",
-                          title: "Application Submitted",
-                          description: `Applied for ${history.jobTitle}`,
-                          status: "info",
-                          icon: IconFileText,
-                          jobTitle: history.jobTitle,
-                          clientName: history.clientName,
-                          jobId: history.jobId,
-                          metadata: { stage: history.stage },
-                        });
-
-                        // Final status event if not active
-                        if (history.status !== "active") {
-                          let statusTitle = "Status Updated";
-                          let statusIcon = IconClockHour4;
-                          let statusType:
-                            | "success"
-                            | "error"
-                            | "warning"
-                            | "info" = "info";
-
-                          if (history.status === "hired") {
-                            statusTitle = "Hired";
-                            statusIcon = IconCircleCheckFilled;
-                            statusType = "success";
-                          } else if (history.status === "rejected") {
-                            statusTitle = "Application Rejected";
-                            statusIcon = IconUserCheck;
-                            statusType = "error";
-                          } else if (history.status === "offered") {
-                            statusTitle = "Offer Extended";
-                            statusIcon = IconUserCheck;
-                            statusType = "success";
-                          } else if (history.status === "withdrawn") {
-                            statusTitle = "Application Withdrawn";
-                            statusIcon = IconUserCheck;
-                            statusType = "warning";
-                          }
-
-                          timelineEvents.push({
-                            id: `status-${history.id}`,
-                            date: new Date(history.lastUpdated),
-                            type: history.status,
-                            title: statusTitle,
-                            description: `${history.jobTitle} - ${
-                              history.status.charAt(0).toUpperCase() +
-                              history.status.slice(1)
-                            }`,
-                            status: statusType,
-                            icon: statusIcon,
-                            jobTitle: history.jobTitle,
-                            clientName: history.clientName,
-                            jobId: history.jobId,
-                          });
-                        }
-                      });
-
-                      // Add interview events
-                      interviews.forEach((interview) => {
-                        const feedback = interview.feedback?.[0];
-                        const isCompleted = interview.status === "completed";
-
-                        timelineEvents.push({
-                          id: `interview-${interview.id || interview._id}`,
-                          date: new Date(interview.scheduledAt),
-                          type: "interview",
-                          title: `${interview.type.replace(
-                            "_",
-                            " "
-                          )} Interview`,
-                          description: isCompleted
-                            ? `Completed interview for ${
-                                interview.jobId?.title || "position"
-                              }`
-                            : `${
-                                interview.status.charAt(0).toUpperCase() +
-                                interview.status.slice(1)
-                              } interview`,
-                          status: isCompleted
-                            ? feedback?.recommendation === "strong_yes"
-                              ? "success"
-                              : feedback?.recommendation === "no"
-                              ? "error"
-                              : "info"
-                            : "warning",
-                          icon: IconUserCheck,
-                          jobTitle: interview.jobId?.title,
-                          jobId:
-                            typeof interview.jobId === "object"
-                              ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                (interview.jobId as any)._id ||
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                (interview.jobId as any).id
-                              : interview.jobId,
-                          clientName: interview.clientId?.companyName,
-                          metadata: {
-                            interviewCount: 1,
-                            rating: feedback?.rating,
-                            recommendation: feedback?.recommendation,
-                          },
-                        });
-                      });
-
-                      // Sort by date (most recent first)
-                      timelineEvents.sort(
-                        (a, b) => b.date.getTime() - a.date.getTime()
-                      );
-
-                      if (isLoadingInterviews) {
-                        return (
-                          <div className="text-center py-8">
-                            <Loader size="sm" text="Loading timeline..." />
-                          </div>
-                        );
+                          type: 'applied',
+                        },
+                        ...history.stageHistory.map(s => ({
+                          label: s.toStageName,
+                          date: toDate(s.changedAt),
+                          type: 'stage' as const,
+                        })),
+                      ]
+                      if (history.status !== 'active') {
+                        trail.push({
+                          label:
+                            history.status.charAt(0).toUpperCase() +
+                            history.status.slice(1),
+                          date: history.lastUpdatedRaw,
+                          type: 'final',
+                        })
                       }
 
-                      if (timelineEvents.length === 0) {
-                        return (
-                          <div className="text-center py-12">
-                            <IconClockHour4 className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-                            <p className="text-sm text-muted-foreground mb-2">
-                              No activity yet
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Timeline will show: Applications, Interviews,
-                              Offers, Hires, and Status Changes
-                            </p>
-                          </div>
-                        );
+                      const statusColors: Record<string, string> = {
+                        active:
+                          'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                        hired:
+                          'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                        rejected:
+                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                        offered:
+                          'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+                        withdrawn:
+                          'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                        interviewing:
+                          'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
                       }
+
+                      const finalStepColor =
+                        history.status === 'hired'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                          : history.status === 'rejected'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
 
                       return (
-                        <div className="relative space-y-3 md:space-y-4">
-                          {/* Timeline line */}
-                          <div className="absolute left-3 md:left-4 top-0 bottom-0 w-0.5 bg-linear-to-b from-primary/50 via-border to-transparent"></div>
-
-                          {timelineEvents.map((event, index) => {
-                            const Icon = event.icon;
-                            const isLast = index === timelineEvents.length - 1;
-
-                            return (
-                              <div
-                                key={event.id}
-                                className="relative pl-10 md:pl-12"
-                              >
-                                {/* Timeline dot */}
-                                <div
-                                  className={`absolute left-0 w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 ${
-                                    event.status === "success"
-                                      ? "bg-green-100 dark:bg-green-900/30 border-green-500"
-                                      : event.status === "error"
-                                      ? "bg-red-100 dark:bg-red-900/30 border-red-500"
-                                      : event.status === "warning"
-                                      ? "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-500"
-                                      : "bg-blue-100 dark:bg-blue-900/30 border-blue-500"
-                                  }`}
-                                >
-                                  <Icon
-                                    className={`h-3 w-3 md:h-4 md:w-4 ${
-                                      event.status === "success"
-                                        ? "text-green-600 dark:text-green-400"
-                                        : event.status === "error"
-                                        ? "text-red-600 dark:text-red-400"
-                                        : event.status === "warning"
-                                        ? "text-yellow-600 dark:text-yellow-400"
-                                        : "text-blue-600 dark:text-blue-400"
-                                    }`}
-                                  />
+                        <Card key={history.id} className="overflow-hidden">
+                          <CardHeader className="p-3 md:p-4 pb-2 md:pb-3">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <IconBriefcase className="h-4 w-4 text-muted-foreground shrink-0" />
+                                  <span className="font-semibold text-sm truncate">
+                                    {history.jobTitle}
+                                  </span>
+                                  <span className="text-muted-foreground text-xs">
+                                    ·
+                                  </span>
+                                  <span className="text-muted-foreground text-xs truncate">
+                                    {history.clientName}
+                                  </span>
                                 </div>
-
-                                {/* Event card */}
-                                <div
-                                  className={`rounded-lg border-2 bg-card p-2.5 md:p-4 hover:shadow-md transition-shadow ${
-                                    event.status === "success"
-                                      ? "border-green-200 dark:border-green-800/50"
-                                      : event.status === "error"
-                                      ? "border-red-200 dark:border-red-800/50"
-                                      : event.status === "warning"
-                                      ? "border-yellow-200 dark:border-yellow-800/50"
-                                      : "border-blue-200 dark:border-blue-800/50"
-                                  } ${isLast ? "" : "mb-3 md:mb-4"}`}
-                                >
-                                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 md:gap-4 mb-2">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                        <h4 className="font-semibold text-xs md:text-sm">
-                                          {event.title}
-                                        </h4>
-                                        <Badge
-                                          variant={
-                                            event.status === "success"
-                                              ? "primary"
-                                              : "secondary"
-                                          }
-                                          className="text-xs"
-                                        >
-                                          {event.type}
-                                        </Badge>
-                                      </div>
-                                      <p className="text-xs md:text-sm text-muted-foreground">
-                                        {event.description}
-                                      </p>
-                                    </div>
-                                    <div className="flex flex-row sm:flex-col items-start gap-1 flex-wrap sm:items-end">
-                                      {event.jobTitle && (
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs shrink-0"
-                                        >
-                                          {event.jobTitle}
-                                        </Badge>
-                                      )}
-                                      {event.jobId && (
-                                        <span className="text-xs font-mono text-muted-foreground">
-                                          Job ID: {event.jobId}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {/* Metadata section */}
-                                  <div className="flex flex-wrap items-center gap-x-3 md:gap-x-4 gap-y-1 text-[10px] md:text-xs text-muted-foreground pt-2 border-t">
-                                    {event.clientName && (
-                                      <span className="flex items-center gap-1">
-                                        <IconBriefcase className="h-3 w-3 shrink-0" />
-                                        <span className="truncate">
-                                          {event.clientName}
-                                        </span>
-                                      </span>
-                                    )}
-                                    <span className="flex items-center gap-1">
-                                      <IconCalendar className="h-3 w-3 shrink-0" />
-                                      <span className="hidden sm:inline">
-                                        {event.date.toLocaleDateString(
-                                          "en-US",
-                                          {
-                                            month: "short",
-                                            day: "numeric",
-                                            year: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                          }
-                                        )}
-                                      </span>
-                                      <span className="sm:hidden">
-                                        {event.date.toLocaleDateString(
-                                          "en-US",
-                                          {
-                                            month: "short",
-                                            day: "numeric",
-                                            year: "2-digit",
-                                          }
-                                        )}
-                                      </span>
-                                    </span>
-                                    {event.metadata?.stage && (
-                                      <span className="flex items-center gap-1">
-                                        <IconClockHour4 className="h-3 w-3 shrink-0" />
-                                        <span className="truncate">
-                                          {event.metadata.stage}
-                                        </span>
-                                      </span>
-                                    )}
-                                    {event.metadata?.rating && (
-                                      <span className="flex items-center gap-1">
-                                        <span className="text-yellow-500">
-                                          ⭐
-                                        </span>
-                                        {event.metadata.rating}/5
-                                      </span>
-                                    )}
-                                    {event.jobId && (
-                                      <button
-                                        onClick={() =>
-                                          navigate(
-                                            `/dashboard/jobs/pipeline/${event.jobId}`
-                                          )
-                                        }
-                                        className="text-primary hover:underline flex items-center gap-1 shrink-0"
-                                      >
-                                        <span className="hidden sm:inline">
-                                          View Job →
-                                        </span>
-                                        <span className="sm:hidden">
-                                          View →
-                                        </span>
-                                      </button>
-                                    )}
-                                  </div>
+                                <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                                  <IconCalendar className="h-3 w-3 shrink-0" />
+                                  Applied {history.appliedDate}
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span
+                                  className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[history.status] || 'bg-muted text-muted-foreground'}`}
+                                >
+                                  {history.status.charAt(0).toUpperCase() +
+                                    history.status.slice(1)}
+                                </span>
+                                <button
+                                  onClick={() =>
+                                    navigate(
+                                      `/dashboard/jobs/pipeline/${history.jobId}`
+                                    )
+                                  }
+                                  className="text-xs text-primary hover:underline shrink-0"
+                                >
+                                  View Job →
+                                </button>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-3 md:p-4 pt-0">
+                            {trail.length <= 1 ? (
+                              <p className="text-xs text-muted-foreground italic">
+                                No stage movements recorded yet
+                              </p>
+                            ) : (
+                              <div className="mt-1">
+                                <p className="text-xs text-muted-foreground font-medium mb-2">
+                                  Stage Trail
+                                </p>
+                                <div className="flex flex-wrap items-start gap-0">
+                                  {trail.map((step, idx) => (
+                                    <React.Fragment key={idx}>
+                                      <div
+                                        className={`flex flex-col items-center min-w-0 max-w-[120px] ${idx === trail.length - 1 && step.type === 'final' ? 'opacity-80' : ''}`}
+                                      >
+                                        <div
+                                          className={`text-xs font-medium px-2 py-1 rounded text-center w-full truncate ${
+                                            step.type === 'applied'
+                                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                              : step.type === 'final'
+                                                ? finalStepColor
+                                                : idx === trail.length - 1
+                                                  ? 'bg-primary/10 text-primary ring-1 ring-primary/30'
+                                                  : 'bg-muted text-muted-foreground'
+                                          }`}
+                                        >
+                                          {step.label}
+                                        </div>
+                                        {step.date && (
+                                          <span className="text-[10px] text-muted-foreground mt-0.5 text-center">
+                                            {step.date.toLocaleDateString(
+                                              'en-US',
+                                              {
+                                                month: 'short',
+                                                day: 'numeric',
+                                              }
+                                            )}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {idx < trail.length - 1 && (
+                                        <div className="flex items-center self-start pt-1.5 px-0.5">
+                                          <IconArrowRight className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+                                        </div>
+                                      )}
+                                    </React.Fragment>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )
+                    })
+                  )}
+                </div>
               </TabsContent>
             </Tabs>
           </div>
@@ -3286,25 +3233,27 @@ export default function CandidateDetailsPage() {
         {reassignJobDialogOpen &&
           candidateData &&
           (() => {
-            const candidate = candidates.find((c) => c.id === effectiveCandidateData?.id);
-            const availableJobs = jobs.filter((job) => {
+            const candidate = candidates.find(
+              c => c.id === effectiveCandidateData?.id
+            )
+            const availableJobs = jobs.filter(job => {
               // Filter logic:
               // - Show if candidate never applied to this job
               // - Show if candidate was rejected from this job (can be reactivated)
               // - Hide if candidate is currently active in this job
               // - Hide if candidate was hired for this job (hiring is final)
               const jobApplication = candidate?.jobApplications?.find(
-                (app) => app.jobId === job.id
-              );
-              const isJobOpen = job.status === "open";
+                app => app.jobId === job.id
+              )
+              const isJobOpen = job.status === 'open'
 
-              if (!isJobOpen) return false;
-              if (!jobApplication) return true; // Never applied - show it
+              if (!isJobOpen) return false
+              if (!jobApplication) return true // Never applied - show it
 
-              const status = jobApplication.status;
+              const status = jobApplication.status
               // Show if rejected (can reactivate), hide if active or hired
-              return status === "rejected";
-            });
+              return status === 'rejected'
+            })
 
             return (
               <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -3332,15 +3281,15 @@ export default function CandidateDetailsPage() {
                           <SelectValue placeholder="Select a job" />
                         </SelectTrigger>
                         <SelectContent>
-                          {availableJobs.map((job) => {
+                          {availableJobs.map(job => {
                             // Get client name
                             const clientName =
-                              typeof job.clientId === "object" &&
+                              typeof job.clientId === 'object' &&
                               job.clientId !== null
                                 ? job.clientId.companyName
                                 : clients.find(
-                                    (client) => client.id === job.clientId
-                                  )?.companyName || "Unknown Client";
+                                    client => client.id === job.clientId
+                                  )?.companyName || 'Unknown Client'
 
                             return (
                               <SelectItem key={job.id} value={job.id}>
@@ -3353,7 +3302,7 @@ export default function CandidateDetailsPage() {
                                   </span>
                                 </div>
                               </SelectItem>
-                            );
+                            )
                           })}
                         </SelectContent>
                       </Select>
@@ -3364,8 +3313,8 @@ export default function CandidateDetailsPage() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setReassignJobDialogOpen(false);
-                        setSelectedJobForReassign("");
+                        setReassignJobDialogOpen(false)
+                        setSelectedJobForReassign('')
                       }}
                     >
                       Cancel
@@ -3381,9 +3330,9 @@ export default function CandidateDetailsPage() {
                   </div>
                 </div>
               </div>
-            );
+            )
           })()}
       </div>
     </div>
-  );
+  )
 }
