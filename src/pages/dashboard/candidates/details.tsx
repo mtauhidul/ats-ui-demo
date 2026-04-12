@@ -171,6 +171,10 @@ export default function CandidateDetailsPage() {
   // Stage update state
   const [isUpdatingStage, setIsUpdatingStage] = React.useState(false)
   const [isChangingJob, setIsChangingJob] = React.useState(false)
+  const [isApprovingApplication, setIsApprovingApplication] =
+    React.useState(false)
+  const [isRejectingApplication, setIsRejectingApplication] =
+    React.useState(false)
 
   // Notes state and debounce
   const [notes, setNotes] = React.useState('')
@@ -425,6 +429,93 @@ export default function CandidateDetailsPage() {
       console.error('Job change error:', error)
     } finally {
       setIsChangingJob(false)
+    }
+  }
+
+  // Handlers for approve/reject when viewing a pending application on this page
+  const handleDetailsApproveAndEmail = async () => {
+    const appId = candidateId
+    const jobId = (applicationData as any)?.jobId
+    if (!appId || !jobId || isApprovingApplication) return
+    setIsApprovingApplication(true)
+    try {
+      const response = await authenticatedFetch(
+        `${API_BASE_URL}/applications/${appId}/approve`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobId }),
+        }
+      )
+      if (!response.ok) throw new Error('Failed to approve')
+      const result = await response.json()
+      const newCandidateId = result.data?.candidateId
+      toast.success('Application approved')
+      navigate(
+        newCandidateId
+          ? `/dashboard/candidates/${newCandidateId}?tab=communications`
+          : '/dashboard/candidates'
+      )
+    } catch {
+      toast.error('Failed to approve application')
+    } finally {
+      setIsApprovingApplication(false)
+    }
+  }
+
+  const handleDetailsApprove = async () => {
+    const appId = candidateId
+    const jobId = (applicationData as any)?.jobId
+    if (!appId || !jobId || isApprovingApplication) return
+    setIsApprovingApplication(true)
+    try {
+      const response = await authenticatedFetch(
+        `${API_BASE_URL}/applications/${appId}/approve`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobId }),
+        }
+      )
+      if (!response.ok) throw new Error('Failed to approve')
+      const result = await response.json()
+      const newCandidateId = result.data?.candidateId
+      if (newCandidateId) {
+        await authenticatedFetch(`${API_BASE_URL}/candidates/${newCandidateId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inTalentPool: true }),
+        })
+      }
+      toast.success('Candidate approved and added to Talent Pool')
+      navigate('/dashboard/candidates')
+    } catch {
+      toast.error('Failed to approve application')
+    } finally {
+      setIsApprovingApplication(false)
+    }
+  }
+
+  const handleDetailsReject = async () => {
+    const appId = candidateId
+    if (!appId || isRejectingApplication) return
+    setIsRejectingApplication(true)
+    try {
+      const response = await authenticatedFetch(
+        `${API_BASE_URL}/applications/${appId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'rejected' }),
+        }
+      )
+      if (!response.ok) throw new Error('Failed to reject')
+      toast.success('Application rejected')
+      navigate('/dashboard/candidates')
+    } catch {
+      toast.error('Failed to reject application')
+    } finally {
+      setIsRejectingApplication(false)
     }
   }
 
@@ -1334,16 +1425,50 @@ export default function CandidateDetailsPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="px-3 md:px-4 lg:px-6 mb-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReassignJob}
-              className="gap-2"
-            >
-              <IconBriefcase className="h-4 w-4" />
-              Apply to Another Job
-            </Button>
+          <div className="px-3 md:px-4 lg:px-6 mb-4 flex items-center gap-2 flex-wrap">
+            {isApplication ? (
+              <>
+                <Button
+                  size="sm"
+                  className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={handleDetailsApproveAndEmail}
+                  disabled={isApprovingApplication || isRejectingApplication}
+                >
+                  <IconMail className="h-4 w-4" />
+                  Approve &amp; Email
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-green-600 text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
+                  onClick={handleDetailsApprove}
+                  disabled={isApprovingApplication || isRejectingApplication}
+                >
+                  <IconCircleCheckFilled className="h-4 w-4" />
+                  Approve
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-red-500 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  onClick={handleDetailsReject}
+                  disabled={isApprovingApplication || isRejectingApplication}
+                >
+                  <IconX className="h-4 w-4" />
+                  Reject
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReassignJob}
+                className="gap-2"
+              >
+                <IconBriefcase className="h-4 w-4" />
+                Apply to Another Job
+              </Button>
+            )}
           </div>
 
           {/* Tabs Section */}

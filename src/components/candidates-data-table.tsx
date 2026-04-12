@@ -1,3 +1,4 @@
+import { Loader } from '@/components/ui/loader'
 import {
   IconArrowsSort,
   IconBriefcase,
@@ -22,8 +23,7 @@ import {
   IconUsers,
   IconUserX,
   IconX,
-} from "@tabler/icons-react";
-import { Loader } from "@/components/ui/loader";
+} from '@tabler/icons-react'
 import {
   flexRender,
   getCoreRowModel,
@@ -37,18 +37,18 @@ import {
   type ColumnFiltersState,
   type SortingState,
   type VisibilityState,
-} from "@tanstack/react-table";
-import * as React from "react";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
+} from '@tanstack/react-table'
+import * as React from 'react'
+import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 
-import { z } from "zod";
+import { z } from 'zod'
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
 import {
   Dialog,
   DialogContent,
@@ -56,9 +56,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { InputDialog } from "@/components/ui/input-dialog";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog'
+import { InputDialog } from '@/components/ui/input-dialog'
+import { Label } from '@/components/ui/label'
 
 import {
   DropdownMenu,
@@ -67,14 +67,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -82,59 +82,59 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { API_BASE_URL } from "@/config/api";
-import { useClients } from "@/hooks/firestore";
-import { useAuth } from "@/hooks/useAuth";
+} from '@/components/ui/tooltip'
+import { API_BASE_URL } from '@/config/api'
+import { useClients } from '@/hooks/firestore'
+import { useAuth } from '@/hooks/useAuth'
 import {
   useCandidates,
   useJobs,
   usePipelines,
   useTeam,
-} from "@/store/hooks/index";
-import type { schema } from "./data-table-schema.tsx";
-import { CandidateEmailModal } from "./candidate-email-modal";
-import type { Candidate } from "@/types/candidate";
-import type { Job } from "@/types/job";
+} from '@/store/hooks/index'
+import type { Candidate } from '@/types/candidate'
+import type { Job } from '@/types/job'
+import { CandidateEmailModal } from './candidate-email-modal'
+import type { schema } from './data-table-schema.tsx'
 
 // Table cell viewer component for candidate name - decorated like applications table
-function TableCellViewer({ 
-  item, 
-  searchParams 
-}: { 
-  item: z.infer<typeof schema>;
-  searchParams?: URLSearchParams;
+function TableCellViewer({
+  item,
+  searchParams,
+}: {
+  item: z.infer<typeof schema>
+  searchParams?: URLSearchParams
 }) {
   // Build URL with both candidateId and jobId for specific candidacy view
   // Preserve pagination, search, and tab state in the URL
-  const params = new URLSearchParams();
-  
+  const params = new URLSearchParams()
+
   if (item.jobIdForRow && item.jobIdForRow !== 'no-job') {
-    params.set('jobId', item.jobIdForRow);
+    params.set('jobId', item.jobIdForRow)
   }
-  
+
   // Preserve current page, pageSize, search, and tab
   if (searchParams) {
-    const page = searchParams.get('page');
-    const pageSize = searchParams.get('pageSize');
-    const search = searchParams.get('search');
-    const tab = searchParams.get('tab');
-    
-    if (page) params.set('page', page);
-    if (pageSize) params.set('pageSize', pageSize);
-    if (search) params.set('search', search);
-    if (tab) params.set('tab', tab);
+    const page = searchParams.get('page')
+    const pageSize = searchParams.get('pageSize')
+    const search = searchParams.get('search')
+    const tab = searchParams.get('tab')
+
+    if (page) params.set('page', page)
+    if (pageSize) params.set('pageSize', pageSize)
+    if (search) params.set('search', search)
+    if (tab) params.set('tab', tab)
   }
-  
-  const url = `/dashboard/candidates/${item.candidateId!}?${params.toString()}`;
-  
+
+  const url = `/dashboard/candidates/${item.candidateId!}?${params.toString()}`
+
   return (
     <Link
       to={url}
@@ -149,7 +149,7 @@ function TableCellViewer({
         {item.email}
       </span>
     </Link>
-  );
+  )
 }
 
 // Assigned team member selector component
@@ -160,94 +160,94 @@ function AssignedSelector({
   disabled = false,
   candidateStatus,
 }: {
-  candidateId: string | number;
-  initialAssignee?: string | null;
-  onUpdate?: () => void;
-  disabled?: boolean;
-  candidateStatus?: string;
+  candidateId: string | number
+  initialAssignee?: string | null
+  onUpdate?: () => void
+  disabled?: boolean
+  candidateStatus?: string
 }) {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false)
   const [selectedMember, setSelectedMember] = React.useState<string | null>(
     initialAssignee || null
-  );
+  )
 
   // 🔥 REALTIME: Team members come from Firestore automatically
-  const { teamMembers } = useTeam();
-  const { updateCandidate } = useCandidates();
+  const { teamMembers } = useTeam()
+  const { updateCandidate } = useCandidates()
 
   // 🔒 RBAC: Check if current user is admin
-  const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
 
   // Debug: Log team members
-  React.useEffect(() => {}, [teamMembers]);
+  React.useEffect(() => {}, [teamMembers])
 
   // Update selected member when initialAssignee changes (e.g., after data refresh)
   React.useEffect(() => {
-    setSelectedMember(initialAssignee || null);
-  }, [initialAssignee]);
+    setSelectedMember(initialAssignee || null)
+  }, [initialAssignee])
 
   const handleValueChange = async (value: string) => {
-    if (value === "unassign") {
+    if (value === 'unassign') {
       // Handle unassign
-      const previousAssignee = selectedMember;
-      setSelectedMember(null);
+      const previousAssignee = selectedMember
+      setSelectedMember(null)
 
       try {
-        await updateCandidate(candidateId.toString(), { assignedTo: null });
-        onUpdate?.(); // Trigger parent refresh
-        toast.success("Team member unassigned");
+        await updateCandidate(candidateId.toString(), { assignedTo: null })
+        onUpdate?.() // Trigger parent refresh
+        toast.success('Team member unassigned')
       } catch {
-        toast.error("Failed to unassign team member");
-        setSelectedMember(previousAssignee);
+        toast.error('Failed to unassign team member')
+        setSelectedMember(previousAssignee)
       }
     } else {
       // Find the team member by ID (value is the member ID)
-      const member = teamMembers.find((m) => m.id === value);
+      const member = teamMembers.find(m => m.id === value)
       if (member) {
         const memberName =
-          `${member.firstName} ${member.lastName}`.trim() || member.email;
-        setSelectedMember(memberName);
+          `${member.firstName} ${member.lastName}`.trim() || member.email
+        setSelectedMember(memberName)
 
         try {
           // Use userId (the actual user's ID), not id (the team member document ID)
-          const userIdToAssign = member.userId || member.id;
+          const userIdToAssign = member.userId || member.id
           await updateCandidate(candidateId.toString(), {
             assignedTo: userIdToAssign,
-          });
-          onUpdate?.(); // Trigger parent refresh
-          toast.success(`Assigned ${memberName} to candidate`);
+          })
+          onUpdate?.() // Trigger parent refresh
+          toast.success(`Assigned ${memberName} to candidate`)
         } catch {
-          toast.error("Failed to assign team member");
-          setSelectedMember(initialAssignee || null);
+          toast.error('Failed to assign team member')
+          setSelectedMember(initialAssignee || null)
         }
       }
     }
-  };
+  }
 
   // Get the current value for the Select component
   const currentValue = React.useMemo(() => {
-    if (!selectedMember) return "unassigned";
+    if (!selectedMember) return 'unassigned'
     // Find member ID by name
-    const member = teamMembers.find((m) => {
-      const name = `${m.firstName} ${m.lastName}`.trim() || m.email;
-      return name === selectedMember;
-    });
-    return member?.id || "unassigned";
-  }, [selectedMember, teamMembers]);
+    const member = teamMembers.find(m => {
+      const name = `${m.firstName} ${m.lastName}`.trim() || m.email
+      return name === selectedMember
+    })
+    return member?.id || 'unassigned'
+  }, [selectedMember, teamMembers])
 
   // 🔒 RBAC: Non-admin users see read-only view
   if (!isAdmin || disabled) {
     return (
       <div className="h-8 px-3 py-2 text-sm border rounded-md bg-muted/50 flex items-center w-full cursor-not-allowed">
         {selectedMember ||
-          (candidateStatus?.toLowerCase() === "hired"
-            ? "Hired"
-            : candidateStatus?.toLowerCase() === "rejected"
-            ? "Rejected"
-            : "Not assigned")}
+          (candidateStatus?.toLowerCase() === 'hired'
+            ? 'Hired'
+            : candidateStatus?.toLowerCase() === 'rejected'
+              ? 'Rejected'
+              : 'Not assigned')}
       </div>
-    );
+    )
   }
 
   // Admin users get the interactive Select dropdown
@@ -260,7 +260,7 @@ function AssignedSelector({
       disabled={disabled}
     >
       <SelectTrigger className="h-8 text-sm w-full" disabled={disabled}>
-        <SelectValue>{selectedMember || "Assign someone"}</SelectValue>
+        <SelectValue>{selectedMember || 'Assign someone'}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         <div className="p-1">
@@ -272,9 +272,9 @@ function AssignedSelector({
               No team members found
             </div>
           ) : (
-            teamMembers.map((member) => {
+            teamMembers.map(member => {
               const memberName =
-                `${member.firstName} ${member.lastName}`.trim() || member.email;
+                `${member.firstName} ${member.lastName}`.trim() || member.email
               return (
                 <SelectItem
                   key={member.id}
@@ -283,7 +283,7 @@ function AssignedSelector({
                 >
                   {memberName}
                 </SelectItem>
-              );
+              )
             })
           )}
           {selectedMember && (
@@ -303,7 +303,7 @@ function AssignedSelector({
         </div>
       </SelectContent>
     </Select>
-  );
+  )
 }
 
 // Stage selector component for changing pipeline stages
@@ -314,63 +314,65 @@ function StageSelector({
   currentStageName,
   onUpdate,
 }: {
-  candidateId: string;
-  jobIdForRow: string;
-  currentStageId: string;
-  currentStageName: string;
-  onUpdate?: () => void;
+  candidateId: string
+  jobIdForRow: string
+  currentStageId: string
+  currentStageName: string
+  onUpdate?: () => void
 }) {
-  const [isUpdating, setIsUpdating] = React.useState(false);
-  const { updateCandidate } = useCandidates();
-  const { pipelines } = usePipelines();
+  const [isUpdating, setIsUpdating] = React.useState(false)
+  const { updateCandidate } = useCandidates()
+  const { pipelines } = usePipelines()
 
   // Get the pipeline for this job
-  const jobPipeline = pipelines.find((p) => p.jobId === jobIdForRow);
-  const stages = jobPipeline?.stages || [];
+  const jobPipeline = pipelines.find(p => p.jobId === jobIdForRow)
+  const stages = jobPipeline?.stages || []
 
   // If no pipeline or stages, show read-only badge
   if (stages.length === 0) {
     return (
       <Badge variant="outline" className="text-xs">
-        {currentStageName || "No Pipeline"}
+        {currentStageName || 'No Pipeline'}
       </Badge>
-    );
+    )
   }
 
   const handleStageChange = async (newStageId: string) => {
-    if (newStageId === currentStageId || isUpdating) return;
+    if (newStageId === currentStageId || isUpdating) return
 
-    setIsUpdating(true);
+    setIsUpdating(true)
     try {
       // Update the candidate with both currentPipelineStageId and jobId
       // The backend will handle updating the specific job application's stage
       await updateCandidate(candidateId, {
         currentPipelineStageId: newStageId,
         jobId: jobIdForRow, // Tell backend which job's stage to update
-      } as any);
+      } as any)
 
-      toast.success("Stage updated successfully");
-      if (onUpdate) onUpdate();
+      toast.success('Stage updated successfully')
+      if (onUpdate) onUpdate()
     } catch (error) {
-      toast.error("Failed to update stage");
-      console.error("Stage update error:", error);
+      toast.error('Failed to update stage')
+      console.error('Stage update error:', error)
     } finally {
-      setIsUpdating(false);
+      setIsUpdating(false)
     }
-  };
+  }
 
   // Get color for current stage
   // The currentStageId might actually be the stage name, so we need to match by both
-  const currentStage = stages.find((s) => s.id === currentStageId || s.name === currentStageId);
-  const stageColor = currentStage?.color || "#6B7280";
+  const currentStage = stages.find(
+    s => s.id === currentStageId || s.name === currentStageId
+  )
+  const stageColor = currentStage?.color || '#6B7280'
 
   // Convert hex to rgba for background with opacity
   const hexToRgba = (hex: string, alpha: number) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
 
   return (
     <Select
@@ -378,7 +380,7 @@ function StageSelector({
       onValueChange={handleStageChange}
       disabled={isUpdating}
     >
-      <SelectTrigger 
+      <SelectTrigger
         className="h-7 text-xs focus:ring-1 focus:ring-offset-0 w-full border-l-4"
         style={{
           borderLeftColor: stageColor,
@@ -397,7 +399,7 @@ function StageSelector({
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {stages.map((stage) => (
+        {stages.map(stage => (
           <SelectItem key={stage.id} value={stage.id} className="text-xs">
             <div className="flex items-center gap-2">
               <div
@@ -410,20 +412,20 @@ function StageSelector({
         ))}
       </SelectContent>
     </Select>
-  );
+  )
 }
 
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
-    id: "select",
+    id: 'select',
     header: ({ table }) => (
       <div className="flex items-center justify-center">
         <Checkbox
           checked={
             table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
           }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
       </div>
@@ -432,7 +434,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       <div className="flex items-center justify-center">
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={value => row.toggleSelected(!!value)}
           aria-label="Select row"
         />
       </div>
@@ -444,30 +446,30 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     maxSize: 50,
   },
   {
-    id: "candidateName",
+    id: 'candidateName',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="hover:bg-transparent p-0"
         >
           Name
-          {column.getIsSorted() === "asc" ? (
+          {column.getIsSorted() === 'asc' ? (
             <IconChevronDown className="ml-1 h-3 w-3 rotate-180" />
-          ) : column.getIsSorted() === "desc" ? (
+          ) : column.getIsSorted() === 'desc' ? (
             <IconChevronDown className="ml-1 h-3 w-3" />
           ) : null}
         </Button>
-      );
+      )
     },
-    accessorFn: (row) => row.header,
+    accessorFn: row => row.header,
     cell: ({ row }) => {
       return (
         <div className="min-w-[220px] max-w-[220px] overflow-hidden">
           <TableCellViewer item={row.original} />
         </div>
-      );
+      )
     },
     enableHiding: false,
     size: 220,
@@ -475,34 +477,34 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     maxSize: 220,
   },
   {
-    accessorKey: "target",
+    accessorKey: 'target',
     header: () => null,
     cell: () => null,
     enableHiding: true,
     enableSorting: true,
   },
   {
-    accessorKey: "jobAndClient",
+    accessorKey: 'jobAndClient',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="hover:bg-transparent p-0"
         >
           Job & Client
-          {column.getIsSorted() === "asc" ? (
+          {column.getIsSorted() === 'asc' ? (
             <IconChevronDown className="ml-1 h-3 w-3 rotate-180" />
-          ) : column.getIsSorted() === "desc" ? (
+          ) : column.getIsSorted() === 'desc' ? (
             <IconChevronDown className="ml-1 h-3 w-3" />
           ) : null}
         </Button>
-      );
+      )
     },
     cell: ({ row }) => {
-      const jobTitle = row.original.jobTitle || "N/A";
-      const clientName = row.original.clientName || "N/A";
-      const clientLogo = row.original.clientLogo;
+      const jobTitle = row.original.jobTitle || 'N/A'
+      const clientName = row.original.clientName || 'N/A'
+      const clientLogo = row.original.clientLogo
 
       return (
         <div className="min-w-60 max-w-60 overflow-hidden">
@@ -533,10 +535,10 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
             </div>
           </div>
         </div>
-      );
+      )
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+      return value.includes(row.getValue(id))
     },
     enableHiding: true,
     size: 240,
@@ -544,57 +546,53 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     maxSize: 240,
   },
   {
-    accessorKey: "currentStage",
-    header: () => (
-      <div className="text-left">Stage</div>
-    ),
+    accessorKey: 'currentStage',
+    header: () => <div className="text-left">Stage</div>,
     cell: ({ row }) => {
-      const isRejected = row.original.status?.toLowerCase() === "rejected";
-      const isHired = row.original.status?.toLowerCase() === "hired";
-      const isApplication = row.original.isApplication === true;
+      const isRejected = row.original.status?.toLowerCase() === 'rejected'
+      const isHired = row.original.status?.toLowerCase() === 'hired'
+      const isApplication = row.original.isApplication === true
 
       // Don't show stage selector for pending applications
       if (isApplication) {
         return (
           <div className="min-w-[200px] max-w-[200px]">
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className="text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
             >
               Pending Review
             </Badge>
           </div>
-        );
+        )
       }
 
       // currentStage can be either a string or an object { id, name, color, order }
       const currentStage = row.original.currentStage as
         | string
         | { id?: string; name?: string; color?: string }
-        | undefined;
+        | undefined
       const stageName =
-        typeof currentStage === "string"
+        typeof currentStage === 'string'
           ? currentStage
-          : currentStage?.name || "Not Started";
-      const stageId = 
-        typeof currentStage === "string"
-          ? currentStage
-          : currentStage?.id || "";
+          : currentStage?.name || 'Not Started'
+      const stageId =
+        typeof currentStage === 'string' ? currentStage : currentStage?.id || ''
 
       // For rejected/hired, show static badge
       if (isRejected || isHired) {
-        const displayText = isRejected ? "Rejected" : "Hired";
+        const displayText = isRejected ? 'Rejected' : 'Hired'
         const colorClass = isRejected
-          ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400 border-red-200"
-          : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200";
-        
+          ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400 border-red-200'
+          : 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200'
+
         return (
           <div className="min-w-[200px] max-w-[200px]">
             <Badge className={`text-xs border ${colorClass}`}>
               {displayText}
             </Badge>
           </div>
-        );
+        )
       }
 
       return (
@@ -605,14 +603,14 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
             currentStageId={stageId}
             currentStageName={stageName}
             onUpdate={() => {
-              window.dispatchEvent(new CustomEvent("refetchCandidates"));
+              window.dispatchEvent(new CustomEvent('refetchCandidates'))
             }}
           />
         </div>
-      );
+      )
     },
     filterFn: (row, _id, value) => {
-      return value.includes(row.original.dateApplied);
+      return value.includes(row.original.dateApplied)
     },
     enableHiding: true,
     size: 200,
@@ -620,56 +618,56 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     maxSize: 200,
   },
   {
-    accessorKey: "dateApplied",
+    accessorKey: 'dateApplied',
     header: ({ column }) => (
       <Button
         variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         className="hover:bg-transparent p-0"
       >
         Applied Date
-        {column.getIsSorted() === "asc" ? (
+        {column.getIsSorted() === 'asc' ? (
           <IconChevronDown className="ml-1 h-3 w-3 rotate-180" />
-        ) : column.getIsSorted() === "desc" ? (
+        ) : column.getIsSorted() === 'desc' ? (
           <IconChevronDown className="ml-1 h-3 w-3" />
         ) : null}
       </Button>
     ),
     cell: ({ row }) => {
-      const dateApplied = row.original.dateApplied;
-      const source = row.original.source;
-      let displayDate = "N/A";
+      const dateApplied = row.original.dateApplied
+      const source = row.original.source
+      let displayDate = 'N/A'
 
       if (dateApplied) {
         try {
-          const date = new Date(dateApplied);
-          displayDate = date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          });
+          const date = new Date(dateApplied)
+          displayDate = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })
         } catch {
-          displayDate = "Invalid Date";
+          displayDate = 'Invalid Date'
         }
       }
 
       // Determine icon and tooltip based on source
-      let SourceIcon = IconClick;
-      let tooltipText = "Direct Apply";
-      let iconColor = "text-blue-500";
+      let SourceIcon = IconClick
+      let tooltipText = 'Direct Apply'
+      let iconColor = 'text-blue-500'
 
-      if (source === "email_automation" || source === "email") {
-        SourceIcon = IconMail;
-        tooltipText = "Applied via Email";
-        iconColor = "text-green-500";
-      } else if (source === "manual") {
-        SourceIcon = IconUpload;
-        tooltipText = "Manually Uploaded";
-        iconColor = "text-orange-500";
-      } else if (source === "direct_apply" || source === "direct_application") {
-        SourceIcon = IconClick;
-        tooltipText = "Direct Apply";
-        iconColor = "text-blue-500";
+      if (source === 'email_automation' || source === 'email') {
+        SourceIcon = IconMail
+        tooltipText = 'Applied via Email'
+        iconColor = 'text-green-500'
+      } else if (source === 'manual') {
+        SourceIcon = IconUpload
+        tooltipText = 'Manually Uploaded'
+        iconColor = 'text-orange-500'
+      } else if (source === 'direct_apply' || source === 'direct_application') {
+        SourceIcon = IconClick
+        tooltipText = 'Direct Apply'
+        iconColor = 'text-blue-500'
       }
 
       return (
@@ -687,10 +685,12 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <span className="text-xs text-muted-foreground truncate">{displayDate}</span>
+            <span className="text-xs text-muted-foreground truncate">
+              {displayDate}
+            </span>
           </div>
         </div>
-      );
+      )
     },
     enableHiding: true,
     size: 95,
@@ -698,51 +698,63 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     maxSize: 95,
   },
   {
-    id: "actions",
+    id: 'actions',
     cell: () => null,
     enableHiding: false,
     size: 180,
     minSize: 180,
     maxSize: 180,
   },
-];
+]
 
 // Row actions column
 const createActionsColumn = (handlers: {
-  onHire: (id: string | number) => void;
-  onReject: (id: string | number) => void;
-  onAssignTeam: (id: string | number) => void;
-  onDownloadResume: (id: string | number) => void;
-  onReassignJob: (id: string | number) => void;
-  onDelete: (id: string | number) => void;
-  onApprove: (id: string | number) => void;
-  onRejectApplication: (id: string | number) => void;
-  onEmail: (id: string | number) => void;
-  onAddToTalentPool: (id: string | number) => void;
+  onHire: (id: string | number) => void
+  onReject: (id: string | number) => void
+  onAssignTeam: (id: string | number) => void
+  onDownloadResume: (id: string | number) => void
+  onReassignJob: (id: string | number) => void
+  onDelete: (id: string | number) => void
+  onApprove: (id: string | number) => void
+  onApproveOnly: (id: string | number) => void
+  onRejectApplication: (id: string | number) => void
+  onEmail: (id: string | number) => void
+  onAddToTalentPool: (id: string | number) => void
 }): ColumnDef<z.infer<typeof schema>> => ({
-  id: "actions",
+  id: 'actions',
   cell: ({ row }) => {
-    const isRejected = row.original.status?.toLowerCase() === "rejected";
-    const isHired = row.original.status?.toLowerCase() === "hired";
-    const isApplication = row.original.isApplication === true;
-    const isPending = row.original.applicationStatus === "pending";
-    const isInTalentPool = row.original.inTalentPool === true;
+    const isRejected = row.original.status?.toLowerCase() === 'rejected'
+    const isHired = row.original.status?.toLowerCase() === 'hired'
+    const isApplication = row.original.isApplication === true
+    const isPending = row.original.applicationStatus === 'pending'
+    const isInTalentPool = row.original.inTalentPool === true
 
     return (
       <div className="min-w-[180px] flex items-center gap-1.5 justify-start">
-        {/* Prominent Approve & Email Button - Only for pending applications */}
+        {/* Action buttons for pending applications */}
         {isApplication && isPending && (
-          <Button
-            variant="primary"
-            size="sm"
-            className="h-8 px-3 bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm"
-            onClick={() => handlers.onApprove(row.original.candidateId!)}
-          >
-            <IconCircleCheck className="h-3.5 w-3.5 mr-1.5" />
-            Approve & Email
-          </Button>
+          <>
+            <Button
+              variant="primary"
+              size="sm"
+              className="h-8 px-2.5 bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm text-xs"
+              onClick={() => handlers.onApprove(row.original.candidateId!)}
+            >
+              <IconCircleCheck className="h-3.5 w-3.5 mr-1" />
+              Approve & Email
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 border-green-600 text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 font-medium text-xs"
+              onClick={() => handlers.onApproveOnly(row.original.candidateId!)}
+            >
+              <IconCircleCheck className="h-3.5 w-3.5 mr-1" />
+              Approve
+            </Button>
+          </>
         )}
-        
+
         {/* Prominent Email Button - Only show for actual candidates (not applications) */}
         {!isApplication && (
           <Button
@@ -755,7 +767,7 @@ const createActionsColumn = (handlers: {
             Email Candidate
           </Button>
         )}
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -777,11 +789,29 @@ const createActionsColumn = (handlers: {
                   <IconCircleCheck className="h-3 w-3 mr-2" />
                   <div className="flex flex-col">
                     <span>Approve & Email Candidate</span>
-                    <span className="text-xs text-muted-foreground font-normal">Review and send welcome email</span>
+                    <span className="text-xs text-muted-foreground font-normal">
+                      Review and send welcome email
+                    </span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handlers.onRejectApplication(row.original.candidateId!)}
+                  onClick={() =>
+                    handlers.onApproveOnly(row.original.candidateId!)
+                  }
+                  className="text-green-600 dark:text-green-400"
+                >
+                  <IconCircleCheck className="h-3 w-3 mr-2" />
+                  <div className="flex flex-col">
+                    <span>Approve (Talent Pool)</span>
+                    <span className="text-xs text-muted-foreground font-normal">
+                      Approve &amp; add to Talent Pool
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    handlers.onRejectApplication(row.original.candidateId!)
+                  }
                   className="text-red-600 dark:text-red-400"
                 >
                   <IconX className="h-3 w-3 mr-2" />
@@ -795,30 +825,30 @@ const createActionsColumn = (handlers: {
                   disabled={isHired}
                   className={
                     isRejected
-                      ? "text-amber-600 dark:text-amber-400"
+                      ? 'text-amber-600 dark:text-amber-400'
                       : isHired
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
                   }
                 >
                   <IconCheck
                     className={`h-3 w-3 mr-2 ${
-                      isRejected ? "text-amber-600" : "text-green-600"
+                      isRejected ? 'text-amber-600' : 'text-green-600'
                     }`}
                   />
                   {isRejected
-                    ? "Hire (Was Rejected)"
+                    ? 'Hire (Was Rejected)'
                     : isHired
-                    ? "Already Hired"
-                    : "Mark as Hired"}
+                      ? 'Already Hired'
+                      : 'Mark as Hired'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handlers.onReject(row.original.id)}
                   disabled={isRejected || isHired}
-                  className={isHired ? "opacity-50 cursor-not-allowed" : ""}
+                  className={isHired ? 'opacity-50 cursor-not-allowed' : ''}
                 >
                   <IconX className="h-3 w-3 mr-2 text-red-600" />
-                  {isHired ? "Cannot Reject (Hired)" : "Reject"}
+                  {isHired ? 'Cannot Reject (Hired)' : 'Reject'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -836,11 +866,19 @@ const createActionsColumn = (handlers: {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => handlers.onAddToTalentPool(row.original.candidateId!)}
-                  className={isInTalentPool ? "text-yellow-600 dark:text-yellow-400" : ""}
+                  onClick={() =>
+                    handlers.onAddToTalentPool(row.original.candidateId!)
+                  }
+                  className={
+                    isInTalentPool ? 'text-yellow-600 dark:text-yellow-400' : ''
+                  }
                 >
-                  <IconStar className={`h-3 w-3 mr-2 ${isInTalentPool ? "text-yellow-500 fill-yellow-500" : ""}`} />
-                  {isInTalentPool ? "Remove from Talent Pool" : "Add to Talent Pool"}
+                  <IconStar
+                    className={`h-3 w-3 mr-2 ${isInTalentPool ? 'text-yellow-500 fill-yellow-500' : ''}`}
+                  />
+                  {isInTalentPool
+                    ? 'Remove from Talent Pool'
+                    : 'Add to Talent Pool'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -854,12 +892,12 @@ const createActionsColumn = (handlers: {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    );
+    )
   },
   size: 100,
   minSize: 100,
   maxSize: 100,
-});
+})
 
 export function CandidatesDataTable({
   data: initialData,
@@ -867,280 +905,298 @@ export function CandidatesDataTable({
   searchParams,
   setSearchParams,
 }: {
-  data: z.infer<typeof schema>[];
-  onDeleteCandidate?: (candidateId: string) => void;
-  searchParams?: URLSearchParams;
-  setSearchParams?: (params: URLSearchParams, options?: { replace?: boolean }) => void;
+  data: z.infer<typeof schema>[]
+  onDeleteCandidate?: (candidateId: string) => void
+  searchParams?: URLSearchParams
+  setSearchParams?: (
+    params: URLSearchParams,
+    options?: { replace?: boolean }
+  ) => void
 }) {
-  const [data, setData] = React.useState(() => initialData);
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [data, setData] = React.useState(() => initialData)
+  const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({ target: false });
+    React.useState<VisibilityState>({ target: false })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
-  );
+  )
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "target", desc: true }, // Default: sort by newest first (Date Applied - Newest)
-  ]);
-  
+    { id: 'target', desc: true }, // Default: sort by newest first (Date Applied - Newest)
+  ])
+
   // Initialize pagination from URL params or default
-  const initialPage = searchParams ? parseInt(searchParams.get("page") || "1") - 1 : 0;
-  const initialPageSize = searchParams ? parseInt(searchParams.get("pageSize") || "10") : 10;
-  const initialSearch = searchParams ? searchParams.get("search") || "" : "";
-  
+  const initialPage = searchParams
+    ? parseInt(searchParams.get('page') || '1') - 1
+    : 0
+  const initialPageSize = searchParams
+    ? parseInt(searchParams.get('pageSize') || '10')
+    : 10
+  const initialSearch = searchParams ? searchParams.get('search') || '' : ''
+
   const [pagination, setPagination] = React.useState({
     pageIndex: initialPage,
     pageSize: initialPageSize,
-  });
-  const [globalFilter, setGlobalFilter] = React.useState(initialSearch);
+  })
+  const [globalFilter, setGlobalFilter] = React.useState(initialSearch)
 
   // 🔥 REALTIME: Get team members for assignee name lookup and candidate operations
-  const { teamMembers } = useTeam();
-  const { updateCandidate, candidates } = useCandidates();
-  const { jobs } = useJobs();
-  const { data: clients } = useClients();
-  const { pipelines } = usePipelines();
+  const { teamMembers } = useTeam()
+  const { updateCandidate, candidates } = useCandidates()
+  const { jobs } = useJobs()
+  const { data: clients } = useClients()
+  const { pipelines } = usePipelines()
 
   // Dialog states
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [candidateToDelete, setCandidateToDelete] = React.useState<{
-    id: string | number;
-    candidateId?: string;
-    jobId?: string;
-  } | null>(null);
-  const [assignTeamDialogOpen, setAssignTeamDialogOpen] = React.useState(false);
+    id: string | number
+    candidateId?: string
+    jobId?: string
+  } | null>(null)
+  const [assignTeamDialogOpen, setAssignTeamDialogOpen] = React.useState(false)
   const [bulkAssignTeamDialogOpen, setBulkAssignTeamDialogOpen] =
-    React.useState(false);
+    React.useState(false)
   const [bulkAssignSelectedMember, setBulkAssignSelectedMember] =
-    React.useState<string>("");
+    React.useState<string>('')
   const [candidateIdForAssign, setCandidateIdForAssign] = React.useState<
     string | number | null
-  >(null);
+  >(null)
   const [hireConfirmDialogOpen, setHireConfirmDialogOpen] =
-    React.useState(false);
+    React.useState(false)
   const [candidateToHire, setCandidateToHire] = React.useState<{
-    id: string | number;
-    candidateId?: string;
-    wasRejected?: boolean;
-  } | null>(null);
+    id: string | number
+    candidateId?: string
+    wasRejected?: boolean
+  } | null>(null)
   const [reassignJobDialogOpen, setReassignJobDialogOpen] =
-    React.useState(false);
+    React.useState(false)
   const [candidateToReassign, setCandidateToReassign] = React.useState<{
-    id: string | number;
-    candidateId?: string;
-  } | null>(null);
+    id: string | number
+    candidateId?: string
+  } | null>(null)
   const [selectedJobForReassign, setSelectedJobForReassign] =
-    React.useState<string>("");
+    React.useState<string>('')
 
   // Email modal state
-  const [emailModalOpen, setEmailModalOpen] = React.useState(false);
-  const [selectedCandidateForEmail, setSelectedCandidateForEmail] = React.useState<{
-    candidate: typeof candidates[0] | null;
-    job: typeof jobs[0] | null;
-  } | null>(null);
+  const [emailModalOpen, setEmailModalOpen] = React.useState(false)
+  const [selectedCandidateForEmail, setSelectedCandidateForEmail] =
+    React.useState<{
+      candidate: (typeof candidates)[0] | null
+      job: (typeof jobs)[0] | null
+    } | null>(null)
 
   // Sync local data state with prop changes (important for when candidates are loaded/updated)
   // Use a timestamp to prevent resets immediately after manual updates
-  const lastManualUpdateRef = React.useRef<number>(0);
-  
+  const lastManualUpdateRef = React.useRef<number>(0)
+
   React.useEffect(() => {
     // If we just did a manual update in the last 2 seconds, don't reset from props
     // This gives time for the parent to refetch and stabilize
-    const timeSinceManualUpdate = Date.now() - lastManualUpdateRef.current;
+    const timeSinceManualUpdate = Date.now() - lastManualUpdateRef.current
     if (timeSinceManualUpdate < 2000) {
-      return;
+      return
     }
-    
+
     // Otherwise, sync with parent data
-    setData(initialData);
-  }, [initialData]);
-  
+    setData(initialData)
+  }, [initialData])
+
   // Helper to update data and mark as manual update
-  const updateDataManually = (updater: (prev: typeof initialData) => typeof initialData) => {
-    lastManualUpdateRef.current = Date.now();
-    setData(updater);
-  };
-  
+  const updateDataManually = (
+    updater: (prev: typeof initialData) => typeof initialData
+  ) => {
+    lastManualUpdateRef.current = Date.now()
+    setData(updater)
+  }
+
   // Sync state FROM URL params when navigating back
   React.useEffect(() => {
     if (searchParams) {
-      const urlPage = parseInt(searchParams.get("page") || "1") - 1;
-      const urlPageSize = parseInt(searchParams.get("pageSize") || "10");
-      const urlSearch = searchParams.get("search") || "";
-      
+      const urlPage = parseInt(searchParams.get('page') || '1') - 1
+      const urlPageSize = parseInt(searchParams.get('pageSize') || '10')
+      const urlSearch = searchParams.get('search') || ''
+
       // Update pagination if different
-      if (urlPage !== pagination.pageIndex || urlPageSize !== pagination.pageSize) {
-        setPagination({ pageIndex: urlPage, pageSize: urlPageSize });
+      if (
+        urlPage !== pagination.pageIndex ||
+        urlPageSize !== pagination.pageSize
+      ) {
+        setPagination({ pageIndex: urlPage, pageSize: urlPageSize })
       }
-      
+
       // Update search if different
       if (urlSearch !== globalFilter) {
-        setGlobalFilter(urlSearch);
+        setGlobalFilter(urlSearch)
       }
     }
-  }, [searchParams]);
-  
+  }, [searchParams])
+
   // Sync URL params when pagination changes (user interaction)
-  const prevPaginationRef = React.useRef(pagination);
+  const prevPaginationRef = React.useRef(pagination)
   React.useEffect(() => {
     // Only update URL if pagination changed due to user interaction, not from URL sync
-    if (setSearchParams && searchParams && 
-        (prevPaginationRef.current.pageIndex !== pagination.pageIndex ||
-         prevPaginationRef.current.pageSize !== pagination.pageSize)) {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("page", (pagination.pageIndex + 1).toString());
-      newParams.set("pageSize", pagination.pageSize.toString());
-      setSearchParams(newParams, { replace: true });
+    if (
+      setSearchParams &&
+      searchParams &&
+      (prevPaginationRef.current.pageIndex !== pagination.pageIndex ||
+        prevPaginationRef.current.pageSize !== pagination.pageSize)
+    ) {
+      const newParams = new URLSearchParams(searchParams)
+      newParams.set('page', (pagination.pageIndex + 1).toString())
+      newParams.set('pageSize', pagination.pageSize.toString())
+      setSearchParams(newParams, { replace: true })
     }
-    prevPaginationRef.current = pagination;
-  }, [pagination.pageIndex, pagination.pageSize]);
-  
+    prevPaginationRef.current = pagination
+  }, [pagination.pageIndex, pagination.pageSize])
+
   // Sync URL params when search changes (user interaction)
-  const prevSearchRef = React.useRef(globalFilter);
+  const prevSearchRef = React.useRef(globalFilter)
   React.useEffect(() => {
     // Only update URL if search changed due to user interaction, not from URL sync
-    if (setSearchParams && searchParams && prevSearchRef.current !== globalFilter) {
-      const newParams = new URLSearchParams(searchParams);
+    if (
+      setSearchParams &&
+      searchParams &&
+      prevSearchRef.current !== globalFilter
+    ) {
+      const newParams = new URLSearchParams(searchParams)
       if (globalFilter) {
-        newParams.set("search", globalFilter);
+        newParams.set('search', globalFilter)
       } else {
-        newParams.delete("search");
+        newParams.delete('search')
       }
-      setSearchParams(newParams, { replace: true });
+      setSearchParams(newParams, { replace: true })
     }
-    prevSearchRef.current = globalFilter;
-  }, [globalFilter]);
+    prevSearchRef.current = globalFilter
+  }, [globalFilter])
 
   // Bulk action handlers
   const handleBulkHire = async () => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const selectedIds = selectedRows.map((r) => r.original.id);
+    const selectedRows = table.getFilteredSelectedRowModel().rows
+    const selectedIds = selectedRows.map(r => r.original.id)
 
     try {
       // Optimistic update
-      setData((prevData) =>
-        prevData.map((item) =>
-          selectedIds.includes(item.id) ? { ...item, status: "Hired" } : item
+      setData(prevData =>
+        prevData.map(item =>
+          selectedIds.includes(item.id) ? { ...item, status: 'Hired' } : item
         )
-      );
+      )
 
       // Update all in Firestore
       const updatePromises = selectedRows
-        .filter((r) => r.original.candidateId)
-        .map((r) =>
-          updateCandidate(r.original.candidateId!, { status: "hired" })
-        );
+        .filter(r => r.original.candidateId)
+        .map(r => updateCandidate(r.original.candidateId!, { status: 'hired' }))
 
-      await Promise.all(updatePromises);
-      toast.success(`${selectedRows.length} candidates marked as hired`);
-      table.resetRowSelection();
+      await Promise.all(updatePromises)
+      toast.success(`${selectedRows.length} candidates marked as hired`)
+      table.resetRowSelection()
     } catch {
-      toast.error("Failed to update some candidates");
-      setData(initialData);
+      toast.error('Failed to update some candidates')
+      setData(initialData)
     }
-  };
+  }
 
   const handleBulkReject = async () => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const selectedIds = selectedRows.map((r) => r.original.id);
+    const selectedRows = table.getFilteredSelectedRowModel().rows
+    const selectedIds = selectedRows.map(r => r.original.id)
 
     try {
       // Optimistic update
-      setData((prevData) =>
-        prevData.map((item) =>
-          selectedIds.includes(item.id) ? { ...item, status: "Rejected" } : item
+      setData(prevData =>
+        prevData.map(item =>
+          selectedIds.includes(item.id) ? { ...item, status: 'Rejected' } : item
         )
-      );
+      )
 
       // Update all in Firestore
       const updatePromises = selectedRows
-        .filter((r) => r.original.candidateId)
-        .map((r) =>
-          updateCandidate(r.original.candidateId!, { status: "rejected" })
-        );
+        .filter(r => r.original.candidateId)
+        .map(r =>
+          updateCandidate(r.original.candidateId!, { status: 'rejected' })
+        )
 
-      await Promise.all(updatePromises);
-      toast.success(`${selectedRows.length} candidates rejected`);
-      table.resetRowSelection();
+      await Promise.all(updatePromises)
+      toast.success(`${selectedRows.length} candidates rejected`)
+      table.resetRowSelection()
     } catch {
-      toast.error("Failed to update some candidates");
-      setData(initialData);
+      toast.error('Failed to update some candidates')
+      setData(initialData)
     }
-  };
+  }
 
   const handleBulkAssignTeam = () => {
-    setBulkAssignSelectedMember("");
-    setBulkAssignTeamDialogOpen(true);
-  };
+    setBulkAssignSelectedMember('')
+    setBulkAssignTeamDialogOpen(true)
+  }
 
   const handleBulkAssignTeamConfirm = async () => {
     if (!bulkAssignSelectedMember) {
-      toast.error("Please select a team member");
-      return;
+      toast.error('Please select a team member')
+      return
     }
 
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const selectedIds = selectedRows.map((r) => r.original.id);
+    const selectedRows = table.getFilteredSelectedRowModel().rows
+    const selectedIds = selectedRows.map(r => r.original.id)
 
     try {
       // Find team member by ID
-      const member = teamMembers.find((m) => m.id === bulkAssignSelectedMember);
+      const member = teamMembers.find(m => m.id === bulkAssignSelectedMember)
 
       if (!member) {
-        toast.error("Team member not found");
-        return;
+        toast.error('Team member not found')
+        return
       }
 
-      const teamMemberName = `${member.firstName} ${member.lastName}`.trim();
+      const teamMemberName = `${member.firstName} ${member.lastName}`.trim()
 
       // Optimistic update
-      setData((prevData) =>
-        prevData.map((item) =>
+      setData(prevData =>
+        prevData.map(item =>
           selectedIds.includes(item.id)
             ? { ...item, reviewer: teamMemberName }
             : item
         )
-      );
+      )
 
       // Update all in Firestore
       const updatePromises = selectedRows
-        .filter((r) => r.original.candidateId)
-        .map((r) =>
+        .filter(r => r.original.candidateId)
+        .map(r =>
           updateCandidate(r.original.candidateId!, {
             assignedTo: member.userId || member.id,
           })
-        );
+        )
 
-      await Promise.all(updatePromises);
+      await Promise.all(updatePromises)
       toast.success(
         `${selectedRows.length} candidates assigned to ${teamMemberName}`
-      );
-      table.resetRowSelection();
-      setBulkAssignTeamDialogOpen(false);
-      setBulkAssignSelectedMember("");
+      )
+      table.resetRowSelection()
+      setBulkAssignTeamDialogOpen(false)
+      setBulkAssignSelectedMember('')
     } catch {
-      toast.error("Failed to assign some candidates");
-      setData(initialData);
+      toast.error('Failed to assign some candidates')
+      setData(initialData)
     }
-  };
+  }
 
   const handleBulkExport = () => {
     const selectedData = table
       .getFilteredSelectedRowModel()
-      .rows.map((r) => r.original);
-    toast.success(`Exporting ${selectedData.length} candidates`);
-  };
+      .rows.map(r => r.original)
+    toast.success(`Exporting ${selectedData.length} candidates`)
+  }
 
   // Individual action handlers
   const handleHire = async (id: string | number) => {
-    const candidate = data.find((item) => item.id === id);
+    const candidate = data.find(item => item.id === id)
     if (!candidate?.candidateId) {
-      toast.error("Candidate ID not found");
-      return;
+      toast.error('Candidate ID not found')
+      return
     }
 
     // Check if candidate was previously rejected
-    const wasRejected = candidate.status.toLowerCase() === "rejected";
+    const wasRejected = candidate.status.toLowerCase() === 'rejected'
 
     if (wasRejected) {
       // Show confirmation dialog for previously rejected candidates
@@ -1148,383 +1204,394 @@ export function CandidatesDataTable({
         id,
         candidateId: candidate.candidateId,
         wasRejected: true,
-      });
-      setHireConfirmDialogOpen(true);
-      return;
+      })
+      setHireConfirmDialogOpen(true)
+      return
     }
 
     // If not rejected, proceed directly
-    await performHire(id, candidate.candidateId);
-  };
+    await performHire(id, candidate.candidateId)
+  }
 
   const performHire = async (id: string | number, candidateId: string) => {
     try {
       // Optimistic update
-      setData((prevData) =>
-        prevData.map((item) =>
-          item.id === id ? { ...item, status: "hired" } : item
+      setData(prevData =>
+        prevData.map(item =>
+          item.id === id ? { ...item, status: 'hired' } : item
         )
-      );
+      )
 
       // Update in Firestore
-      await updateCandidate(candidateId, { status: "hired" });
-      toast.success("Candidate marked as hired");
+      await updateCandidate(candidateId, { status: 'hired' })
+      toast.success('Candidate marked as hired')
     } catch {
-      toast.error("Failed to update candidate status");
+      toast.error('Failed to update candidate status')
       // Revert optimistic update on error
-      setData(initialData);
+      setData(initialData)
     }
-  };
+  }
 
   const handleHireConfirm = async () => {
-    if (!candidateToHire) return;
+    if (!candidateToHire) return
 
-    await performHire(candidateToHire.id, candidateToHire.candidateId!);
-    setHireConfirmDialogOpen(false);
-    setCandidateToHire(null);
-  };
+    await performHire(candidateToHire.id, candidateToHire.candidateId!)
+    setHireConfirmDialogOpen(false)
+    setCandidateToHire(null)
+  }
 
   const handleReject = async (id: string | number) => {
     try {
-      const candidate = data.find((item) => item.id === id);
+      const candidate = data.find(item => item.id === id)
       if (!candidate?.candidateId) {
-        toast.error("Candidate ID not found");
-        return;
+        toast.error('Candidate ID not found')
+        return
       }
 
-      const jobId = candidate.jobIdDisplay;
-      if (!jobId || jobId === "N/A") {
-        toast.error("Job ID not found for this candidate");
-        return;
+      const jobId = candidate.jobIdDisplay
+      if (!jobId || jobId === 'N/A') {
+        toast.error('Job ID not found for this candidate')
+        return
       }
 
       // Optimistic update - mark as rejected in UI
-      setData((prevData) =>
-        prevData.map((item) =>
-          item.id === id ? { ...item, status: "rejected" } : item
+      setData(prevData =>
+        prevData.map(item =>
+          item.id === id ? { ...item, status: 'rejected' } : item
         )
-      );
+      )
 
       // Update candidate status to rejected in Firestore
       // Note: The backend will handle updating the jobApplications array status for this specific job
       await updateCandidate(candidate.candidateId, {
-        status: "rejected",
+        status: 'rejected',
         lastStatusChange: new Date().toISOString(),
         // Pass the jobId so backend can update the specific job application
         rejectedJobId: jobId,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      } as any)
 
-      toast.success("Candidate marked as rejected");
+      toast.success('Candidate marked as rejected')
     } catch {
-      toast.error("Failed to reject candidate");
+      toast.error('Failed to reject candidate')
       // Revert optimistic update on error
-      setData(initialData);
+      setData(initialData)
     }
-  };
+  }
 
   const handleAssignTeam = (id: string | number) => {
-    setCandidateIdForAssign(id);
-    setAssignTeamDialogOpen(true);
-  };
+    setCandidateIdForAssign(id)
+    setAssignTeamDialogOpen(true)
+  }
 
   const handleAssignTeamConfirm = async (teamMember: string) => {
-    if (!candidateIdForAssign) return;
+    if (!candidateIdForAssign) return
 
     try {
-      const candidate = data.find((item) => item.id === candidateIdForAssign);
+      const candidate = data.find(item => item.id === candidateIdForAssign)
       if (!candidate?.candidateId) {
-        toast.error("Candidate ID not found");
-        return;
+        toast.error('Candidate ID not found')
+        return
       }
 
       // Find team member ID from name
       const member = teamMembers.find(
-        (m) => `${m.firstName} ${m.lastName}`.trim() === teamMember
-      );
+        m => `${m.firstName} ${m.lastName}`.trim() === teamMember
+      )
 
       if (!member) {
-        toast.error("Team member not found");
-        return;
+        toast.error('Team member not found')
+        return
       }
 
       // Optimistic update
-      setData((prevData) =>
-        prevData.map((item) =>
+      setData(prevData =>
+        prevData.map(item =>
           item.id === candidateIdForAssign
             ? { ...item, reviewer: teamMember }
             : item
         )
-      );
+      )
 
       // Update in Firestore - assignedTo should store the user ID
       await updateCandidate(candidate.candidateId, {
         assignedTo: member.userId || member.id,
-      });
-      toast.success(`Assigned to ${teamMember}`);
+      })
+      toast.success(`Assigned to ${teamMember}`)
     } catch {
-      toast.error("Failed to assign team member");
+      toast.error('Failed to assign team member')
       // Revert optimistic update on error
-      setData(initialData);
+      setData(initialData)
     }
-  };
+  }
 
   const handleDownloadResume = (id: string | number) => {
-    const candidate = data.find((item) => item.id === id);
+    const candidate = data.find(item => item.id === id)
 
     // Check for resume URL first (Firestore field)
     if (candidate?.resumeUrl) {
-      window.open(candidate.resumeUrl, "_blank");
-      toast.success("Opening resume...");
-      return;
+      window.open(candidate.resumeUrl, '_blank')
+      toast.success('Opening resume...')
+      return
     }
 
     // Fallback to filename
     if (candidate?.resumeFilename) {
-      const link = document.createElement("a");
-      link.href = `/uploads/resumes/${candidate.resumeFilename}`;
-      link.download = candidate.resumeFilename;
-      link.click();
-      toast.success("Downloading resume...");
+      const link = document.createElement('a')
+      link.href = `/uploads/resumes/${candidate.resumeFilename}`
+      link.download = candidate.resumeFilename
+      link.click()
+      toast.success('Downloading resume...')
     } else {
-      toast.error("No resume file available");
+      toast.error('No resume file available')
     }
-  };
+  }
 
   const handleDelete = (id: string | number) => {
     // Try to find by row id first
-    let rowData = data.find((item) => item.id === id);
-    
+    let rowData = data.find(item => item.id === id)
+
     // If not found, the id might be a candidateId directly, try finding by candidateId
     if (!rowData) {
-      rowData = data.find((item) => item.candidateId === id);
+      rowData = data.find(item => item.candidateId === id)
     }
-    
+
     setCandidateToDelete({
       id,
-      candidateId: rowData?.candidateId || (typeof id === 'string' ? id : undefined), // Fallback to id if it's the candidateId
+      candidateId:
+        rowData?.candidateId || (typeof id === 'string' ? id : undefined), // Fallback to id if it's the candidateId
       jobId: rowData?.jobIdDisplay, // Store the job ID for this specific application
-    });
-    setDeleteDialogOpen(true);
-  };
+    })
+    setDeleteDialogOpen(true)
+  }
 
   const confirmDelete = async () => {
     if (candidateToDelete) {
       // Check if this is an application
-      const rowData = data.find((item) => item.id === candidateToDelete.id);
-      const isApplication = rowData && "isApplication" in rowData && rowData.isApplication;
+      const rowData = data.find(item => item.id === candidateToDelete.id)
+      const isApplication =
+        rowData && 'isApplication' in rowData && rowData.isApplication
 
       if (isApplication) {
         // Delete application using API
         try {
-          const response = await fetch(`${API_BASE_URL}/applications/${candidateToDelete.id}`, {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${localStorage.getItem("ats_access_token")}`,
-            },
-          });
+          const response = await fetch(
+            `${API_BASE_URL}/applications/${candidateToDelete.id}`,
+            {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('ats_access_token')}`,
+              },
+            }
+          )
 
           if (!response.ok) {
-            throw new Error("Failed to delete application");
+            throw new Error('Failed to delete application')
           }
 
-          toast.success("Application deleted");
-          setDeleteDialogOpen(false);
-          setCandidateToDelete(null);
-          
+          toast.success('Application deleted')
+          setDeleteDialogOpen(false)
+          setCandidateToDelete(null)
+
           // Remove from local state
-          setData((prevData) =>
-            prevData.filter((item) => item.id !== candidateToDelete.id)
-          );
+          setData(prevData =>
+            prevData.filter(item => item.id !== candidateToDelete.id)
+          )
         } catch (error) {
-          toast.error("Failed to delete application");
-          console.error("Delete error:", error);
+          toast.error('Failed to delete application')
+          console.error('Delete error:', error)
         }
       } else if (candidateToDelete.candidateId) {
         try {
           // Find the full candidate data
           const candidate = candidates.find(
-            (c) => c.id === candidateToDelete.candidateId
-          );
+            c => c.id === candidateToDelete.candidateId
+          )
 
           if (!candidate) {
-            toast.error("Candidate not found");
-            return;
+            toast.error('Candidate not found')
+            return
           }
 
-          const jobId = candidateToDelete.jobId;
+          const jobId = candidateToDelete.jobId
 
           // If jobId exists, remove only this job application
-          if (jobId && jobId !== "N/A") {
+          if (jobId && jobId !== 'N/A') {
             const updatedJobIds = (candidate.jobIds || []).filter(
               (jid: string | { id: string }) => {
-                const id = typeof jid === "string" ? jid : jid?.id;
-                return id !== jobId;
+                const id = typeof jid === 'string' ? jid : jid?.id
+                return id !== jobId
               }
-            );
+            )
 
             const updatedJobApplications = (
               candidate.jobApplications || []
-            ).filter((app) => app.jobId !== jobId);
+            ).filter(app => app.jobId !== jobId)
 
             // If this was the last job, delete the entire candidate
             if (updatedJobIds.length === 0) {
               if (onDeleteCandidate) {
-                onDeleteCandidate(candidateToDelete.candidateId);
+                onDeleteCandidate(candidateToDelete.candidateId)
               }
-              toast.success("Candidate removed (no more active jobs)");
+              toast.success('Candidate removed (no more active jobs)')
             } else {
               // Update candidate with remaining jobs
               await updateCandidate(candidateToDelete.candidateId, {
                 jobIds: updatedJobIds,
                 jobApplications: updatedJobApplications,
-              });
+              })
 
               // Firestore will automatically update via real-time subscription
               // Force immediate local state update for better UX
-              setData((prevData) =>
-                prevData.filter((item) => item.id !== candidateToDelete.id)
-              );
+              setData(prevData =>
+                prevData.filter(item => item.id !== candidateToDelete.id)
+              )
 
-              toast.success("Removed candidate from this job");
+              toast.success('Removed candidate from this job')
             }
           } else {
             // No specific job, delete entire candidate
             if (onDeleteCandidate) {
-              await onDeleteCandidate(candidateToDelete.candidateId);
+              await onDeleteCandidate(candidateToDelete.candidateId)
             }
           }
 
-          setDeleteDialogOpen(false);
-          setCandidateToDelete(null);
+          setDeleteDialogOpen(false)
+          setCandidateToDelete(null)
         } catch (error) {
-          toast.error("Failed to delete candidate");
-          console.error("Delete error:", error);
+          toast.error('Failed to delete candidate')
+          console.error('Delete error:', error)
         }
       } else {
         // Fallback to local state update if no callback provided
-        setData((prevData) =>
-          prevData.filter((item) => item.id !== candidateToDelete.id)
-        );
+        setData(prevData =>
+          prevData.filter(item => item.id !== candidateToDelete.id)
+        )
       }
     }
-  };
+  }
 
   const handleReassignJob = (id: string | number) => {
-    const candidate = data.find((item) => item.id === id);
-    setCandidateToReassign({ id, candidateId: candidate?.candidateId });
-    setSelectedJobForReassign("");
-    setReassignJobDialogOpen(true);
-  };
+    const candidate = data.find(item => item.id === id)
+    setCandidateToReassign({ id, candidateId: candidate?.candidateId })
+    setSelectedJobForReassign('')
+    setReassignJobDialogOpen(true)
+  }
 
   const handleEmail = (id: string | number) => {
-    const rowData = data.find((item) => item.candidateId === id);
-    
+    const rowData = data.find(item => item.candidateId === id)
+
     if (!rowData) {
-      toast.error("Row data not found");
-      return;
+      toast.error('Row data not found')
+      return
     }
 
     // Find the actual candidate from candidates store
-    const candidate = candidates.find((c) => c.id === id);
-    
+    const candidate = candidates.find(c => c.id === id)
+
     if (!candidate) {
-      toast.error("Candidate not found");
-      return;
+      toast.error('Candidate not found')
+      return
     }
 
     // Get the job - handle both string and object types
-    let job = null;
-    const rowDataTyped = rowData as { jobIdForRow?: string; jobId?: string };
-    const jobIdToFind = rowDataTyped.jobIdForRow || rowDataTyped.jobId;
-    
+    let job = null
+    const rowDataTyped = rowData as { jobIdForRow?: string; jobId?: string }
+    const jobIdToFind = rowDataTyped.jobIdForRow || rowDataTyped.jobId
+
     if (jobIdToFind) {
-      if (typeof jobIdToFind === "string") {
-        job = jobs.find((j) => j.id === jobIdToFind);
-      } else if (typeof jobIdToFind === "object" && jobIdToFind !== null) {
-        const jobId = (jobIdToFind as { id?: string })?.id;
+      if (typeof jobIdToFind === 'string') {
+        job = jobs.find(j => j.id === jobIdToFind)
+      } else if (typeof jobIdToFind === 'object' && jobIdToFind !== null) {
+        const jobId = (jobIdToFind as { id?: string })?.id
         if (jobId) {
-          job = jobs.find((j) => j.id === jobId);
+          job = jobs.find(j => j.id === jobId)
         }
       }
     }
 
     // If job still not found, try to get from candidate's jobs array
-    const candidateJobs = (candidate as { jobs?: unknown[] }).jobs;
-    if (!job && candidateJobs && Array.isArray(candidateJobs) && candidateJobs.length > 0) {
-      const firstJobId = typeof candidateJobs[0] === "string" 
-        ? candidateJobs[0] 
-        : (candidateJobs[0] as { id?: string })?.id;
+    const candidateJobs = (candidate as { jobs?: unknown[] }).jobs
+    if (
+      !job &&
+      candidateJobs &&
+      Array.isArray(candidateJobs) &&
+      candidateJobs.length > 0
+    ) {
+      const firstJobId =
+        typeof candidateJobs[0] === 'string'
+          ? candidateJobs[0]
+          : (candidateJobs[0] as { id?: string })?.id
       if (firstJobId) {
-        job = jobs.find((j) => j.id === firstJobId);
+        job = jobs.find(j => j.id === firstJobId)
       }
     }
 
     if (!job) {
-      toast.error("No job associated with this candidate");
-      return;
+      toast.error('No job associated with this candidate')
+      return
     }
 
-    setSelectedCandidateForEmail({ candidate, job });
-    setEmailModalOpen(true);
-  };
+    setSelectedCandidateForEmail({ candidate, job })
+    setEmailModalOpen(true)
+  }
 
   const handleReassignJobConfirm = async () => {
-    if (!candidateToReassign?.candidateId || !selectedJobForReassign) return;
+    if (!candidateToReassign?.candidateId || !selectedJobForReassign) return
 
     try {
       // Find the candidate and job
       const candidate = candidates.find(
-        (c) => c.id === candidateToReassign.candidateId
-      );
-      const job = jobs.find((j) => j.id === selectedJobForReassign);
+        c => c.id === candidateToReassign.candidateId
+      )
+      const job = jobs.find(j => j.id === selectedJobForReassign)
 
       if (!candidate || !job) {
-        toast.error("Candidate or job not found");
-        return;
+        toast.error('Candidate or job not found')
+        return
       }
 
       // Check if candidate is already ACTIVELY assigned to this job
       const existingJobApp = candidate.jobApplications?.find(
-        (app) => app.jobId === selectedJobForReassign
-      );
-      if (existingJobApp && existingJobApp.status === "active") {
-        toast.error("Candidate is already actively assigned to this job");
-        return;
+        app => app.jobId === selectedJobForReassign
+      )
+      if (existingJobApp && existingJobApp.status === 'active') {
+        toast.error('Candidate is already actively assigned to this job')
+        return
       }
 
-      let updatedJobIds = candidate.jobIds || [];
-      let updatedJobApplications = candidate.jobApplications || [];
+      let updatedJobIds = candidate.jobIds || []
+      let updatedJobApplications = candidate.jobApplications || []
 
       if (existingJobApp) {
         // Candidate was previously assigned to this job (rejected/hired) - reactivate
         // Get the job's pipeline and first stage
         const jobPipeline = pipelines.find(
-          (p) => p.jobId === selectedJobForReassign
-        );
-        const firstStageId = jobPipeline?.stages?.[0]?.id;
+          p => p.jobId === selectedJobForReassign
+        )
+        const firstStageId = jobPipeline?.stages?.[0]?.id
 
-        updatedJobApplications = updatedJobApplications.map((app) =>
+        updatedJobApplications = updatedJobApplications.map(app =>
           app.jobId === selectedJobForReassign
             ? {
                 ...app,
-                status: "active" as const,
+                status: 'active' as const,
                 currentStage: firstStageId || undefined, // Reset to first stage of pipeline
                 lastStatusChange: new Date(),
               }
             : app
-        );
+        )
       } else {
         // New assignment - get the job's pipeline and first stage
         const jobPipeline = pipelines.find(
-          (p) => p.jobId === selectedJobForReassign
-        );
-        const firstStageId = jobPipeline?.stages?.[0]?.id;
+          p => p.jobId === selectedJobForReassign
+        )
+        const firstStageId = jobPipeline?.stages?.[0]?.id
 
         const newJobApplication = {
           jobId: selectedJobForReassign,
-          status: "active" as const,
+          status: 'active' as const,
           appliedAt: new Date(),
           currentStage: firstStageId || undefined, // Use first stage of pipeline if exists
           lastStatusChange: new Date(),
@@ -1532,10 +1599,10 @@ export function CandidatesDataTable({
           emailIds: [],
           emailsSent: 0,
           emailsReceived: 0,
-        };
+        }
 
-        updatedJobIds = [...updatedJobIds, selectedJobForReassign];
-        updatedJobApplications = [...updatedJobApplications, newJobApplication];
+        updatedJobIds = [...updatedJobIds, selectedJobForReassign]
+        updatedJobApplications = [...updatedJobApplications, newJobApplication]
       }
 
       // Update candidate
@@ -1545,218 +1612,294 @@ export function CandidatesDataTable({
         clientIds: [
           ...new Set([...(candidate.clientIds || []), job.clientId as string]),
         ],
-        status: "active", // Reactivate candidate if they were globally rejected
+        status: 'active', // Reactivate candidate if they were globally rejected
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      } as any)
 
       toast.success(
-        `Candidate ${existingJobApp ? "reactivated for" : "assigned to"} ${
+        `Candidate ${existingJobApp ? 'reactivated for' : 'assigned to'} ${
           job.title
         }`
-      );
-      setReassignJobDialogOpen(false);
-      setCandidateToReassign(null);
-      setSelectedJobForReassign("");
+      )
+      setReassignJobDialogOpen(false)
+      setCandidateToReassign(null)
+      setSelectedJobForReassign('')
     } catch {
-      toast.error("Failed to reassign candidate");
+      toast.error('Failed to reassign candidate')
     }
-  };
+  }
 
   // Handle application approval
-  const [approveModalOpen, setApproveModalOpen] = React.useState(false);
-  const [applicationToApprove, setApplicationToApprove] = React.useState<string | null>(null);
-  const [selectedJobForApproval, setSelectedJobForApproval] = React.useState<string>("");
-  const [isApproving, setIsApproving] = React.useState(false);
-  const [sendWelcomeEmail, setSendWelcomeEmail] = React.useState(true); // Default to true
-  const [newlyCreatedCandidate, setNewlyCreatedCandidate] = React.useState<{ candidate: Candidate; job: Job } | null>(null);
+  const [approveModalOpen, setApproveModalOpen] = React.useState(false)
+  const [applicationToApprove, setApplicationToApprove] = React.useState<
+    string | null
+  >(null)
+  const [selectedJobForApproval, setSelectedJobForApproval] =
+    React.useState<string>('')
+  const [isApproving, setIsApproving] = React.useState(false)
+  const [sendWelcomeEmail, setSendWelcomeEmail] = React.useState(true) // Default to true
+  const [newlyCreatedCandidate, setNewlyCreatedCandidate] = React.useState<{
+    candidate: Candidate
+    job: Job
+  } | null>(null)
+  // Tracks whether the current approval should skip email and add to Talent Pool
+  const approveModeRef = React.useRef<'approve_email' | 'approve_only'>(
+    'approve_email'
+  )
 
   const handleApprove = (id: string | number) => {
-    setApplicationToApprove(String(id));
-    setApproveModalOpen(true);
-    
+    approveModeRef.current = 'approve_email'
+    setApplicationToApprove(String(id))
+    setApproveModalOpen(true)
+
     // Auto-select job if application has a jobId
-    const application = data.find((item) => item.id === id);
-    if (application?.jobIdDisplay && application.jobIdDisplay !== "N/A") {
-      setSelectedJobForApproval(application.jobIdDisplay);
+    const application = data.find(item => item.id === id)
+    if (application?.jobIdDisplay && application.jobIdDisplay !== 'N/A') {
+      setSelectedJobForApproval(application.jobIdDisplay)
     } else {
-      setSelectedJobForApproval("");
+      setSelectedJobForApproval('')
     }
-  };
+  }
+
+  const handleApproveOnly = (id: string | number) => {
+    approveModeRef.current = 'approve_only'
+    setApplicationToApprove(String(id))
+    setApproveModalOpen(true)
+
+    const application = data.find(item => item.id === id)
+    if (application?.jobIdDisplay && application.jobIdDisplay !== 'N/A') {
+      setSelectedJobForApproval(application.jobIdDisplay)
+    } else {
+      setSelectedJobForApproval('')
+    }
+  }
 
   const handleApproveConfirm = async (jobId: string) => {
-    if (!applicationToApprove || isApproving) return;
+    if (!applicationToApprove || isApproving) return
 
-    setIsApproving(true);
+    setIsApproving(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/applications/${applicationToApprove}/approve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("ats_access_token")}`,
-        },
-        body: JSON.stringify({ jobId }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/applications/${applicationToApprove}/approve`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('ats_access_token')}`,
+          },
+          body: JSON.stringify({ jobId }),
+        }
+      )
 
       if (!response.ok) {
-        throw new Error("Failed to approve application");
+        throw new Error('Failed to approve application')
       }
 
-      const result = await response.json();
-      const candidateId = result.data?.candidateId || result.data?.id;
+      const result = await response.json()
+      const candidateId = result.data?.candidateId || result.data?.id
 
-      toast.success("Application approved and candidate created");
-      
+      toast.success('Application approved and candidate created')
+
       // Update local state to mark as approved instead of removing
       // This prevents pagination reset
-      updateDataManually((prevData) =>
-        prevData.map((item) =>
-          item.id === applicationToApprove
-            ? { ...item, status: "In Process", applicationStatus: "approved", isApplication: false }
-            : item
-        ).filter((item) => !(item.id === applicationToApprove && item.isApplication))
-      );
+      updateDataManually(prevData =>
+        prevData
+          .map(item =>
+            item.id === applicationToApprove
+              ? {
+                  ...item,
+                  status: 'In Process',
+                  applicationStatus: 'approved',
+                  isApplication: false,
+                }
+              : item
+          )
+          .filter(
+            item => !(item.id === applicationToApprove && item.isApplication)
+          )
+      )
 
-      // If user wants to send welcome email, open email modal with new candidate
+      // Branch: Approve only (no email) → add to Talent Pool
+      if (approveModeRef.current === 'approve_only') {
+        if (candidateId) {
+          try {
+            await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('ats_access_token')}`,
+              },
+              body: JSON.stringify({ inTalentPool: true }),
+            })
+          } catch {
+            // Non-fatal — candidate is created even if talent pool flag fails
+          }
+        }
+        toast.success('Candidate approved and added to Talent Pool')
+        setApproveModalOpen(false)
+        setApplicationToApprove(null)
+        setSelectedJobForApproval('')
+        approveModeRef.current = 'approve_email'
+        return
+      }
+
+      // Branch: Approve & Email → open email modal
       if (sendWelcomeEmail && candidateId) {
         // Fetch the newly created candidate
         try {
-          const candidateResponse = await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
-            headers: {
-              "Authorization": `Bearer ${localStorage.getItem("ats_access_token")}`,
-            },
-          });
+          const candidateResponse = await fetch(
+            `${API_BASE_URL}/candidates/${candidateId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('ats_access_token')}`,
+              },
+            }
+          )
 
           if (candidateResponse.ok) {
-            const candidateData = await candidateResponse.json();
-            const job = jobs.find((j) => j.id === jobId);
-            
+            const candidateData = await candidateResponse.json()
+            const job = jobs.find(j => j.id === jobId)
+
             if (job) {
               // Close approval modal first
-              setApproveModalOpen(false);
-              setApplicationToApprove(null);
-              setSelectedJobForApproval("");
-              setSendWelcomeEmail(true); // Reset for next time
-              
+              setApproveModalOpen(false)
+              setApplicationToApprove(null)
+              setSelectedJobForApproval('')
+              setSendWelcomeEmail(true) // Reset for next time
+
               // Store candidate data and open email modal
-              setNewlyCreatedCandidate({ candidate: candidateData.data, job });
-              
+              setNewlyCreatedCandidate({ candidate: candidateData.data, job })
+
               // Small delay to ensure modal transition is smooth
               setTimeout(() => {
-                setEmailModalOpen(true);
-                toast.info("Welcome email composer opened");
-              }, 300);
-              
-              return; // Exit early to avoid closing modal twice
+                setEmailModalOpen(true)
+                toast.info('Welcome email composer opened')
+              }, 300)
+
+              return // Exit early to avoid closing modal twice
             }
           }
         } catch (error) {
-          console.error("Failed to fetch candidate for email:", error);
-          toast.error("Candidate created but couldn't open email composer");
+          console.error('Failed to fetch candidate for email:', error)
+          toast.error("Candidate created but couldn't open email composer")
         }
       }
-      
+
       // Close modal if not sending email or on error
-      setApproveModalOpen(false);
-      setApplicationToApprove(null);
-      setSelectedJobForApproval("");
-      setSendWelcomeEmail(true); // Reset for next time
+      setApproveModalOpen(false)
+      setApplicationToApprove(null)
+      setSelectedJobForApproval('')
+      setSendWelcomeEmail(true) // Reset for next time
     } catch (error) {
-      toast.error("Failed to approve application");
-      console.error(error);
+      toast.error('Failed to approve application')
+      console.error(error)
     } finally {
-      setIsApproving(false);
+      setIsApproving(false)
     }
-  };
+  }
 
   // Handle application rejection
-  const [rejectApplicationDialogOpen, setRejectApplicationDialogOpen] = React.useState(false);
-  const [applicationToReject, setApplicationToReject] = React.useState<string | null>(null);
+  const [rejectApplicationDialogOpen, setRejectApplicationDialogOpen] =
+    React.useState(false)
+  const [applicationToReject, setApplicationToReject] = React.useState<
+    string | null
+  >(null)
 
   const handleRejectApplication = (id: string | number) => {
-    setApplicationToReject(String(id));
-    setRejectApplicationDialogOpen(true);
-  };
+    setApplicationToReject(String(id))
+    setRejectApplicationDialogOpen(true)
+  }
 
   const handleRejectApplicationConfirm = async () => {
-    if (!applicationToReject) return;
+    if (!applicationToReject) return
 
     try {
-      const response = await fetch(`${API_BASE_URL}/applications/${applicationToReject}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("ats_access_token")}`,
-        },
-        body: JSON.stringify({ status: "rejected" }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/applications/${applicationToReject}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('ats_access_token')}`,
+          },
+          body: JSON.stringify({ status: 'rejected' }),
+        }
+      )
 
       if (!response.ok) {
-        throw new Error("Failed to reject application");
+        throw new Error('Failed to reject application')
       }
 
-      toast.success("Application rejected");
-      setRejectApplicationDialogOpen(false);
-      setApplicationToReject(null);
-      
+      toast.success('Application rejected')
+      setRejectApplicationDialogOpen(false)
+      setApplicationToReject(null)
+
       // Update local state - filter out rejected application
-      updateDataManually((prevData) =>
-        prevData.filter((item) => item.id !== applicationToReject)
-      );
+      updateDataManually(prevData =>
+        prevData.filter(item => item.id !== applicationToReject)
+      )
     } catch (error) {
-      toast.error("Failed to reject application");
-      console.error(error);
+      toast.error('Failed to reject application')
+      console.error(error)
     }
-  };
+  }
 
   // Handle add/remove from Talent Pool
   const handleAddToTalentPool = async (id: string | number) => {
-    const candidate = data.find((item) => item.candidateId === id);
+    const candidate = data.find(item => item.candidateId === id)
     if (!candidate?.candidateId) {
-      toast.error("Candidate not found");
-      return;
+      toast.error('Candidate not found')
+      return
     }
 
-    const newValue = !candidate.inTalentPool;
+    const newValue = !candidate.inTalentPool
 
     // Optimistic update
-    updateDataManually((prevData) =>
-      prevData.map((item) =>
+    updateDataManually(prevData =>
+      prevData.map(item =>
         item.candidateId === id ? { ...item, inTalentPool: newValue } : item
       )
-    );
+    )
 
     try {
-      await updateCandidate(candidate.candidateId, { inTalentPool: newValue } as any);
-      toast.success(newValue ? "Added to Talent Pool" : "Removed from Talent Pool");
+      await updateCandidate(candidate.candidateId, {
+        inTalentPool: newValue,
+      } as any)
+      toast.success(
+        newValue ? 'Added to Talent Pool' : 'Removed from Talent Pool'
+      )
     } catch {
-      toast.error("Failed to update Talent Pool");
+      toast.error('Failed to update Talent Pool')
       // Revert
-      updateDataManually((prevData) =>
-        prevData.map((item) =>
+      updateDataManually(prevData =>
+        prevData.map(item =>
           item.candidateId === id ? { ...item, inTalentPool: !newValue } : item
         )
-      );
+      )
     }
-  };
+  }
 
   const columnsWithActions = React.useMemo(() => {
     // Clone columns and update columns that need dynamic data
-    const baseColumns = columns.slice(0, -1).map((col) => {
+    const baseColumns = columns.slice(0, -1).map(col => {
       // Update candidateName column to pass searchParams
-      if (col.id === "candidateName") {
+      if (col.id === 'candidateName') {
         return {
           ...col,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           cell: ({ row }: { row: any }) => (
             <div className="min-w-[220px] max-w-[220px] overflow-hidden">
-              <TableCellViewer item={row.original} searchParams={searchParams} />
+              <TableCellViewer
+                item={row.original}
+                searchParams={searchParams}
+              />
             </div>
           ),
-        };
+        }
       }
-      
+
       // Update "Assigned" column to use team members for name lookup
-      if ("accessorKey" in col && col.accessorKey === "reviewer") {
+      if ('accessorKey' in col && col.accessorKey === 'reviewer') {
         return {
           ...col,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1764,35 +1907,35 @@ export function CandidatesDataTable({
             const assignedTo = row.original.assignedTo as
               | string
               | {
-                  id?: string;
-                  _id?: string;
-                  firstName?: string;
-                  lastName?: string;
-                  email?: string;
+                  id?: string
+                  _id?: string
+                  firstName?: string
+                  lastName?: string
+                  email?: string
                 }
               | null
-              | undefined;
-            let assignedName: string | null = null;
+              | undefined
+            let assignedName: string | null = null
 
             if (assignedTo) {
-              if (typeof assignedTo === "object") {
+              if (typeof assignedTo === 'object') {
                 // Populated user object from backend
                 assignedName =
-                  `${assignedTo.firstName || ""} ${
-                    assignedTo.lastName || ""
+                  `${assignedTo.firstName || ''} ${
+                    assignedTo.lastName || ''
                   }`.trim() ||
                   assignedTo.email ||
-                  null;
-              } else if (typeof assignedTo === "string") {
+                  null
+              } else if (typeof assignedTo === 'string') {
                 // User ID - look up in team members
                 const member = teamMembers.find(
-                  (m) => m.userId === assignedTo || m.id === assignedTo
-                );
+                  m => m.userId === assignedTo || m.id === assignedTo
+                )
                 if (member) {
                   assignedName =
                     `${member.firstName} ${member.lastName}`.trim() ||
                     member.email ||
-                    null;
+                    null
                 }
               }
             }
@@ -1803,16 +1946,16 @@ export function CandidatesDataTable({
                   candidateId={row.original.candidateId}
                   initialAssignee={assignedName}
                   onUpdate={() => {
-                    window.dispatchEvent(new CustomEvent("refetchCandidates"));
+                    window.dispatchEvent(new CustomEvent('refetchCandidates'))
                   }}
                 />
               </div>
-            );
+            )
           },
-        };
+        }
       }
-      return col;
-    });
+      return col
+    })
 
     const actionsColumn = createActionsColumn({
       onHire: handleHire,
@@ -1822,13 +1965,14 @@ export function CandidatesDataTable({
       onReassignJob: handleReassignJob,
       onDelete: handleDelete,
       onApprove: handleApprove,
+      onApproveOnly: handleApproveOnly,
       onRejectApplication: handleRejectApplication,
       onEmail: handleEmail,
       onAddToTalentPool: handleAddToTalentPool,
-    });
-    return [...baseColumns, actionsColumn];
+    })
+    return [...baseColumns, actionsColumn]
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, teamMembers, searchParams]);
+  }, [data, teamMembers, searchParams])
 
   const table = useReactTable({
     data,
@@ -1841,7 +1985,7 @@ export function CandidatesDataTable({
       pagination,
       globalFilter,
     },
-    getRowId: (row) => row.id.toString(),
+    getRowId: row => row.id.toString(),
     enableRowSelection: true,
     autoResetPageIndex: false, // Prevent pagination reset when data changes (e.g. reject action)
     onRowSelectionChange: setRowSelection,
@@ -1857,39 +2001,35 @@ export function CandidatesDataTable({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     globalFilterFn: (row, _columnId, filterValue) => {
-      if (!filterValue) return true;
+      if (!filterValue) return true
 
-      const searchValue = String(filterValue).toLowerCase().trim();
-      if (!searchValue) return true;
+      const searchValue = String(filterValue).toLowerCase().trim()
+      if (!searchValue) return true
 
       const searchFields = [
-        row.original.header,      // Candidate name
-        row.original.email,       // Email
-        row.original.jobTitle,    // Job title
-        row.original.clientName,  // Client name
-      ];
+        row.original.header, // Candidate name
+        row.original.email, // Email
+        row.original.jobTitle, // Job title
+        row.original.clientName, // Client name
+      ]
 
-      return searchFields.some((field) => {
-        if (field == null) return false;
-        return String(field).toLowerCase().includes(searchValue);
-      });
+      return searchFields.some(field => {
+        if (field == null) return false
+        return String(field).toLowerCase().includes(searchValue)
+      })
     },
-  });
+  })
 
   // Calculate statistics
-  const filteredData = table
-    .getFilteredRowModel()
-    .rows.map((row) => row.original);
-  const totalCandidates = filteredData.length;
-  const hiredCount = filteredData.filter(
-    (item) => item.status === "Hired"
-  ).length;
+  const filteredData = table.getFilteredRowModel().rows.map(row => row.original)
+  const totalCandidates = filteredData.length
+  const hiredCount = filteredData.filter(item => item.status === 'Hired').length
   const rejectedCount = filteredData.filter(
-    (item) => item.status === "Rejected"
-  ).length;
+    item => item.status === 'Rejected'
+  ).length
   const inProcessCount = filteredData.filter(
-    (item) => item.status === "In Process"
-  ).length;
+    item => item.status === 'In Process'
+  ).length
 
   return (
     <>
@@ -1979,8 +2119,8 @@ export function CandidatesDataTable({
                 <input
                   type="text"
                   placeholder="Search by name, email, job, or client..."
-                  value={globalFilter ?? ""}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  value={globalFilter ?? ''}
+                  onChange={e => setGlobalFilter(e.target.value)}
                   className="w-full h-9 pl-9 pr-4 text-sm rounded-md border bg-background shadow-xs focus:outline-none focus:ring-2 focus:ring-ring/50"
                 />
               </div>
@@ -2071,36 +2211,36 @@ export function CandidatesDataTable({
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem
                     onClick={() =>
-                      setSorting([{ id: "candidateName", desc: false }])
+                      setSorting([{ id: 'candidateName', desc: false }])
                     }
                   >
                     Name (A → Z)
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
-                      setSorting([{ id: "candidateName", desc: true }])
+                      setSorting([{ id: 'candidateName', desc: true }])
                     }
                   >
                     Name (Z → A)
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => setSorting([{ id: "target", desc: true }])}
+                    onClick={() => setSorting([{ id: 'target', desc: true }])}
                   >
                     Date Applied (Newest)
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => setSorting([{ id: "target", desc: false }])}
+                    onClick={() => setSorting([{ id: 'target', desc: false }])}
                   >
                     Date Applied (Oldest)
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => setSorting([{ id: "status", desc: false }])}
+                    onClick={() => setSorting([{ id: 'status', desc: false }])}
                   >
                     Status (A → Z)
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
-                      setSorting([{ id: "jobAndClient", desc: false }])
+                      setSorting([{ id: 'jobAndClient', desc: false }])
                     }
                   >
                     Job & Client (A → Z)
@@ -2133,35 +2273,35 @@ export function CandidatesDataTable({
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuCheckboxItem
-                    checked={table.getColumn("candidateName")?.getIsVisible()}
-                    onCheckedChange={(value) =>
+                    checked={table.getColumn('candidateName')?.getIsVisible()}
+                    onCheckedChange={value =>
                       table
-                        .getColumn("candidateName")
+                        .getColumn('candidateName')
                         ?.toggleVisibility(!!value)
                     }
                   >
                     Name
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuCheckboxItem
-                    checked={table.getColumn("jobAndClient")?.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      table.getColumn("jobAndClient")?.toggleVisibility(!!value)
+                    checked={table.getColumn('jobAndClient')?.getIsVisible()}
+                    onCheckedChange={value =>
+                      table.getColumn('jobAndClient')?.toggleVisibility(!!value)
                     }
                   >
                     Job & Client
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuCheckboxItem
-                    checked={table.getColumn("currentStage")?.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      table.getColumn("currentStage")?.toggleVisibility(!!value)
+                    checked={table.getColumn('currentStage')?.getIsVisible()}
+                    onCheckedChange={value =>
+                      table.getColumn('currentStage')?.toggleVisibility(!!value)
                     }
                   >
                     Stage
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuCheckboxItem
-                    checked={table.getColumn("dateApplied")?.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      table.getColumn("dateApplied")?.toggleVisibility(!!value)
+                    checked={table.getColumn('dateApplied')?.getIsVisible()}
+                    onCheckedChange={value =>
+                      table.getColumn('dateApplied')?.toggleVisibility(!!value)
                     }
                   >
                     Applied Date
@@ -2176,9 +2316,9 @@ export function CandidatesDataTable({
           <div className="rounded-lg border overflow-x-auto">
             <Table>
               <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
+                {table.getHeaderGroups().map(headerGroup => (
                   <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
+                    {headerGroup.headers.map(header => {
                       return (
                         <TableHead
                           key={header.id}
@@ -2191,36 +2331,36 @@ export function CandidatesDataTable({
                                 header.getContext()
                               )}
                         </TableHead>
-                      );
+                      )
                     })}
                   </TableRow>
                 ))}
               </TableHeader>
               <TableBody>
                 {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => {
+                  table.getRowModel().rows.map(row => {
                     const isRejected =
-                      row.original.status?.toLowerCase() === "rejected";
+                      row.original.status?.toLowerCase() === 'rejected'
                     const isHired =
-                      row.original.status?.toLowerCase() === "hired";
+                      row.original.status?.toLowerCase() === 'hired'
 
                     // Determine row styling based on status
-                    let rowClassName = "";
+                    let rowClassName = ''
                     if (isRejected) {
                       rowClassName =
-                        "bg-red-50/50 hover:bg-red-50/70 dark:bg-red-950/20 dark:hover:bg-red-950/30 opacity-70";
+                        'bg-red-50/50 hover:bg-red-50/70 dark:bg-red-950/20 dark:hover:bg-red-950/30 opacity-70'
                     } else if (isHired) {
                       rowClassName =
-                        "bg-green-50/50 hover:bg-green-50/70 dark:bg-green-950/20 dark:hover:bg-green-950/30";
+                        'bg-green-50/50 hover:bg-green-50/70 dark:bg-green-950/20 dark:hover:bg-green-950/30'
                     }
 
                     return (
                       <TableRow
                         key={row.id}
-                        data-state={row.getIsSelected() && "selected"}
+                        data-state={row.getIsSelected() && 'selected'}
                         className={rowClassName}
                       >
-                        {row.getVisibleCells().map((cell) => (
+                        {row.getVisibleCells().map(cell => (
                           <TableCell
                             key={cell.id}
                             style={{ width: cell.column.getSize() }}
@@ -2232,7 +2372,7 @@ export function CandidatesDataTable({
                           </TableCell>
                         ))}
                       </TableRow>
-                    );
+                    )
                   })
                 ) : (
                   <TableRow>
@@ -2251,7 +2391,7 @@ export function CandidatesDataTable({
           {/* Pagination */}
           <div className="flex flex-col gap-3 px-3 md:px-4 lg:px-6 py-3 md:py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs md:text-sm text-muted-foreground order-3 sm:order-1 text-center sm:text-left">
-              {table.getFilteredSelectedRowModel().rows.length} of{" "}
+              {table.getFilteredSelectedRowModel().rows.length} of{' '}
               {table.getFilteredRowModel().rows.length} row(s) selected.
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 md:gap-6 order-1 sm:order-2">
@@ -2259,8 +2399,8 @@ export function CandidatesDataTable({
                 <p className="text-xs md:text-sm font-medium">Rows per page</p>
                 <Select
                   value={`${table.getState().pagination.pageSize}`}
-                  onValueChange={(value) => {
-                    table.setPageSize(Number(value));
+                  onValueChange={value => {
+                    table.setPageSize(Number(value))
                   }}
                 >
                   <SelectTrigger className="h-7 md:h-8 w-[70px]">
@@ -2269,7 +2409,7 @@ export function CandidatesDataTable({
                     />
                   </SelectTrigger>
                   <SelectContent side="top">
-                    {[10, 20, 30, 40, 50].map((pageSize) => (
+                    {[10, 20, 30, 40, 50].map(pageSize => (
                       <SelectItem key={pageSize} value={`${pageSize}`}>
                         {pageSize}
                       </SelectItem>
@@ -2279,7 +2419,7 @@ export function CandidatesDataTable({
               </div>
               <div className="flex items-center justify-between sm:justify-center gap-2 order-2">
                 <div className="flex items-center justify-center text-xs md:text-sm font-medium min-w-[100px]">
-                  Page {table.getState().pagination.pageIndex + 1} of{" "}
+                  Page {table.getState().pagination.pageIndex + 1} of{' '}
                   {table.getPageCount()}
                 </div>
                 <div className="flex items-center gap-1">
@@ -2331,19 +2471,19 @@ export function CandidatesDataTable({
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title={
-          candidateToDelete?.jobId && candidateToDelete.jobId !== "N/A"
-            ? "Remove from Job"
-            : "Delete Candidate"
+          candidateToDelete?.jobId && candidateToDelete.jobId !== 'N/A'
+            ? 'Remove from Job'
+            : 'Delete Candidate'
         }
         description={
-          candidateToDelete?.jobId && candidateToDelete.jobId !== "N/A"
-            ? "Are you sure you want to remove this candidate from this job? The candidate will still be available for other jobs they applied to."
-            : "Are you sure you want to delete this candidate completely? This will remove them from all jobs and cannot be undone."
+          candidateToDelete?.jobId && candidateToDelete.jobId !== 'N/A'
+            ? 'Are you sure you want to remove this candidate from this job? The candidate will still be available for other jobs they applied to.'
+            : 'Are you sure you want to delete this candidate completely? This will remove them from all jobs and cannot be undone.'
         }
         confirmText={
-          candidateToDelete?.jobId && candidateToDelete.jobId !== "N/A"
-            ? "Remove from Job"
-            : "Delete"
+          candidateToDelete?.jobId && candidateToDelete.jobId !== 'N/A'
+            ? 'Remove from Job'
+            : 'Delete'
         }
         cancelText="Cancel"
         onConfirm={confirmDelete}
@@ -2370,7 +2510,7 @@ export function CandidatesDataTable({
           <DialogHeader>
             <DialogTitle>Assign Team Member</DialogTitle>
             <DialogDescription>
-              Select a team member to assign to{" "}
+              Select a team member to assign to{' '}
               {table.getFilteredSelectedRowModel().rows.length} selected
               candidates.
             </DialogDescription>
@@ -2391,7 +2531,7 @@ export function CandidatesDataTable({
                       No team members available
                     </SelectItem>
                   ) : (
-                    teamMembers.map((member) => (
+                    teamMembers.map(member => (
                       <SelectItem key={member.id} value={member.id}>
                         {`${member.firstName} ${member.lastName}`.trim() ||
                           member.email}
@@ -2406,8 +2546,8 @@ export function CandidatesDataTable({
             <Button
               variant="outline"
               onClick={() => {
-                setBulkAssignTeamDialogOpen(false);
-                setBulkAssignSelectedMember("");
+                setBulkAssignTeamDialogOpen(false)
+                setBulkAssignSelectedMember('')
               }}
             >
               Cancel
@@ -2438,26 +2578,26 @@ export function CandidatesDataTable({
         candidateToReassign &&
         (() => {
           const candidate = candidates.find(
-            (c) => c.id === candidateToReassign.candidateId
-          );
-          const availableJobs = jobs.filter((job) => {
+            c => c.id === candidateToReassign.candidateId
+          )
+          const availableJobs = jobs.filter(job => {
             // Filter logic:
             // - Show if candidate never applied to this job
             // - Show if candidate was rejected from this job (can be reactivated)
             // - Hide if candidate is currently active in this job
             // - Hide if candidate was hired for this job (hiring is final)
             const jobApplication = candidate?.jobApplications?.find(
-              (app) => app.jobId === job.id
-            );
-            const isJobOpen = job.status === "open";
+              app => app.jobId === job.id
+            )
+            const isJobOpen = job.status === 'open'
 
-            if (!isJobOpen) return false;
-            if (!jobApplication) return true; // Never applied - show it
+            if (!isJobOpen) return false
+            if (!jobApplication) return true // Never applied - show it
 
-            const status = jobApplication.status;
+            const status = jobApplication.status
             // Show if rejected (can reactivate), hide if active or hired
-            return status === "rejected";
-          });
+            return status === 'rejected'
+          })
 
           return (
             <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -2484,15 +2624,15 @@ export function CandidatesDataTable({
                         <SelectValue placeholder="Select a job" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableJobs.map((job) => {
+                        {availableJobs.map(job => {
                           // Get client name
                           const clientName =
-                            typeof job.clientId === "object" &&
+                            typeof job.clientId === 'object' &&
                             job.clientId !== null
                               ? job.clientId.companyName
                               : clients.find(
-                                  (client) => client.id === job.clientId
-                                )?.companyName || "Unknown Client";
+                                  client => client.id === job.clientId
+                                )?.companyName || 'Unknown Client'
 
                           return (
                             <SelectItem key={job.id} value={job.id}>
@@ -2503,7 +2643,7 @@ export function CandidatesDataTable({
                                 </span>
                               </div>
                             </SelectItem>
-                          );
+                          )
                         })}
                       </SelectContent>
                     </Select>
@@ -2514,9 +2654,9 @@ export function CandidatesDataTable({
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setReassignJobDialogOpen(false);
-                      setCandidateToReassign(null);
-                      setSelectedJobForReassign("");
+                      setReassignJobDialogOpen(false)
+                      setCandidateToReassign(null)
+                      setSelectedJobForReassign('')
                     }}
                   >
                     Cancel
@@ -2532,120 +2672,130 @@ export function CandidatesDataTable({
                 </div>
               </div>
             </div>
-          );
+          )
         })()}
 
       {/* Approve Application Dialog */}
-      {approveModalOpen && applicationToApprove && (() => {
-        const application = data.find((item) => item.id === applicationToApprove);
-        const applicableJobs = jobs.filter((job) => job.status === "open");
-        const hasPreselectedJob = selectedJobForApproval && selectedJobForApproval !== "N/A";
+      {approveModalOpen &&
+        applicationToApprove &&
+        (() => {
+          const application = data.find(
+            item => item.id === applicationToApprove
+          )
+          const applicableJobs = jobs.filter(job => job.status === 'open')
+          const hasPreselectedJob =
+            selectedJobForApproval && selectedJobForApproval !== 'N/A'
 
-        return (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-md w-full p-6">
-              <h2 className="text-lg font-semibold mb-4">
-                Approve Application
-              </h2>
+          return (
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-md w-full p-6">
+                <h2 className="text-lg font-semibold mb-4">
+                  Approve Application
+                </h2>
 
-              <p className="text-sm text-muted-foreground mb-4">
-                Convert <strong>{application?.header}</strong>'s application to candidate and assign to a job:
-              </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Convert <strong>{application?.header}</strong>'s application
+                  to candidate and assign to a job:
+                </p>
 
-              {hasPreselectedJob && (
-                <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
-                  <p className="text-xs text-blue-700 dark:text-blue-300 mb-1">
-                    Applied job auto-selected
-                  </p>
-                </div>
-              )}
-
-              <Select
-                value={selectedJobForApproval}
-                onValueChange={(value) => {
-                  setSelectedJobForApproval(value);
-                }}
-              >
-                <SelectTrigger className="w-full mb-4">
-                  <SelectValue placeholder="Select a job" />
-                </SelectTrigger>
-                <SelectContent>
-                  {applicableJobs.map((job) => {
-                    const clientName =
-                      typeof job.clientId === "object" && job.clientId !== null
-                        ? job.clientId.companyName
-                        : clients.find((client) => client.id === job.clientId)?.companyName || "Unknown Client";
-
-                    return (
-                      <SelectItem key={job.id} value={job.id}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{job.title}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {clientName}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-
-              {/* Welcome Email Checkbox */}
-              <div className="mb-4 p-3 bg-primary/5 dark:bg-primary/10 rounded-md border border-primary/20">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={sendWelcomeEmail}
-                    onChange={(e) => setSendWelcomeEmail(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-foreground mb-1">
-                      Send welcome email after approval
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Email composer will open immediately after creating the candidate, allowing you to send a personalized welcome message.
-                    </div>
+                {hasPreselectedJob && (
+                  <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mb-1">
+                      Applied job auto-selected
+                    </p>
                   </div>
-                </label>
-              </div>
+                )}
 
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setApproveModalOpen(false);
-                    setApplicationToApprove(null);
-                    setSelectedJobForApproval("");
+                <Select
+                  value={selectedJobForApproval}
+                  onValueChange={value => {
+                    setSelectedJobForApproval(value)
                   }}
-                  disabled={isApproving}
                 >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (selectedJobForApproval) {
-                      handleApproveConfirm(selectedJobForApproval);
-                    } else {
-                      toast.error("Please select a job");
-                    }
-                  }}
-                  disabled={!selectedJobForApproval || isApproving}
-                >
-                  {isApproving ? (
-                    <>
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Approving...
-                    </>
-                  ) : (
-                    "Approve & Create Candidate"
-                  )}
-                </Button>
+                  <SelectTrigger className="w-full mb-4">
+                    <SelectValue placeholder="Select a job" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {applicableJobs.map(job => {
+                      const clientName =
+                        typeof job.clientId === 'object' &&
+                        job.clientId !== null
+                          ? job.clientId.companyName
+                          : clients.find(client => client.id === job.clientId)
+                              ?.companyName || 'Unknown Client'
+
+                      return (
+                        <SelectItem key={job.id} value={job.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{job.title}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {clientName}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+
+                {/* Welcome Email Checkbox */}
+                <div className="mb-4 p-3 bg-primary/5 dark:bg-primary/10 rounded-md border border-primary/20">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={sendWelcomeEmail}
+                      onChange={e => setSendWelcomeEmail(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-foreground mb-1">
+                        Send welcome email after approval
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Email composer will open immediately after creating the
+                        candidate, allowing you to send a personalized welcome
+                        message.
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setApproveModalOpen(false)
+                      setApplicationToApprove(null)
+                      setSelectedJobForApproval('')
+                    }}
+                    disabled={isApproving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (selectedJobForApproval) {
+                        handleApproveConfirm(selectedJobForApproval)
+                      } else {
+                        toast.error('Please select a job')
+                      }
+                    }}
+                    disabled={!selectedJobForApproval || isApproving}
+                  >
+                    {isApproving ? (
+                      <>
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                        Approving...
+                      </>
+                    ) : (
+                      'Approve & Create Candidate'
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          )
+        })()}
 
       {/* Reject Application Dialog */}
       <ConfirmationDialog
@@ -2662,16 +2812,22 @@ export function CandidatesDataTable({
       {/* Email Modal */}
       <CandidateEmailModal
         open={emailModalOpen}
-        onOpenChange={(open) => {
-          setEmailModalOpen(open);
+        onOpenChange={open => {
+          setEmailModalOpen(open)
           // Clear newly created candidate data when closing modal
           if (!open && newlyCreatedCandidate) {
-            setNewlyCreatedCandidate(null);
+            setNewlyCreatedCandidate(null)
           }
         }}
-        candidate={(newlyCreatedCandidate?.candidate || selectedCandidateForEmail?.candidate) || null}
-        job={(newlyCreatedCandidate?.job || selectedCandidateForEmail?.job) || null}
+        candidate={
+          newlyCreatedCandidate?.candidate ||
+          selectedCandidateForEmail?.candidate ||
+          null
+        }
+        job={
+          newlyCreatedCandidate?.job || selectedCandidateForEmail?.job || null
+        }
       />
     </>
-  );
+  )
 }
