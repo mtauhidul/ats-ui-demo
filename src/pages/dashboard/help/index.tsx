@@ -57,7 +57,7 @@ const faqData: FAQItem[] = [
     category: "Getting Started",
     question: "How do I navigate around the system?",
     answer:
-      "Use the left sidebar to access main sections: Dashboard (home page with overview), Clients (companies you work with - click any client to see their jobs), Candidates (both approved candidates and pending applications), Emails (communication center), Team (manage your coworkers), and Get Help (this page). Each section has its own tools and filters at the top.",
+      "Use the left sidebar to access main sections: Dashboard (home page with overview), Clients (companies you work with), Jobs (all jobs across all clients in one place), Candidates (both approved candidates and pending applications), Emails (communication center), Team (manage your coworkers), and Get Help (this page). Each section has its own tools and filters at the top.",
     tags: ["navigation", "sidebar", "menu", "basics"],
   },
 
@@ -67,7 +67,7 @@ const faqData: FAQItem[] = [
     category: "Applications",
     question: "How do I review new applications?",
     answer:
-      "Go to Candidates page and click the 'Applications' tab. You'll see all new applications in a table. Click any row to view the full resume and details. To approve: click the green 'Approve & Email' button (this creates a candidate and opens an email to contact them). To reject: click the red X button. You can assign applications to team members using the dropdown in each row.",
+      "Go to Candidates page and click the 'Applications' tab. You'll see all new applications in a table. Click any row to view the full resume and details. You have three action options: 1) Green 'Approve & Email' button — creates a candidate and opens an email screen to contact them. 2) Outlined green 'Approve' button — approves and automatically places them in the Talent Pool without sending an email. 3) Red X / Reject — dismisses the application. You can assign applications to team members using the dropdown in each row.",
     tags: ["applications", "review", "approve", "reject"],
   },
   {
@@ -83,7 +83,7 @@ const faqData: FAQItem[] = [
     category: "Applications",
     question: "What happens when I approve an application?",
     answer:
-      "Three things happen automatically: 1) A new candidate profile is created and linked to the job they applied for, 2) An email window opens so you can immediately contact them, 3) They appear in the Candidates tab and in the job's pipeline at the first stage. This ensures you never forget to welcome new candidates.",
+      "It depends which button you use. 'Approve & Email': a candidate profile is created, an email window opens so you can contact them, and they appear in the Candidates tab at the first pipeline stage. 'Approve' (without email): a candidate profile is created and they are automatically added to the Talent Pool — no email is sent. Both options move them from the Applications tab into the Candidates tab instantly.",
     tags: ["applications", "approve", "automation"],
   },
   {
@@ -126,6 +126,14 @@ const faqData: FAQItem[] = [
     answer:
       "Rejected applications are automatically deleted after 30 days to keep your system clean. The candidate's resume file is also removed from storage. If you think you might reconsider someone, add a note before rejecting or don't reject them yet - once deleted after 30 days, the data cannot be recovered.",
     tags: ["applications", "reject", "cleanup", "automatic"],
+  },
+  {
+    id: "faq-018",
+    category: "Applications",
+    question: "What is the difference between 'Approve & Email' and 'Approve'?",
+    answer:
+      "'Approve & Email': Creates a candidate profile and immediately opens an email compose window so you can write a personalised welcome or interview invitation. Use this when you want to reach out right away. 'Approve' (outlined button): Creates a candidate profile and automatically places them in the Talent Pool — no email is sent. Use this when you want to save someone for future consideration without contacting them yet. Both buttons turn the application into a full candidate profile.",
+    tags: ["applications", "approve", "talent-pool", "email", "difference"],
   },
 
   // ==================== CANDIDATES ====================
@@ -193,6 +201,30 @@ const faqData: FAQItem[] = [
       "Use the search box at the top of the Candidates page to search by name, email, or skills. You can also click on column headers to sort (like sorting by stage or client). If you need more specific filters, use the Search page for advanced filtering.",
     tags: ["candidates", "filter", "search"],
   },
+  {
+    id: "faq-028",
+    category: "Candidates",
+    question: "What is the Talent Pool and how do I add someone to it?",
+    answer:
+      "The Talent Pool is a collection of pre-screened candidates you want to keep on file for future roles. There are three ways to add someone: 1) Click the outlined 'Approve' button when reviewing an application — they go straight into the Talent Pool without an email. 2) In the Candidates list, use the 3-dot menu → 'Approve (Talent Pool)'. 3) On a candidate's profile page, click the yellow 'Move to Talent Pool' button next to 'Apply to Another Job'. Once a candidate is in the Talent Pool, the button changes to a green '✓ In Talent Pool' badge so you won't add them twice.",
+    tags: ["candidates", "talent-pool", "approve", "pipeline"],
+  },
+  {
+    id: "faq-029",
+    category: "Candidates",
+    question: "What does the History tab show on a candidate profile?",
+    answer:
+      "The History tab has two sections. 1) Activity Timeline: a full chronological log of everything that has happened with this candidate — profile created, stage changes, status changes, job assignments, talent pool additions, interviews scheduled and completed, approvals and rejections, and profile updates. Each event shows an icon, description, job/client context, date, and time. 2) Pipeline Overview: a visual stage trail per job showing the sequence of stages the candidate moved through (e.g. Applied → Phone Screen → Interview → Offer).",
+    tags: ["candidates", "history", "timeline", "activity", "stages"],
+  },
+  {
+    id: "faq-029b",
+    category: "Candidates",
+    question: "Are stage changes tracked automatically?",
+    answer:
+      "Yes! Every time you move a candidate from one pipeline stage to another, the system records: the stage they came from, the stage they moved to, the exact date and time, and who made the change. You can see these stage moves in two places: the Activity Timeline (under the History tab) and the Pipeline Overview stage trail on the same tab. This means you have a permanent audit trail of the candidate's entire journey.",
+    tags: ["candidates", "stages", "history", "tracking", "audit"],
+  },
 
   // ==================== JOBS ====================
   {
@@ -200,7 +232,7 @@ const faqData: FAQItem[] = [
     category: "Jobs",
     question: "How do I create a new job posting?",
     answer:
-      "Click 'Clients' in the left sidebar, select the client you want to create a job for, then click the 'Add Job' button. Fill in the job title, description, requirements, salary range, location, employment type (full-time, part-time, etc.). Click 'Create Job' when done. The job will immediately be available for applications and appear on that client's job list.",
+      "You can access jobs two ways: Click 'Jobs' in the left sidebar to see all jobs, or click 'Clients', select a client, then click 'Add Job'. Fill in the job title, description, requirements, salary range, location, and employment type. Click 'Create Job' when done. The job will immediately appear in the Jobs page and on the client's profile.",
     tags: ["jobs", "create", "posting"],
   },
   {
@@ -251,6 +283,14 @@ const faqData: FAQItem[] = [
       "The pipeline is a visual board (like Trello) showing all candidates for a job organized into columns by stage (Screening, Interview, Offer, etc.). Click on any job to see its pipeline. Drag candidate cards between columns to move them through your hiring process. It's the easiest way to see your progress at a glance.",
     tags: ["jobs", "pipeline", "kanban", "workflow"],
   },
+  {
+    id: "faq-037",
+    category: "Jobs",
+    question: "How do I see all jobs across all clients at once?",
+    answer:
+      "Click 'Jobs' in the left sidebar. You'll see a compact table listing every job across all clients. Columns include: Job Title (with location), Status (colour-coded badge: green = Open, yellow = Draft, orange = On Hold, grey = Closed), Client name, Employment Type, Candidates (total applied + hired count), and Openings (remaining / total). Use the search box and filter dropdowns at the top to narrow by status, type, client, or sort order. Click any row to open the full job details.",
+    tags: ["jobs", "all-jobs", "sidebar", "navigation", "table"],
+  },
 
   // ==================== CLIENTS ====================
   {
@@ -292,6 +332,14 @@ const faqData: FAQItem[] = [
     answer:
       "Click 'Clients' in the sidebar, find your client, and click on their name. You'll see an 'Edit Client' button at the top. You can update company name, industry, address, website, or any other details. Changes save automatically.",
     tags: ["clients", "edit", "update"],
+  },
+  {
+    id: "faq-045",
+    category: "Clients",
+    question: "What does the Clients list look like and what information does it show?",
+    answer:
+      "The Clients page uses a compact table layout (similar to the Candidates and Jobs pages). Each row shows: Company name with logo/avatar, Status badge (Active, Inactive, Prospect, etc.), Industry, Primary contact email, Jobs count (active / total with a briefcase icon), Candidates count (total placed in green), and the assigned Recruiter. Click any row to open the full client profile. Use the search box and filters at the top to find clients quickly.",
+    tags: ["clients", "table", "layout", "overview"],
   },
 
   // ==================== TEAM ====================
@@ -452,7 +500,7 @@ const faqData: FAQItem[] = [
     category: "Common Tasks",
     question: "How do I process a new application start to finish?",
     answer:
-      "Step 1: Go to Candidates page and click Applications tab. Step 2: Click on an application to review their resume and details. Step 3: Click the green 'Approve & Email' button to approve (opens email modal) or red X to Reject. Step 4: Send welcome email to approved candidate. Step 5: They become a Candidate in the Candidates tab. Step 6: Move them through stages as you interview them. Step 7: When ready, change their stage to 'Offer' or 'Hired'.",
+      "Step 1: Go to Candidates page and click Applications tab. Step 2: Click on an application to review their resume and details. Step 3: Choose an action: 'Approve & Email' (creates candidate + opens email screen), 'Approve' (creates candidate + adds to Talent Pool, no email), or 'Reject' (dismisses). Step 4: The approved person appears in the Candidates tab. Step 5: Move them through pipeline stages as you interview them. Step 6: When ready, change their stage to 'Offer' or 'Hired'.",
     tags: ["workflow", "process", "applications", "candidates"],
   },
   {
@@ -492,7 +540,7 @@ const faqData: FAQItem[] = [
     category: "Common Tasks",
     question: "How do I check how many open positions I have?",
     answer:
-      "Click 'Clients' in the sidebar, then click on each client to see their jobs. Jobs marked 'Active' are currently accepting applications. You can also see a summary on the Dashboard showing total jobs and applications across all clients.",
+      "Click 'Jobs' in the sidebar to see all jobs across all clients in one compact table. The Status column shows Open, Draft, On Hold, or Closed. The Openings column shows remaining / total positions (e.g. '2 / 3' means 2 spots still open). You can also see a summary on the Dashboard.",
     tags: ["workflow", "jobs", "counting"],
   },
 

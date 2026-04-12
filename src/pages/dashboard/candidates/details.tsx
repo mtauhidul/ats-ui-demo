@@ -299,7 +299,13 @@ export default function CandidateDetailsPage() {
             : app
         )
       } else {
-        // New assignment - add to arrays
+        // New assignment - mark old active applications as inactive (candidate moved to new job)
+        updatedJobApplications = updatedJobApplications.map(app =>
+          app.status === 'active'
+            ? { ...app, status: 'inactive' as const, lastStatusChange: new Date() }
+            : app
+        )
+
         const newJobApplication = {
           jobId: selectedJobForReassign,
           status: 'active' as const,

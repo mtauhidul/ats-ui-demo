@@ -446,9 +446,6 @@ export default function DashboardJobsPage() {
                         <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">
                           Type
                         </th>
-                        <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">
-                          Work Mode
-                        </th>
                         <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden sm:table-cell">
                           Candidates
                         </th>
@@ -496,12 +493,6 @@ export default function DashboardJobsPage() {
                           temporary: 'Temporary',
                         }
 
-                        const workModeLabel: Record<string, string> = {
-                          remote: 'Remote',
-                          onsite: 'Onsite',
-                          hybrid: 'Hybrid',
-                        }
-
                         return (
                           <tr
                             key={job.id}
@@ -517,12 +508,19 @@ export default function DashboardJobsPage() {
                                   <Briefcase className="h-4 w-4 text-primary" />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-medium truncate max-w-[200px]">
+                                  <p className="font-medium truncate max-w-[280px]">
                                     {job.title}
                                   </p>
                                   {job.location && (
                                     <p className="text-xs text-muted-foreground truncate">
-                                      {job.location}
+                                      {typeof job.location === "object"
+                                        ? [
+                                            (job.location as any).city,
+                                            (job.location as any).country,
+                                          ]
+                                            .filter(Boolean)
+                                            .join(", ")
+                                        : job.location}
                                     </p>
                                   )}
                                 </div>
@@ -565,13 +563,6 @@ export default function DashboardJobsPage() {
                             {/* Type */}
                             <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">
                               {typeLabel[job.type] || job.type || '—'}
-                            </td>
-
-                            {/* Work Mode */}
-                            <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">
-                              {workModeLabel[job.workMode as string] ||
-                                job.workMode ||
-                                '—'}
                             </td>
 
                             {/* Candidates */}

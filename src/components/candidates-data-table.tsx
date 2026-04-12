@@ -1583,7 +1583,14 @@ export function CandidatesDataTable({
             : app
         )
       } else {
-        // New assignment - get the job's pipeline and first stage
+        // New assignment - mark old active applications as inactive (candidate moved to new job)
+        updatedJobApplications = updatedJobApplications.map(app =>
+          app.status === 'active'
+            ? { ...app, status: 'inactive' as const, lastStatusChange: new Date() }
+            : app
+        )
+
+        // Get the job's pipeline and first stage
         const jobPipeline = pipelines.find(
           p => p.jobId === selectedJobForReassign
         )
