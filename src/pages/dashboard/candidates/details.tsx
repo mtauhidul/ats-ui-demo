@@ -180,6 +180,7 @@ export default function CandidateDetailsPage() {
   // Activity log state
   const [activityLog, setActivityLog] = React.useState<any[]>([])
   const [activityLoading, setActivityLoading] = React.useState(false)
+  const [isMovingToTalentPool, setIsMovingToTalentPool] = React.useState(false)
 
   // Notes state and debounce
   const [notes, setNotes] = React.useState('')
@@ -521,6 +522,28 @@ export default function CandidateDetailsPage() {
       toast.error('Failed to reject application')
     } finally {
       setIsRejectingApplication(false)
+    }
+  }
+
+  const handleMoveToTalentPool = async () => {
+    const id = effectiveCandidateData?.id
+    if (!id || isMovingToTalentPool) return
+    setIsMovingToTalentPool(true)
+    try {
+      const response = await authenticatedFetch(
+        `${API_BASE_URL}/candidates/${id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inTalentPool: true }),
+        }
+      )
+      if (!response.ok) throw new Error('Failed')
+      toast.success('Candidate added to Talent Pool')
+    } catch {
+      toast.error('Failed to add to Talent Pool')
+    } finally {
+      setIsMovingToTalentPool(false)
     }
   }
 
@@ -1512,15 +1535,34 @@ export default function CandidateDetailsPage() {
                 </Button>
               </>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReassignJob}
-                className="gap-2"
-              >
-                <IconBriefcase className="h-4 w-4" />
-                Apply to Another Job
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReassignJob}
+                  className="gap-2"
+                >
+                  <IconBriefcase className="h-4 w-4" />
+                  Apply to Another Job
+                </Button>
+                {(effectiveCandidateData as any)?.inTalentPool ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800">
+                    <IconStar className="h-4 w-4" />
+                    In Talent Pool
+                  </span>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleMoveToTalentPool}
+                    disabled={isMovingToTalentPool}
+                    className="gap-2 border-yellow-500 text-yellow-700 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                  >
+                    <IconStar className="h-4 w-4" />
+                    {isMovingToTalentPool ? 'Adding…' : 'Move to Talent Pool'}
+                  </Button>
+                )}
+              </>
             )}
           </div>
 
