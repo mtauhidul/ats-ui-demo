@@ -58,6 +58,7 @@ import {
   IconMapPin,
   IconMessageCircle,
   IconPhone,
+  IconStar,
   IconTag,
   IconUserCheck,
   IconUsers,
@@ -175,6 +176,10 @@ export default function CandidateDetailsPage() {
     React.useState(false)
   const [isRejectingApplication, setIsRejectingApplication] =
     React.useState(false)
+
+  // Activity log state
+  const [activityLog, setActivityLog] = React.useState<any[]>([])
+  const [activityLoading, setActivityLoading] = React.useState(false)
 
   // Notes state and debounce
   const [notes, setNotes] = React.useState('')
@@ -712,6 +717,18 @@ export default function CandidateDetailsPage() {
     }
   }, [])
 
+  // Fetch activity timeline when candidate is loaded
+  React.useEffect(() => {
+    const candidateId = effectiveCandidateData?.id
+    if (!candidateId || isApplication) return
+    setActivityLoading(true)
+    authenticatedFetch(`${API_BASE_URL}/candidates/${candidateId}/activity`)
+      .then(res => res.json())
+      .then(data => setActivityLog(data.data || []))
+      .catch(() => {})
+      .finally(() => setActivityLoading(false))
+  }, [effectiveCandidateData?.id, isApplication])
+
   // Loading state
   const isLoadingAll =
     isLoading || jobsLoading || clientsLoading || pipelinesLoading
@@ -1164,6 +1181,42 @@ export default function CandidateDetailsPage() {
         }
       })
     : []
+
+  // Map activity event action → icon + color + label
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getActivityConfig = (event: any) => {
+    const meta = event.metadata || {}
+    switch (event.action) {
+      case 'created_candidate':
+        return { Icon: IconUserCheck, bg: 'bg-green-100 dark:bg-green-900/30', fg: 'text-green-600 dark:text-green-400', label: 'Candidate profile created' }
+      case 'candidate_job_assigned':
+        return { Icon: IconBriefcase, bg: 'bg-blue-100 dark:bg-blue-900/30', fg: 'text-blue-600 dark:text-blue-400', label: `Assigned to job: ${meta.jobTitle || 'Unknown Job'}` }
+      case 'candidate_applied':
+        return { Icon: IconBriefcase, bg: 'bg-blue-100 dark:bg-blue-900/30', fg: 'text-blue-600 dark:text-blue-400', label: `Applied to ${meta.jobTitle || 'a job'}` }
+      case 'candidate_stage_changed':
+        return { Icon: IconArrowRight, bg: 'bg-purple-100 dark:bg-purple-900/30', fg: 'text-purple-600 dark:text-purple-400', label: meta.fromStageName && meta.toStageName ? `Stage: ${meta.fromStageName} → ${meta.toStageName}` : `Moved to stage: ${meta.toStageName || 'Unknown'}` }
+      case 'candidate_status_changed':
+        return { Icon: IconTag, bg: 'bg-orange-100 dark:bg-orange-900/30', fg: 'text-orange-600 dark:text-orange-400', label: meta.oldStatus && meta.newStatus ? `Status: ${meta.oldStatus} → ${meta.newStatus}` : `Status changed to: ${meta.newStatus || 'Unknown'}` }
+      case 'candidate_assigned':
+        return { Icon: IconUserCheck, bg: 'bg-indigo-100 dark:bg-indigo-900/30', fg: 'text-indigo-600 dark:text-indigo-400', label: meta.assignedToName ? `Assigned to ${meta.assignedToName}` : 'Candidate assigned to recruiter' }
+      case 'candidate_added_to_talent_pool':
+        return { Icon: IconStar, bg: 'bg-yellow-100 dark:bg-yellow-900/30', fg: 'text-yellow-600 dark:text-yellow-400', label: 'Added to Talent Pool' }
+      case 'candidate_removed_from_talent_pool':
+        return { Icon: IconStar, bg: 'bg-gray-100 dark:bg-gray-900/30', fg: 'text-gray-500 dark:text-gray-400', label: 'Removed from Talent Pool' }
+      case 'application_approved':
+        return { Icon: IconCircleCheckFilled, bg: 'bg-green-100 dark:bg-green-900/30', fg: 'text-green-600 dark:text-green-400', label: 'Application approved' }
+      case 'application_rejected':
+        return { Icon: IconX, bg: 'bg-red-100 dark:bg-red-900/30', fg: 'text-red-600 dark:text-red-400', label: 'Application rejected' }
+      case 'scheduled_interview':
+        return { Icon: IconCalendar, bg: 'bg-blue-100 dark:bg-blue-900/30', fg: 'text-blue-600 dark:text-blue-400', label: meta.interviewType ? `${meta.interviewType} interview scheduled` : 'Interview scheduled' }
+      case 'completed_interview':
+        return { Icon: IconCalendar, bg: 'bg-green-100 dark:bg-green-900/30', fg: 'text-green-600 dark:text-green-400', label: 'Interview completed' }
+      case 'updated_candidate':
+        return { Icon: IconClockHour4, bg: 'bg-gray-100 dark:bg-gray-900/30', fg: 'text-gray-500 dark:text-gray-400', label: 'Profile updated' }
+      default:
+        return { Icon: IconHistory, bg: 'bg-gray-100 dark:bg-gray-900/30', fg: 'text-gray-500 dark:text-gray-400', label: event.action?.replace(/_/g, ' ') || 'Activity recorded' }
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -3164,44 +3217,119 @@ export default function CandidateDetailsPage() {
               {/* History Tab */}
               <TabsContent
                 value="history"
-                className="mt-4 md:mt-6 space-y-4 md:space-y-6"
+                className="mt-4 md:mt-6 space-y-6"
               >
-                <div className="space-y-4">
+                {/* ── Activity Timeline ── */}
+                <div className="space-y-3">
                   <div className="flex items-center gap-2 px-1">
                     <IconHistory className="h-5 w-5 text-primary shrink-0" />
                     <h3 className="font-semibold text-sm md:text-base">
-                      Application History
+                      Activity Timeline
                     </h3>
-                    <Badge variant="secondary" className="text-xs ml-auto">
-                      {historyData.length} job
-                      {historyData.length !== 1 ? 's' : ''}
-                    </Badge>
+                    {activityLoading && (
+                      <span className="ml-auto text-xs text-muted-foreground animate-pulse">
+                        Loading…
+                      </span>
+                    )}
                   </div>
 
-                  {historyData.length === 0 ? (
+                  {!activityLoading && activityLog.length === 0 ? (
                     <Card>
                       <CardContent className="flex flex-col items-center justify-center py-12 gap-3">
                         <IconHistory className="h-10 w-10 text-muted-foreground/40" />
                         <p className="text-sm text-muted-foreground">
-                          No application history yet
+                          No activity recorded yet
                         </p>
                       </CardContent>
                     </Card>
                   ) : (
-                    historyData.map(history => {
+                    <div className="relative pl-5">
+                      {/* Vertical connector line */}
+                      <div className="absolute left-[19px] top-0 bottom-4 w-px bg-border" />
+                      <div className="space-y-1">
+                        {activityLog.map((event: any, idx: number) => {
+                          const toDate = (val: any): Date => {
+                            if (!val) return new Date()
+                            if (typeof val === 'object' && 'seconds' in val)
+                              return new Date(val.seconds * 1000)
+                            const d = new Date(val)
+                            return isNaN(d.getTime()) ? new Date() : d
+                          }
+                          const eventDate = toDate(event.createdAt)
+                          const meta = event.metadata || {}
+                          const { Icon, bg, fg, label } = getActivityConfig(event)
+
+                          return (
+                            <div
+                              key={event.id || idx}
+                              className="relative flex gap-3 pb-3"
+                            >
+                              {/* Icon dot */}
+                              <div
+                                className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-background ${bg}`}
+                              >
+                                <Icon className={`h-4 w-4 ${fg}`} />
+                              </div>
+                              {/* Content */}
+                              <div className="flex-1 min-w-0 pt-1">
+                                <p className="text-sm font-medium leading-snug">
+                                  {label}
+                                </p>
+                                {(meta.jobTitle || meta.clientName) && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                    {[meta.jobTitle, meta.clientName]
+                                      .filter(Boolean)
+                                      .join(' · ')}
+                                  </p>
+                                )}
+                                <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                                  {eventDate.toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                  })}{' '}
+                                  ·{' '}
+                                  {eventDate.toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Pipeline Overview (stage trails per job) ── */}
+                {historyData.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 px-1">
+                      <IconBriefcase className="h-5 w-5 text-primary shrink-0" />
+                      <h3 className="font-semibold text-sm md:text-base">
+                        Pipeline Overview
+                      </h3>
+                      <Badge
+                        variant="secondary"
+                        className="text-xs ml-auto"
+                      >
+                        {historyData.length} job
+                        {historyData.length !== 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+
+                    {historyData.map(history => {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       const toDate = (val: any): Date => {
                         if (!val) return new Date()
-                        if (
-                          typeof val === 'object' &&
-                          'seconds' in val
-                        )
+                        if (typeof val === 'object' && 'seconds' in val)
                           return new Date(val.seconds * 1000)
                         const d = new Date(val)
                         return isNaN(d.getTime()) ? new Date() : d
                       }
 
-                      // Build the stage trail starting from "Applied"
                       const trail: Array<{
                         label: string
                         date?: Date
@@ -3212,7 +3340,7 @@ export default function CandidateDetailsPage() {
                           date: history.appliedDateRaw,
                           type: 'applied',
                         },
-                        ...history.stageHistory.map(s => ({
+                        ...history.stageHistory.map((s: any) => ({
                           label: s.toStageName,
                           date: toDate(s.changedAt),
                           type: 'stage' as const,
@@ -3346,9 +3474,9 @@ export default function CandidateDetailsPage() {
                           </CardContent>
                         </Card>
                       )
-                    })
-                  )}
-                </div>
+                    })}
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>
