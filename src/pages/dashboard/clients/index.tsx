@@ -1,5 +1,4 @@
-import { ClientCard } from "@/components/client-card";
-import { AddClientModal } from "@/components/modals/add-client-modal";
+import { AddClientModal } from '@/components/modals/add-client-modal'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,80 +8,92 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/alert-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useClients, useUI, useJobs, useCandidates } from "@/store/hooks/index";
-import type { Client, CreateClientRequest } from "@/types/client";
+} from '@/components/ui/select'
+import { useCandidates, useClients, useJobs, useUI } from '@/store/hooks/index'
+import type { Client, CreateClientRequest } from '@/types/client'
 import {
   Briefcase,
   Building2,
   CheckCircle2,
+  ChevronRight,
+  Mail,
   Plus,
   Search,
+  User,
   Users,
-} from "lucide-react";
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export default function ClientsPage() {
-  const navigate = useNavigate();
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate()
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
 
   // Get realtime data from Firestore via Redux hook
   const { clients, filters, createClient, deleteClient, setFilters } =
-    useClients();
-  const { jobs } = useJobs();
-  const { candidates } = useCandidates();
-  const { modals, openModal, closeModal } = useUI();
+    useClients()
+  const { jobs } = useJobs()
+  const { candidates } = useCandidates()
+  const { modals, openModal, closeModal } = useUI()
 
   // Calculate client statistics from jobs and candidates data in real-time
   const clientsWithStats = useMemo(() => {
     return clients.map(client => {
       // Calculate job statistics from real-time jobs data
-      const clientJobs = jobs.filter(job => job.clientId === client.id);
-      const totalJobs = clientJobs.length;
-      const activeJobs = clientJobs.filter(job => job.status === 'open').length;
-      const closedJobs = clientJobs.filter(job => job.status === 'closed').length;
-      const draftJobs = clientJobs.filter(job => job.status === 'draft').length;
-      
+      const clientJobs = jobs.filter(job => job.clientId === client.id)
+      const totalJobs = clientJobs.length
+      const activeJobs = clientJobs.filter(job => job.status === 'open').length
+      const closedJobs = clientJobs.filter(
+        job => job.status === 'closed'
+      ).length
+      const draftJobs = clientJobs.filter(job => job.status === 'draft').length
+
       // Get all job IDs for this client
-      const clientJobIds = clientJobs.map(job => job.id);
-      
+      const clientJobIds = clientJobs.map(job => job.id)
+
       // Calculate candidate statistics from real-time candidates data
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const clientCandidates = candidates.filter((candidate: any) => {
-        const candidateJobIds = candidate.jobIds || [];
-        return candidateJobIds.some((jobId: string) => clientJobIds.includes(jobId));
-      });
-      
-      const totalCandidates = clientCandidates.length;
+        const candidateJobIds = candidate.jobIds || []
+        return candidateJobIds.some((jobId: string) =>
+          clientJobIds.includes(jobId)
+        )
+      })
+
+      const totalCandidates = clientCandidates.length
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const activeCandidates = clientCandidates.filter((c: any) => 
-        c.status === 'active' || c.status === 'interviewing' || c.status === 'offered'
-      ).length;
+      const activeCandidates = clientCandidates.filter(
+        (c: any) =>
+          c.status === 'active' ||
+          c.status === 'interviewing' ||
+          c.status === 'offered'
+      ).length
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rejectedCandidates = clientCandidates.filter((c: any) => 
-        c.status === 'rejected'
-      ).length;
+      const rejectedCandidates = clientCandidates.filter(
+        (c: any) => c.status === 'rejected'
+      ).length
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const hiredCandidates = clientCandidates.filter((c: any) => 
-        c.status === 'hired'
-      ).length;
-      
-      const successRate = totalCandidates > 0 
-        ? Math.round((hiredCandidates / totalCandidates) * 100) 
-        : 0;
-      
+      const hiredCandidates = clientCandidates.filter(
+        (c: any) => c.status === 'hired'
+      ).length
+
+      const successRate =
+        totalCandidates > 0
+          ? Math.round((hiredCandidates / totalCandidates) * 100)
+          : 0
+
       return {
         ...client,
         statistics: {
@@ -95,54 +106,85 @@ export default function ClientsPage() {
           rejectedCandidates,
           hiredCandidates,
           successRate,
-        }
-      };
-    });
-  }, [clients, jobs, candidates]);
+        },
+      }
+    })
+  }, [clients, jobs, candidates])
 
   // Filter clients locally based on filters state
-  const filteredClients = clientsWithStats.filter((client) => {
-    // Search filter
-    const matchesSearch = filters.search
-      ? client.companyName.toLowerCase().includes(filters.search.toLowerCase()) ||
-        client.email.toLowerCase().includes(filters.search.toLowerCase()) ||
-        client.industry?.toLowerCase().includes(filters.search.toLowerCase())
-      : true;
+  const filteredClients = clientsWithStats
+    .filter(client => {
+      // Search filter
+      const matchesSearch = filters.search
+        ? client.companyName
+            .toLowerCase()
+            .includes(filters.search.toLowerCase()) ||
+          client.email.toLowerCase().includes(filters.search.toLowerCase()) ||
+          client.industry?.toLowerCase().includes(filters.search.toLowerCase())
+        : true
 
-    // Status filter
-    const matchesStatus =
-      filters.status === "all" || !filters.status ? true : client.status === filters.status;
+      // Status filter
+      const matchesStatus =
+        filters.status === 'all' || !filters.status
+          ? true
+          : client.status === filters.status
 
-    // Industry filter
-    const matchesIndustry =
-      filters.industry === "all" || !filters.industry ? true : client.industry === filters.industry;
+      // Industry filter
+      const matchesIndustry =
+        filters.industry === 'all' || !filters.industry
+          ? true
+          : client.industry === filters.industry
 
-    return matchesSearch && matchesStatus && matchesIndustry;
-  });
+      return matchesSearch && matchesStatus && matchesIndustry
+    })
+    .sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'name':
+          return a.companyName.localeCompare(b.companyName)
+        case 'oldest':
+          return (
+            new Date(a.createdAt || 0).getTime() -
+            new Date(b.createdAt || 0).getTime()
+          )
+        case 'jobs':
+          return (b.statistics?.totalJobs || 0) - (a.statistics?.totalJobs || 0)
+        case 'candidates':
+          return (
+            (b.statistics?.totalCandidates || 0) -
+            (a.statistics?.totalCandidates || 0)
+          )
+        case 'newest':
+        default:
+          return (
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime()
+          )
+      }
+    })
 
   // No useEffect needed - Firestore provides realtime data automatically via Redux hooks!
 
   const handleAddClient = async (data: CreateClientRequest) => {
-    setIsCreating(true);
+    setIsCreating(true)
     try {
-      await createClient(data);
-      closeModal("addClient");
+      await createClient(data)
+      closeModal('addClient')
     } finally {
-      setIsCreating(false);
+      setIsCreating(false)
     }
-  };
+  }
 
   const confirmDeleteClient = async () => {
-    if (!clientToDelete) return;
+    if (!clientToDelete) return
 
     try {
-      await deleteClient(clientToDelete.id);
-      setDeleteConfirmOpen(false);
-      setClientToDelete(null);
+      await deleteClient(clientToDelete.id)
+      setDeleteConfirmOpen(false)
+      setClientToDelete(null)
     } catch (error) {
       // Error is already handled in the Redux thunk with toast notification
-      }
-  };
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -160,7 +202,7 @@ export default function ClientsPage() {
                     Manage your client companies and their hiring processes
                   </p>
                 </div>
-                <Button onClick={() => openModal("addClient")}>
+                <Button onClick={() => openModal('addClient')}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Client
                 </Button>
@@ -264,7 +306,7 @@ export default function ClientsPage() {
                   <p className="text-xl font-bold text-green-600 dark:text-green-400">
                     {
                       filteredClients.filter(
-                        (c: Client) => c.status === "active"
+                        (c: Client) => c.status === 'active'
                       ).length
                     }
                   </p>
@@ -272,7 +314,7 @@ export default function ClientsPage() {
                     {filteredClients.length > 0
                       ? Math.round(
                           (filteredClients.filter(
-                            (c: Client) => c.status === "active"
+                            (c: Client) => c.status === 'active'
                           ).length /
                             filteredClients.length) *
                             100
@@ -292,7 +334,8 @@ export default function ClientsPage() {
                   </div>
                   <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                     {filteredClients.reduce(
-                      (acc: number, c: Client) => acc + (c.statistics?.totalJobs || 0),
+                      (acc: number, c: Client) =>
+                        acc + (c.statistics?.totalJobs || 0),
                       0
                     )}
                   </p>
@@ -311,7 +354,8 @@ export default function ClientsPage() {
                   </div>
                   <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
                     {filteredClients.reduce(
-                      (acc: number, c: Client) => acc + (c.statistics?.activeJobs || 0),
+                      (acc: number, c: Client) =>
+                        acc + (c.statistics?.activeJobs || 0),
                       0
                     )}
                   </p>
@@ -322,25 +366,193 @@ export default function ClientsPage() {
               </div>
             </div>
 
-            {/* Client Cards Grid */}
-            {/* Client Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredClients.map((client: Client) => (
-                <ClientCard
-                  key={client.id}
-                  client={client}
-                  onClick={() => navigate(`/dashboard/clients/${client.id}`)}
-                />
-              ))}
-            </div>
-
-            {filteredClients.length === 0 && (
-              <div className="text-center py-12">
+            {/* Clients Table */}
+            {filteredClients.length === 0 ? (
+              <div className="text-center py-12 border rounded-lg bg-card">
+                <Building2 className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
                 <p className="text-muted-foreground">
                   {filters.search
-                    ? "No clients found matching your search"
-                    : "No clients yet. Add your first client to get started."}
+                    ? 'No clients found matching your search'
+                    : 'No clients yet. Add your first client to get started.'}
                 </p>
+              </div>
+            ) : (
+              <div className="rounded-lg border bg-card overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/40">
+                      <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                        Company
+                      </th>
+                      <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                        Status
+                      </th>
+                      <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">
+                        Industry
+                      </th>
+                      <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">
+                        Contact
+                      </th>
+                      <th className="text-left font-medium text-muted-foreground px-4 py-3">
+                        Jobs
+                      </th>
+                      <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden sm:table-cell">
+                        Candidates
+                      </th>
+                      <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">
+                        Recruiter
+                      </th>
+                      <th className="w-8 px-4 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredClients.map((client: Client, idx: number) => {
+                      const primaryContact =
+                        client.contacts?.find(c => c.isPrimary) ||
+                        client.contacts?.[0]
+                      const statusConfig: Record<
+                        string,
+                        { label: string; className: string }
+                      > = {
+                        active: {
+                          label: 'Active',
+                          className:
+                            'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                        },
+                        inactive: {
+                          label: 'Inactive',
+                          className:
+                            'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+                        },
+                        pending: {
+                          label: 'Pending',
+                          className:
+                            'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                        },
+                        on_hold: {
+                          label: 'On Hold',
+                          className:
+                            'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+                        },
+                      }
+                      const status = statusConfig[client.status] ?? {
+                        label: client.status,
+                        className: 'bg-muted text-muted-foreground',
+                      }
+                      const industryLabel = client.industry
+                        ? client.industry
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, l => l.toUpperCase())
+                        : '—'
+
+                      return (
+                        <tr
+                          key={client.id}
+                          onClick={() =>
+                            navigate(`/dashboard/clients/${client.id}`)
+                          }
+                          className={`cursor-pointer hover:bg-muted/50 transition-colors ${idx !== filteredClients.length - 1 ? 'border-b' : ''}`}
+                        >
+                          {/* Company */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Avatar className="h-8 w-8 shrink-0">
+                                <AvatarImage
+                                  src={client.logo}
+                                  alt={client.companyName}
+                                />
+                                <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                                  {client.companyName.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium truncate">
+                                {client.companyName}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${status.className}`}
+                            >
+                              {status.label}
+                            </span>
+                          </td>
+
+                          {/* Industry */}
+                          <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                            {industryLabel}
+                          </td>
+
+                          {/* Contact */}
+                          <td className="px-4 py-3 hidden lg:table-cell">
+                            {primaryContact?.email ? (
+                              <span className="flex items-center gap-1.5 text-muted-foreground truncate max-w-[200px]">
+                                <Mail className="h-3.5 w-3.5 shrink-0" />
+                                <span className="truncate">
+                                  {primaryContact.email}
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground/40">
+                                —
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Jobs */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5">
+                              <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span className="font-medium">
+                                {client.statistics?.activeJobs ?? 0}
+                              </span>
+                              <span className="text-muted-foreground text-xs">
+                                / {client.statistics?.totalJobs ?? 0}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Candidates */}
+                          <td className="px-4 py-3 hidden sm:table-cell">
+                            <div className="flex items-center gap-1.5">
+                              <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span>
+                                {client.statistics?.totalCandidates ?? 0}
+                              </span>
+                              {(client.statistics?.hiredCandidates ?? 0) >
+                                0 && (
+                                <span className="text-green-600 dark:text-green-400 text-xs font-medium">
+                                  · {client.statistics.hiredCandidates} hired
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Recruiter */}
+                          <td className="px-4 py-3 hidden lg:table-cell">
+                            {client.assignedToName ? (
+                              <span className="flex items-center gap-1.5 text-muted-foreground">
+                                <User className="h-3.5 w-3.5 shrink-0" />
+                                {client.assignedToName}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground/40">
+                                —
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Arrow */}
+                          <td className="px-4 py-3 text-muted-foreground/40">
+                            <ChevronRight className="h-4 w-4" />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -350,7 +562,7 @@ export default function ClientsPage() {
       {/* Add Client Modal */}
       <AddClientModal
         open={modals.addClient}
-        onClose={() => closeModal("addClient")}
+        onClose={() => closeModal('addClient')}
         onSubmit={handleAddClient}
         isLoading={isCreating}
       />
@@ -362,12 +574,12 @@ export default function ClientsPage() {
             <AlertDialogDescription>
               {clientToDelete && (
                 <>
-                  Are you sure you want to delete{" "}
+                  Are you sure you want to delete{' '}
                   <strong>{clientToDelete.companyName}</strong>?
                   {clientToDelete.statistics.totalJobs > 0 && (
                     <span className="block mt-2 text-amber-600 dark:text-amber-500">
                       This client has {clientToDelete.statistics.totalJobs} job
-                      {clientToDelete.statistics.totalJobs > 1 ? "s" : ""} in
+                      {clientToDelete.statistics.totalJobs > 1 ? 's' : ''} in
                       the system.
                     </span>
                   )}
@@ -390,5 +602,5 @@ export default function ClientsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }
