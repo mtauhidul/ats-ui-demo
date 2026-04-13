@@ -302,7 +302,11 @@ export default function CandidateDetailsPage() {
         // New assignment - mark old active applications as inactive (candidate moved to new job)
         updatedJobApplications = updatedJobApplications.map(app =>
           app.status === 'active'
-            ? { ...app, status: 'inactive' as const, lastStatusChange: new Date() }
+            ? {
+                ...app,
+                status: 'inactive' as const,
+                lastStatusChange: new Date(),
+              }
             : app
         )
 
@@ -493,11 +497,14 @@ export default function CandidateDetailsPage() {
       const result = await response.json()
       const newCandidateId = result.data?.candidateId
       if (newCandidateId) {
-        await authenticatedFetch(`${API_BASE_URL}/candidates/${newCandidateId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ inTalentPool: true }),
-        })
+        await authenticatedFetch(
+          `${API_BASE_URL}/candidates/${newCandidateId}`,
+          {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inTalentPool: true }),
+          }
+        )
       }
       toast.success('Candidate approved and added to Talent Pool')
       navigate('/dashboard/candidates')
@@ -1217,33 +1224,113 @@ export default function CandidateDetailsPage() {
     const meta = event.metadata || {}
     switch (event.action) {
       case 'created_candidate':
-        return { Icon: IconUserCheck, bg: 'bg-green-100 dark:bg-green-900/30', fg: 'text-green-600 dark:text-green-400', label: 'Candidate profile created' }
+        return {
+          Icon: IconUserCheck,
+          bg: 'bg-green-100 dark:bg-green-900/30',
+          fg: 'text-green-600 dark:text-green-400',
+          label: 'Candidate profile created',
+        }
       case 'candidate_job_assigned':
-        return { Icon: IconBriefcase, bg: 'bg-blue-100 dark:bg-blue-900/30', fg: 'text-blue-600 dark:text-blue-400', label: `Assigned to job: ${meta.jobTitle || 'Unknown Job'}` }
+        return {
+          Icon: IconBriefcase,
+          bg: 'bg-blue-100 dark:bg-blue-900/30',
+          fg: 'text-blue-600 dark:text-blue-400',
+          label: `Assigned to job: ${meta.jobTitle || 'Unknown Job'}`,
+        }
       case 'candidate_applied':
-        return { Icon: IconBriefcase, bg: 'bg-blue-100 dark:bg-blue-900/30', fg: 'text-blue-600 dark:text-blue-400', label: `Applied to ${meta.jobTitle || 'a job'}` }
+        return {
+          Icon: IconBriefcase,
+          bg: 'bg-blue-100 dark:bg-blue-900/30',
+          fg: 'text-blue-600 dark:text-blue-400',
+          label: `Applied to ${meta.jobTitle || 'a job'}`,
+        }
       case 'candidate_stage_changed':
-        return { Icon: IconArrowRight, bg: 'bg-purple-100 dark:bg-purple-900/30', fg: 'text-purple-600 dark:text-purple-400', label: meta.fromStageName && meta.toStageName ? `Stage: ${meta.fromStageName} → ${meta.toStageName}` : `Moved to stage: ${meta.toStageName || 'Unknown'}` }
+        return {
+          Icon: IconArrowRight,
+          bg: 'bg-purple-100 dark:bg-purple-900/30',
+          fg: 'text-purple-600 dark:text-purple-400',
+          label:
+            meta.fromStageName && meta.toStageName
+              ? `Stage: ${meta.fromStageName} → ${meta.toStageName}`
+              : `Moved to stage: ${meta.toStageName || 'Unknown'}`,
+        }
       case 'candidate_status_changed':
-        return { Icon: IconTag, bg: 'bg-orange-100 dark:bg-orange-900/30', fg: 'text-orange-600 dark:text-orange-400', label: meta.oldStatus && meta.newStatus ? `Status: ${meta.oldStatus} → ${meta.newStatus}` : `Status changed to: ${meta.newStatus || 'Unknown'}` }
+        return {
+          Icon: IconTag,
+          bg: 'bg-orange-100 dark:bg-orange-900/30',
+          fg: 'text-orange-600 dark:text-orange-400',
+          label:
+            meta.oldStatus && meta.newStatus
+              ? `Status: ${meta.oldStatus} → ${meta.newStatus}`
+              : `Status changed to: ${meta.newStatus || 'Unknown'}`,
+        }
       case 'candidate_assigned':
-        return { Icon: IconUserCheck, bg: 'bg-indigo-100 dark:bg-indigo-900/30', fg: 'text-indigo-600 dark:text-indigo-400', label: meta.assignedToName ? `Assigned to ${meta.assignedToName}` : 'Candidate assigned to recruiter' }
+        return {
+          Icon: IconUserCheck,
+          bg: 'bg-indigo-100 dark:bg-indigo-900/30',
+          fg: 'text-indigo-600 dark:text-indigo-400',
+          label: meta.assignedToName
+            ? `Assigned to ${meta.assignedToName}`
+            : 'Candidate assigned to recruiter',
+        }
       case 'candidate_added_to_talent_pool':
-        return { Icon: IconStar, bg: 'bg-yellow-100 dark:bg-yellow-900/30', fg: 'text-yellow-600 dark:text-yellow-400', label: 'Added to Talent Pool' }
+        return {
+          Icon: IconStar,
+          bg: 'bg-yellow-100 dark:bg-yellow-900/30',
+          fg: 'text-yellow-600 dark:text-yellow-400',
+          label: 'Added to Talent Pool',
+        }
       case 'candidate_removed_from_talent_pool':
-        return { Icon: IconStar, bg: 'bg-gray-100 dark:bg-gray-900/30', fg: 'text-gray-500 dark:text-gray-400', label: 'Removed from Talent Pool' }
+        return {
+          Icon: IconStar,
+          bg: 'bg-gray-100 dark:bg-gray-900/30',
+          fg: 'text-gray-500 dark:text-gray-400',
+          label: 'Removed from Talent Pool',
+        }
       case 'application_approved':
-        return { Icon: IconCircleCheckFilled, bg: 'bg-green-100 dark:bg-green-900/30', fg: 'text-green-600 dark:text-green-400', label: 'Application approved' }
+        return {
+          Icon: IconCircleCheckFilled,
+          bg: 'bg-green-100 dark:bg-green-900/30',
+          fg: 'text-green-600 dark:text-green-400',
+          label: 'Application approved',
+        }
       case 'application_rejected':
-        return { Icon: IconX, bg: 'bg-red-100 dark:bg-red-900/30', fg: 'text-red-600 dark:text-red-400', label: 'Application rejected' }
+        return {
+          Icon: IconX,
+          bg: 'bg-red-100 dark:bg-red-900/30',
+          fg: 'text-red-600 dark:text-red-400',
+          label: 'Application rejected',
+        }
       case 'scheduled_interview':
-        return { Icon: IconCalendar, bg: 'bg-blue-100 dark:bg-blue-900/30', fg: 'text-blue-600 dark:text-blue-400', label: meta.interviewType ? `${meta.interviewType} interview scheduled` : 'Interview scheduled' }
+        return {
+          Icon: IconCalendar,
+          bg: 'bg-blue-100 dark:bg-blue-900/30',
+          fg: 'text-blue-600 dark:text-blue-400',
+          label: meta.interviewType
+            ? `${meta.interviewType} interview scheduled`
+            : 'Interview scheduled',
+        }
       case 'completed_interview':
-        return { Icon: IconCalendar, bg: 'bg-green-100 dark:bg-green-900/30', fg: 'text-green-600 dark:text-green-400', label: 'Interview completed' }
+        return {
+          Icon: IconCalendar,
+          bg: 'bg-green-100 dark:bg-green-900/30',
+          fg: 'text-green-600 dark:text-green-400',
+          label: 'Interview completed',
+        }
       case 'updated_candidate':
-        return { Icon: IconClockHour4, bg: 'bg-gray-100 dark:bg-gray-900/30', fg: 'text-gray-500 dark:text-gray-400', label: 'Profile updated' }
+        return {
+          Icon: IconClockHour4,
+          bg: 'bg-gray-100 dark:bg-gray-900/30',
+          fg: 'text-gray-500 dark:text-gray-400',
+          label: 'Profile updated',
+        }
       default:
-        return { Icon: IconHistory, bg: 'bg-gray-100 dark:bg-gray-900/30', fg: 'text-gray-500 dark:text-gray-400', label: event.action?.replace(/_/g, ' ') || 'Activity recorded' }
+        return {
+          Icon: IconHistory,
+          bg: 'bg-gray-100 dark:bg-gray-900/30',
+          fg: 'text-gray-500 dark:text-gray-400',
+          label: event.action?.replace(/_/g, ' ') || 'Activity recorded',
+        }
     }
   }
 
@@ -1551,22 +1638,11 @@ export default function CandidateDetailsPage() {
                   <IconBriefcase className="h-4 w-4" />
                   Apply to Another Job
                 </Button>
-                {(effectiveCandidateData as any)?.inTalentPool ? (
+                {(effectiveCandidateData as any)?.inTalentPool && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800">
                     <IconStar className="h-4 w-4" />
                     In Talent Pool
                   </span>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleMoveToTalentPool}
-                    disabled={isMovingToTalentPool}
-                    className="gap-2 border-yellow-500 text-yellow-700 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
-                  >
-                    <IconStar className="h-4 w-4" />
-                    {isMovingToTalentPool ? 'Adding…' : 'Move to Talent Pool'}
-                  </Button>
                 )}
               </>
             )}
@@ -3263,10 +3339,7 @@ export default function CandidateDetailsPage() {
               </TabsContent>
 
               {/* History Tab */}
-              <TabsContent
-                value="history"
-                className="mt-4 md:mt-6 space-y-6"
-              >
+              <TabsContent value="history" className="mt-4 md:mt-6 space-y-6">
                 {/* ── Activity Timeline ── */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 px-1">
@@ -3305,7 +3378,8 @@ export default function CandidateDetailsPage() {
                           }
                           const eventDate = toDate(event.createdAt)
                           const meta = event.metadata || {}
-                          const { Icon, bg, fg, label } = getActivityConfig(event)
+                          const { Icon, bg, fg, label } =
+                            getActivityConfig(event)
 
                           return (
                             <div
@@ -3359,10 +3433,7 @@ export default function CandidateDetailsPage() {
                       <h3 className="font-semibold text-sm md:text-base">
                         Pipeline Overview
                       </h3>
-                      <Badge
-                        variant="secondary"
-                        className="text-xs ml-auto"
-                      >
+                      <Badge variant="secondary" className="text-xs ml-auto">
                         {historyData.length} job
                         {historyData.length !== 1 ? 's' : ''}
                       </Badge>
@@ -3540,8 +3611,8 @@ export default function CandidateDetailsPage() {
             const availableJobs = jobs.filter(job => {
               // Filter logic:
               // - Show if candidate never applied to this job
-              // - Show if candidate was rejected from this job (can be reactivated)
-              // - Hide if candidate is currently active in this job
+              // - Show if candidate was rejected, withdrawn, or inactive (can be reactivated)
+              // - Hide if candidate is currently active/interviewing/offered in this job
               // - Hide if candidate was hired for this job (hiring is final)
               const jobApplication = candidate?.jobApplications?.find(
                 app => app.jobId === job.id
@@ -3552,8 +3623,12 @@ export default function CandidateDetailsPage() {
               if (!jobApplication) return true // Never applied - show it
 
               const status = jobApplication.status
-              // Show if rejected (can reactivate), hide if active or hired
-              return status === 'rejected'
+              // Show if rejected, withdrawn, or inactive (can reactivate), hide if active/interviewing/offered/hired
+              return (
+                status === 'rejected' ||
+                status === 'withdrawn' ||
+                status === 'inactive'
+              )
             })
 
             return (
@@ -3620,6 +3695,21 @@ export default function CandidateDetailsPage() {
                     >
                       Cancel
                     </Button>
+                    {!(effectiveCandidateData as any)?.inTalentPool && (
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          await handleMoveToTalentPool()
+                          setReassignJobDialogOpen(false)
+                          setSelectedJobForReassign('')
+                        }}
+                        disabled={isMovingToTalentPool}
+                        className="gap-2 border-yellow-500 text-yellow-700 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                      >
+                        <IconStar className="h-4 w-4" />
+                        {isMovingToTalentPool ? 'Adding…' : 'Move to Talent Pool'}
+                      </Button>
+                    )}
                     {availableJobs.length > 0 && (
                       <Button
                         onClick={handleReassignJobConfirm}
