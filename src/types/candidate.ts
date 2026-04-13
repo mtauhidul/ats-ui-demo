@@ -19,6 +19,7 @@ export type CandidateSource =
 // Candidate status in job pipeline
 export const CandidateStatus = {
   ACTIVE: 'active', // Active candidate in pipeline
+  INACTIVE: 'inactive', // Moved to a different job
   INTERVIEWING: 'interviewing', // Currently in interview process
   OFFERED: 'offered', // Offer extended
   HIRED: 'hired', // Successfully hired
