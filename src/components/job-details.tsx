@@ -33,6 +33,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCategories } from '@/hooks/firestore'
+import { usePipelineByJobId } from '@/hooks/usePipelinesFirestore'
 import { authenticatedFetch } from '@/lib/authenticated-fetch'
 import { cn } from '@/lib/utils'
 import { useJobs } from '@/store/hooks/useJobs'
@@ -98,6 +99,7 @@ export function JobDetails({
   const navigate = useNavigate()
   const { deleteJob } = useJobs()
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [stageFilter, setStageFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('newest')
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null
@@ -141,6 +143,9 @@ export function JobDetails({
 
   // Get categories from Firestore realtime
   const { data: allCategories } = useCategories()
+
+  // Get this job's pipeline for stage filtering
+  const { pipeline } = usePipelineByJobId(job.id)
 
   // Category management state
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
@@ -279,9 +284,18 @@ export function JobDetails({
   // Apply filters
   const filteredCandidates = jobCandidates.filter(candidate => {
     // Backend has status at candidate level, not per-job
-    if (statusFilter === 'all') return true
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (candidate as any).status === statusFilter
+    if (statusFilter !== 'all' && (candidate as any).status !== statusFilter)
+      return false
+
+    // Filter by pipeline stage (per-job application currentStage)
+    if (stageFilter !== 'all') {
+      const jobApp = (candidate as any).jobApplications?.find(
+        (app: any) => app.jobId === job.id
+      )
+      if (!jobApp || jobApp.currentStage !== stageFilter) return false
+    }
+
+    return true
   })
 
   // Apply sorting
@@ -322,52 +336,56 @@ export function JobDetails({
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="w-full space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-3">
+        {/* Row 1: Back + full wrapping title + inline copy */}
+        <div className="flex items-start gap-3">
           <Button
-            variant="ghost"
-            size="sm"
+            variant="outline"
+            size="icon"
             onClick={onBack}
-            className="h-9 px-3"
+            className="shrink-0 mt-0.5 rounded-lg"
+            title="Back"
           >
-            <ArrowLeft className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">Back</span>
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex-1 min-w-0 flex items-center gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground truncate">
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground break-words">
               {job.title}
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(job.title)
+                  toast.success('Job title copied to clipboard!')
+                }}
+                title="Copy Job Title"
+                className="inline-flex items-center justify-center ml-2 align-middle h-7 w-7 rounded-md text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </button>
             </h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 hover:bg-primary/10 shrink-0"
-              onClick={() => {
-                navigator.clipboard.writeText(job.title)
-                toast.success('Job title copied to clipboard!')
-              }}
-              title="Copy Job Title"
-            >
-              <Copy className="h-4 w-4 text-muted-foreground hover:text-primary" />
-            </Button>
           </div>
+        </div>
+
+        {/* Row 2: Status badge + action buttons */}
+        <div className="flex items-center gap-3">
+          <Badge
+            className={cn(
+              'border text-sm px-3 py-1 whitespace-nowrap',
+              statusColors[job.status]
+            )}
+          >
+            {job.status?.replace(/_/g, ' ') || job.status}
+          </Badge>
+          <div className="w-px h-5 bg-border" />
           <div className="flex items-center gap-2">
-            <Badge
-              className={cn(
-                'border text-sm px-3 py-1 whitespace-nowrap',
-                statusColors[job.status]
-              )}
-            >
-              {job.status?.replace(/_/g, ' ') || job.status}
-            </Badge>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsEditModalOpen(true)}
             >
-              <Edit className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Edit</span>
+              <Edit className="h-4 w-4 mr-1.5" />
+              Edit
             </Button>
             {job.status === 'closed' && (
               <Button
@@ -381,8 +399,8 @@ export function JobDetails({
                     : 'Delete job'
                 }
               >
-                <Trash2 className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Delete</span>
+                <Trash2 className="h-4 w-4 mr-1.5" />
+                Delete
               </Button>
             )}
           </div>
@@ -729,6 +747,23 @@ export function JobDetails({
                       <SelectItem value="withdrawn">Withdrawn</SelectItem>
                     </SelectContent>
                   </Select>
+                  {pipeline && pipeline.stages.length > 0 && (
+                    <Select value={stageFilter} onValueChange={setStageFilter}>
+                      <SelectTrigger className="w-full sm:w-44">
+                        <SelectValue placeholder="Filter by stage" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Stages</SelectItem>
+                        {[...pipeline.stages]
+                          .sort((a, b) => a.order - b.order)
+                          .map(stage => (
+                            <SelectItem key={stage.id} value={stage.id}>
+                              {stage.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-full sm:w-[140px]">
                       <SelectValue placeholder="Sort by" />
@@ -748,8 +783,8 @@ export function JobDetails({
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-sm text-muted-foreground">
-                    {statusFilter !== 'all'
-                      ? 'No candidates found with this status'
+                    {statusFilter !== 'all' || stageFilter !== 'all'
+                      ? 'No candidates match the selected filters'
                       : 'No candidates have applied yet'}
                   </p>
                 </div>
