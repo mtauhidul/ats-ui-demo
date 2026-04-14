@@ -22,6 +22,7 @@ import {
   IconUserCheck,
   IconUsers,
   IconUserX,
+  IconVideo,
   IconX,
 } from '@tabler/icons-react'
 import {
@@ -698,6 +699,39 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     maxSize: 95,
   },
   {
+    accessorKey: 'hasZoomInterview',
+    header: () => (
+      <div className="flex items-center gap-1 text-left">
+        <IconVideo className="h-3.5 w-3.5" />
+        <span>Zoom</span>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const hasZoom = row.original.hasZoomInterview === true
+      const isInTalentPool = row.original.inTalentPool === true
+      if (!isInTalentPool) return null
+      return (
+        <div className="min-w-[80px]">
+          {hasZoom ? (
+            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+              <IconVideo className="h-3 w-3" />
+              Done
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+              <IconVideo className="h-3 w-3" />
+              None
+            </span>
+          )}
+        </div>
+      )
+    },
+    enableHiding: true,
+    size: 80,
+    minSize: 80,
+    maxSize: 80,
+  },
+  {
     id: 'actions',
     cell: () => null,
     enableHiding: false,
@@ -904,6 +938,7 @@ export function CandidatesDataTable({
   onDeleteCandidate,
   searchParams,
   setSearchParams,
+  showZoomColumn = false,
 }: {
   data: z.infer<typeof schema>[]
   onDeleteCandidate?: (candidateId: string) => void
@@ -912,17 +947,23 @@ export function CandidatesDataTable({
     params: URLSearchParams,
     options?: { replace?: boolean }
   ) => void
+  showZoomColumn?: boolean
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({ target: false })
+    React.useState<VisibilityState>({ target: false, hasZoomInterview: false })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: 'target', desc: true }, // Default: sort by newest first (Date Applied - Newest)
   ])
+
+  // Sync Zoom column visibility with the active tab
+  React.useEffect(() => {
+    setColumnVisibility(prev => ({ ...prev, hasZoomInterview: showZoomColumn }))
+  }, [showZoomColumn])
 
   // Initialize pagination from URL params or default
   const initialPage = searchParams
@@ -1586,7 +1627,11 @@ export function CandidatesDataTable({
         // New assignment - mark old active applications as inactive (candidate moved to new job)
         updatedJobApplications = updatedJobApplications.map(app =>
           app.status === 'active'
-            ? { ...app, status: 'inactive' as const, lastStatusChange: new Date() }
+            ? {
+                ...app,
+                status: 'inactive' as const,
+                lastStatusChange: new Date(),
+              }
             : app
         )
 

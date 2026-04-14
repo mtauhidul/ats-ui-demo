@@ -1,8 +1,16 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { Candidate } from '@/types/candidate'
+import type { Pipeline } from '@/types/pipeline'
 import {
   Award,
   Briefcase,
@@ -17,6 +25,8 @@ interface CandidateCardProps {
   candidate: Candidate
   jobId: string
   onClick: () => void
+  pipeline?: Pipeline | null
+  onStageChange?: (candidateId: string, stageId: string) => Promise<void>
 }
 
 const statusColors = {
@@ -32,11 +42,22 @@ const statusColors = {
     'bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20',
 } as const
 
-export function CandidateCard({ candidate, onClick }: CandidateCardProps) {
+export function CandidateCard({ candidate, jobId, onClick, pipeline, onStageChange }: CandidateCardProps) {
   // Backend doesn't have per-job applications, use candidate-level data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const candidateData = candidate as any
   const status = candidateData.status || 'active'
+
+  // Get current stage for this job
+  const currentJobApp = candidateData.jobApplications?.find(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (app: any) => app.jobId === jobId
+  )
+  const currentStageId = currentJobApp?.currentStage || ''
+  const sortedStages = pipeline?.stages
+    ? [...pipeline.stages].sort((a, b) => a.order - b.order)
+    : []
+  const currentStage = sortedStages.find(s => s.id === currentStageId)
 
   // AI Score details
   const aiScore = candidateData.aiScore?.overallScore
@@ -89,6 +110,52 @@ export function CandidateCard({ candidate, onClick }: CandidateCardProps) {
             {status.replace(/_/g, ' ')}
           </Badge>
         </div>
+
+        {/* Stage Dropdown — only when pipeline stages are available */}
+        {sortedStages.length > 0 && onStageChange && (
+          <div
+            className="mb-3"
+            onClick={e => e.stopPropagation()}
+          >
+            <Select
+              value={currentStageId || '__none__'}
+              onValueChange={val => {
+                if (val !== '__none__') {
+                  onStageChange(candidate.id, val)
+                }
+              }}
+            >
+              <SelectTrigger className="h-7 text-xs w-full">
+                <SelectValue placeholder="Set stage…">
+                  {currentStage ? (
+                    <span className="flex items-center gap-1.5">
+                      <span
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: currentStage.color || '#94a3b8' }}
+                      />
+                      {currentStage.name}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Set stage…</span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {sortedStages.map(stage => (
+                  <SelectItem key={stage.id} value={stage.id}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: stage.color || '#94a3b8' }}
+                      />
+                      {stage.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Info Grid */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3">

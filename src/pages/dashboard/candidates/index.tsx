@@ -1,6 +1,7 @@
 import { CandidatesDataTable } from '@/components/candidates-data-table'
 import { Loader } from '@/components/ui/loader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useInterviews } from '@/hooks/useInterviews'
 import {
   useApplications,
   useCandidates,
@@ -30,6 +31,7 @@ export default function CandidatesPage() {
   const { jobs, isLoading: jobsLoading } = useJobs()
   const { clients, isLoading: clientsLoading } = useClients()
   const { pipelines, isLoading: pipelinesLoading } = usePipelines()
+  const { data: interviews } = useInterviews()
 
   const handleDeleteCandidate = async (candidateId: string) => {
     try {
@@ -361,9 +363,12 @@ export default function CandidatesPage() {
         videoIntroFileSize: undefined,
         videoIntroDuration: undefined,
         inTalentPool: candidate.inTalentPool === true,
+        hasZoomInterview: interviews.some(
+          i => i.candidateId === candidateId && i.interviewType === 'video'
+        ),
       }
     }
-  }, [candidates, jobs, clients, pipelines])
+  }, [candidates, jobs, clients, pipelines, interviews])
 
   const allData = React.useMemo(() => {
     const sortedCandidates = [...transformedData].sort(
@@ -649,6 +654,7 @@ export default function CandidatesPage() {
                     onDeleteCandidate={handleDeleteCandidate}
                     searchParams={searchParams}
                     setSearchParams={setSearchParams}
+                    showZoomColumn={activeTab === 'talent_pool'}
                   />
                 )}
               </div>

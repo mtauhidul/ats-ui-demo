@@ -37,6 +37,7 @@ import { usePipelineByJobId } from '@/hooks/usePipelinesFirestore'
 import { authenticatedFetch } from '@/lib/authenticated-fetch'
 import { cn } from '@/lib/utils'
 import { useJobs } from '@/store/hooks/useJobs'
+import { useCandidates } from '@/store/hooks/index'
 import type { Candidate } from '@/types/candidate'
 import type { Client } from '@/types/client'
 import type { Job, UpdateJobRequest } from '@/types/job'
@@ -98,6 +99,7 @@ export function JobDetails({
 }: JobDetailsProps) {
   const navigate = useNavigate()
   const { deleteJob } = useJobs()
+  const { updateCandidate } = useCandidates()
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [stageFilter, setStageFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('newest')
@@ -146,6 +148,18 @@ export function JobDetails({
 
   // Get this job's pipeline for stage filtering
   const { pipeline } = usePipelineByJobId(job.id)
+
+  const handleStageChange = async (candidateId: string, stageId: string) => {
+    try {
+      await updateCandidate(candidateId, {
+        currentPipelineStageId: stageId,
+        jobId: job.id,
+      } as any)
+      toast.success('Stage updated')
+    } catch {
+      toast.error('Failed to update stage')
+    }
+  }
 
   // Category management state
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
@@ -799,6 +813,8 @@ export function JobDetails({
                         key={key}
                         candidate={candidate}
                         jobId={job.id}
+                        pipeline={pipeline}
+                        onStageChange={handleStageChange}
                         onClick={() => {
                           setSelectedCandidate(candidate)
                           onCandidateClick(candidate)
