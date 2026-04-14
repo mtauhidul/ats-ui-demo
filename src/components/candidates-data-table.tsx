@@ -1221,8 +1221,33 @@ export function CandidatesDataTable({
     }
   }
 
-  const handleBulkExport = () => {
-    const selectedData = table
+  const handleBulkMoveToTalentPool = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows
+    const selectedIds = selectedRows.map(r => r.original.id)
+
+    try {
+      // Optimistic update
+      setData(prevData =>
+        prevData.map(item =>
+          selectedIds.includes(item.id) ? { ...item, inTalentPool: true } : item
+        )
+      )
+
+      // Update all in Firestore
+      const updatePromises = selectedRows
+        .filter(r => r.original.candidateId)
+        .map(r => updateCandidate(r.original.candidateId!, { inTalentPool: true } as any))
+
+      await Promise.all(updatePromises)
+      toast.success(`${selectedRows.length} candidates moved to Talent Pool`)
+      table.resetRowSelection()
+    } catch {
+      toast.error('Failed to update some candidates')
+      setData(initialData)
+    }
+  }
+
+  const handleBulkExport = () => {    const selectedData = table
       .getFilteredSelectedRowModel()
       .rows.map(r => r.original)
     toast.success(`Exporting ${selectedData.length} candidates`)
@@ -2200,6 +2225,10 @@ export function CandidatesDataTable({
                       <DropdownMenuItem onClick={handleBulkReject}>
                         <IconX className="h-4 w-4 mr-2 text-red-600" />
                         Reject Selected
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleBulkMoveToTalentPool}>
+                        <IconStar className="h-4 w-4 mr-2 text-yellow-500" />
+                        Move to Talent Pool
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleBulkAssignTeam}>
